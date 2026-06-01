@@ -1,0 +1,96 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#0b1220] text-white font-sans antialiased;
+  }
+}
+
+@layer components {
+  /* Buttons */
+  .btn-primary {
+    @apply inline-flex items-center gap-2 bg-[#c29a6b] hover:bg-[#b8911f] text-black text-xs font-semibold tracking-widest uppercase px-6 py-3 transition-colors;
+  }
+  .btn-white {
+    @apply inline-flex items-center gap-2 bg-white hover:bg-gray-100 text-black text-xs font-semibold tracking-widest uppercase px-6 py-3 transition-colors;
+  }
+  .btn-outline {
+    @apply inline-flex items-center gap-2 border border-white text-white hover:bg-white hover:text-black text-xs font-semibold tracking-widest uppercase px-6 py-3 transition-colors;
+  }
+  .btn-outline-gold {
+    @apply inline-flex items-center gap-2 border border-[#c29a6b] text-[#c29a6b] hover:bg-[#c29a6b] hover:text-black text-xs font-semibold tracking-widest uppercase px-6 py-3 transition-colors;
+  }
+
+  /* Cards / Inputs */
+  .card {
+    @apply bg-[#111720] border border-white/10 p-6 rounded-xl;
+  }
+  .input {
+    @apply bg-[#111720] border border-white/10 text-white placeholder-gray-600 px-4 py-3 w-full focus:outline-none focus:border-[#c29a6b]/50 transition-colors text-sm rounded-lg;
+  }
+
+  /* Badges */
+  .badge {
+    @apply inline-flex items-center gap-1 text-xs font-medium px-3 py-1 rounded-full;
+  }
+  .tag-analysis {
+    @apply badge bg-blue-500/15 text-blue-400 border border-blue-500/20;
+  }
+  .tag-live {
+    @apply badge bg-[#c29a6b]/15 text-[#c29a6b] border border-[#c29a6b]/20;
+  }
+  .tag-archived {
+    @apply badge bg-white/5 text-gray-400 border border-white/10;
+  }
+
+  /* Section labels */
+  .section-label {
+    @apply text-xs tracking-[0.3em] uppercase text-gray-500 mb-4;
+  }
+  .section-label-gold {
+    @apply text-xs tracking-[0.3em] uppercase text-[#c29a6b] mb-4;
+  }
+}
+
+/* ── Centrage mobile ── */
+@media (max-width: 768px) {
+  section .max-w-7xl > p,
+  section .max-w-7xl > h1,
+  section .max-w-7xl > h2,
+  section .max-w-7xl > h3,
+  section .max-w-7xl > div > p,
+  section .max-w-7xl > div > h1,
+  section .max-w-7xl > div > h2,
+  section .max-w-7xl > div > h3 {
+    text-align: center;
+  }
+
+  section .max-w-7xl .w-8,
+  section .max-w-7xl .w-10 {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  section .max-w-7xl .border-l-2 {
+    border-left: none;
+    border-top: 2px solid;
+    padding-left: 0;
+    padding-top: 1rem;
+    text-align: center;
+  }
+
+  section .max-w-7xl a[href],
+  section .max-w-7xl .inline-flex {
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #0b1220; }
+::-webkit-scrollbar-thumb { background: #1a2232; border-radius: 2px; }
