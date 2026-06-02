@@ -53,6 +53,7 @@ export default function DashboardAdmin() {
   const [tab, setTab] = useState('tous')
   const [biens, setBiens] = useState<any[]>([])
   const [leadsLive, setLeadsLive] = useState<any[]>([])
+  const [authChecked, setAuthChecked] = useState(false)
   const [loading, setLoading] = useState(true)
   const [loadingLive, setLoadingLive] = useState(false)
   const [selected, setSelected] = useState<any | null>(null)
@@ -68,9 +69,12 @@ export default function DashboardAdmin() {
   async function checkAdmin() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/auth/login'); return }
-    const { data: profile, error } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-    console.log('checkAdmin profile:', profile, 'error:', error, 'userId:', user.id)
-    if (profile && profile.role !== 'admin') router.push('/')
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    if (profile && profile.role !== 'admin') {
+      router.push('/')
+      return
+    }
+    setAuthChecked(true)
   }
 
   async function loadBiens() {
@@ -148,6 +152,14 @@ export default function DashboardAdmin() {
 
   const pendingCount = biens.filter(b => b.statut === 'pending').length
   const liveCount = biens.filter(b => b.statut === 'diffuse').length
+
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen bg-[#0b1220] flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-[#c29a6b]" />
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-[#0b1220] text-white flex">
