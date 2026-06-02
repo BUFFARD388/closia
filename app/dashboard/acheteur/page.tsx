@@ -98,25 +98,44 @@ export default function DashboardAcheteur() {
   const handleBuy = async () => {
     if (!selectedLead || !buyMode || !userId) return
     const grille = getPrix(selectedLead.prix)
-    const montant = buyMode === 'exclu' ? grille.exclu : grille.trois // montant initial partagé
+    const montant = buyMode === 'exclu' ? grille.exclu : grille.trois
 
-    const { error } = await supabase.from('achats').insert({
+    // Créer l'achat en base
+    const { data: achat, error } = await supabase.from('achats').insert({
       bien_id: selectedLead.id,
       acheteur_id: userId,
       mode: buyMode === 'exclu' ? 'exclusif' : 'partage',
-      statut: buyMode === 'exclu' ? 'confirme' : 'reserve',
+      statut: 'reserve',
       montant,
-    })
+    }).select().single()
 
     if (error) { alert('Erreur : ' + error.message); return }
 
-    if (buyMode === 'exclu') {
-      // Retirer le lead de la diffusion
-      await supabase.from('biens').update({ statut: 'archive' }).eq('id', selectedLead.id)
+    if (buyMode === 'partage') {
+      // Pas de paiement immédiat pour le partagé
+      await loadLeads(userId)
+      setPayStep('confirm')
+      return
     }
 
-    await loadLeads(userId)
-    setPayStep('confirm')
+    // Paiement Stripe pour l'exclusif
+    const acheteurs = selectedLead.achats?.filter((a: any) => a.statut !== 'annule') || []
+    const res = await fetch('/api/stripe/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        bienId: selectedLead.id,
+        bienType: selectedLead.type,
+        bienVille: selectedLead.ville,
+        prixBien: selectedLead.prix,
+        mode: 'exclusif',
+        nbAcheteurs: acheteurs.length + 1,
+        achatId: achat.id,
+      }),
+    })
+    const { url, error: stripeError } = await res.json()
+    if (stripeError) { alert('Erreur Stripe : ' + stripeError); return }
+    window.location.href = url
   }
 
   return (
