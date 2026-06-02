@@ -443,7 +443,18 @@ export default function DashboardAcheteur() {
                 return (
                   <>
                     <h3 className="font-semibold mb-2">Choisissez votre formule</h3>
-                    <p className="text-xs text-gray-500 mb-5">L'exclusivité garantit un accès immédiat. La liste d'attente est soumise à conditions.</p>
+                    <div className="flex flex-col gap-1.5 mb-5">
+                      <p className="text-xs text-gray-500">L'exclusivité garantit un accès immédiat. La liste d'attente est soumise à conditions.</p>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {[
+                          '✦ Mandat exclusif confirmé',
+                          '✦ Non diffusé sur d\'autres plateformes',
+                          '✦ Première diffusion',
+                        ].map(item => (
+                          <span key={item} className="text-xs px-3 py-1 rounded-full bg-[#c29a6b]/10 text-[#c29a6b] border border-[#c29a6b]/20">{item}</span>
+                        ))}
+                      </div>
+                    </div>
 
                     <div className="space-y-4 mb-6">
                       {/* Exclusivité */}
