@@ -5,9 +5,33 @@ import { useRouter } from 'next/navigation'
 import {
   Clock, CheckCircle, XCircle, Eye, LogOut,
   MapPin, Euro, FileText, ImageIcon, Download, ChevronRight,
-  Timer, AlertCircle, X, Send, User, ShoppingCart, Ban, Zap, Loader2
+  Timer, AlertCircle, X, Send, User, ShoppingCart, Ban, Zap, Loader2, Users
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+
+// ── Grille de prix ──────────────────────────────────────────
+function getPrix(prixBien: number) {
+  if (prixBien < 300000) return { exclu: 490, deux: 290, trois: 190 }
+  if (prixBien <= 1000000) return { exclu: 890, deux: 490, trois: 320 }
+  return { exclu: 1490, deux: 790, trois: 520 }
+}
+
+function getPrixLabel(prixBien: number, nbAcheteurs: number) {
+  const g = getPrix(prixBien)
+  if (nbAcheteurs === 1) return g.exclu
+  if (nbAcheteurs === 2) return g.deux
+  return g.trois
+}
+
+function timerColor(h: number) {
+  if (h < 24) return 'text-red-400'
+  if (h < 48) return 'text-orange-400'
+  return 'text-green-400'
+}
+
+function heuresRestantes(dateExpiration: string) {
+  return Math.max(0, (new Date(dateExpiration).getTime() - Date.now()) / 3600000)
+}
 
 const SECTIONS = [
   { key: 'dossiers', label: 'Dossiers', icon: <FileText className="w-4 h-4" />, alert: true },
@@ -18,7 +42,7 @@ const SECTIONS = [
 
 function StatutBadge({ statut }: { statut: string }) {
   if (statut === 'pending') return <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-orange-500/15 text-orange-400 border border-orange-500/20"><AlertCircle className="w-3 h-3" /> À analyser</span>
-  if (statut === 'diffuse') return <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-green-500/15 text-green-400 border border-green-500/20"><CheckCircle className="w-3 h-3" /> Validé</span>
+  if (statut === 'diffuse') return <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-green-500/15 text-green-400 border border-green-500/20"><CheckCircle className="w-3 h-3" /> En diffusion</span>
   if (statut === 'rejected') return <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-red-500/15 text-red-400 border border-red-500/20"><XCircle className="w-3 h-3" /> Refusé</span>
   return null
 }
@@ -28,7 +52,9 @@ export default function DashboardAdmin() {
   const [section, setSection] = useState('dossiers')
   const [tab, setTab] = useState('tous')
   const [biens, setBiens] = useState<any[]>([])
+  const [leadsLive, setLeadsLive] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingLive, setLoadingLive] = useState(false)
   const [selected, setSelected] = useState<any | null>(null)
   const [apporteur, setApporteur] = useState<any | null>(null)
   const [decision, setDecision] = useState<'validate' | 'reject' | null>(null)
@@ -36,10 +62,8 @@ export default function DashboardAdmin() {
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
 
-  useEffect(() => {
-    checkAdmin()
-    loadBiens()
-  }, [])
+  useEffect(() => { checkAdmin(); loadBiens() }, [])
+  useEffect(() => { if (section === 'live') loadLeadsLive() }, [section])
 
   async function checkAdmin() {
     const { data: { user } } = await supabase.auth.getUser()
@@ -50,12 +74,23 @@ export default function DashboardAdmin() {
 
   async function loadBiens() {
     setLoading(true)
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('biens')
       .select('*, profiles!biens_apporteur_id_fkey(prenom, nom, tel, statut_pro)')
       .order('created_at', { ascending: false })
-    if (!error) setBiens(data || [])
+    setBiens(data || [])
     setLoading(false)
+  }
+
+  async function loadLeadsLive() {
+    setLoadingLive(true)
+    const { data } = await supabase
+      .from('biens')
+      .select('*, profiles!biens_apporteur_id_fkey(prenom, nom), achats(*, profiles!achats_acheteur_id_fkey(prenom, nom, societe))')
+      .eq('statut', 'diffuse')
+      .order('date_diffusion', { ascending: false })
+    setLeadsLive(data || [])
+    setLoadingLive(false)
   }
 
   const filtered = tab === 'tous' ? biens : biens.filter(b =>
@@ -64,7 +99,7 @@ export default function DashboardAdmin() {
     b.statut === 'rejected'
   )
 
-  const openDetail = async (bien: any) => {
+  const openDetail = (bien: any) => {
     setSelected(bien)
     setApporteur(bien.profiles)
     setDecision(null)
@@ -86,7 +121,6 @@ export default function DashboardAdmin() {
           date_expiration: expiration.toISOString(),
         }).eq('id', selected.id)
       } else {
-        // Supprimer les fichiers du storage
         if (selected.photos_urls?.length > 0) {
           const paths = selected.photos_urls.map((url: string) => {
             const parts = url.split('/closia-documents/')
@@ -112,6 +146,7 @@ export default function DashboardAdmin() {
   const formatDate = (d: string) => new Date(d).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 
   const pendingCount = biens.filter(b => b.statut === 'pending').length
+  const liveCount = biens.filter(b => b.statut === 'diffuse').length
 
   return (
     <div className="min-h-screen bg-[#0b1220] text-white flex">
@@ -130,6 +165,9 @@ export default function DashboardAdmin() {
               {s.key === 'dossiers' && pendingCount > 0 && (
                 <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400">{pendingCount}</span>
               )}
+              {s.key === 'live' && liveCount > 0 && (
+                <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-400">{liveCount}</span>
+              )}
             </button>
           ))}
         </nav>
@@ -144,7 +182,7 @@ export default function DashboardAdmin() {
       {/* MAIN */}
       <main className="flex-1 lg:ml-64 p-6 lg:p-10">
 
-        {/* DOSSIERS */}
+        {/* ════ DOSSIERS ════ */}
         {section === 'dossiers' && (
           <>
             <div className="mb-8">
@@ -168,10 +206,8 @@ export default function DashboardAdmin() {
 
             <div className="flex gap-2 mb-6">
               {[
-                { key: 'tous', label: 'Tous' },
-                { key: 'pending', label: 'À analyser' },
-                { key: 'diffuse', label: 'Validés' },
-                { key: 'rejected', label: 'Refusés' },
+                { key: 'tous', label: 'Tous' }, { key: 'pending', label: 'À analyser' },
+                { key: 'diffuse', label: 'Validés' }, { key: 'rejected', label: 'Refusés' },
               ].map(t => (
                 <button key={t.key} onClick={() => setTab(t.key)}
                   className={`text-xs px-4 py-2 rounded-full transition-all ${tab === t.key ? 'bg-[#c29a6b] text-black font-medium' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}>
@@ -188,27 +224,17 @@ export default function DashboardAdmin() {
                   <div key={b.id} className="bg-[#111720] border border-white/10 rounded-xl p-5 hover:border-white/20 transition-all">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex gap-4">
-                        {/* Miniature */}
                         {b.photos_urls?.length > 0 ? (
                           <img src={b.photos_urls[0]} alt={b.type} className="w-16 h-16 object-cover rounded-lg flex-shrink-0" />
                         ) : (
                           <div className={`w-16 h-16 rounded-lg flex flex-col items-center justify-center flex-shrink-0 gap-0.5 ${b.statut === 'rejected' ? 'bg-red-500/10' : 'bg-white/5'}`}>
-                            {b.statut === 'rejected' ? (
-                              <>
-                                <XCircle className="w-5 h-5 text-red-400" />
-                                <span className="text-xs text-red-400">Refusé</span>
-                              </>
-                            ) : (
-                              <ImageIcon className="w-5 h-5 text-gray-600" />
-                            )}
+                            {b.statut === 'rejected' ? <><XCircle className="w-5 h-5 text-red-400" /><span className="text-xs text-red-400">Refusé</span></> : <ImageIcon className="w-5 h-5 text-gray-600" />}
                           </div>
                         )}
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
                             <StatutBadge statut={b.statut} />
-                            <span className="text-xs text-gray-500 flex items-center gap-1">
-                              <Clock className="w-3 h-3" /> {formatDate(b.created_at)}
-                            </span>
+                            <span className="text-xs text-gray-500 flex items-center gap-1"><Clock className="w-3 h-3" />{formatDate(b.created_at)}</span>
                           </div>
                           <h3 className="font-semibold">{b.type}</h3>
                           <div className="flex flex-wrap gap-x-4 mt-1 text-sm text-gray-400">
@@ -225,25 +251,164 @@ export default function DashboardAdmin() {
                   </div>
                 ))}
                 {filtered.length === 0 && (
-                  <div className="text-center py-16 text-gray-500">
-                    <FileText className="w-8 h-8 mx-auto mb-3" />
-                    Aucun dossier dans cette catégorie.
-                  </div>
+                  <div className="text-center py-16 text-gray-500"><FileText className="w-8 h-8 mx-auto mb-3" />Aucun dossier.</div>
                 )}
               </div>
             )}
           </>
         )}
 
-        {/* EN DIFFUSION */}
+        {/* ════ EN DIFFUSION ════ */}
         {section === 'live' && (
-          <div className="text-center py-16 text-gray-500">
-            <Zap className="w-8 h-8 mx-auto mb-3" />
-            <p>Section en cours de développement.</p>
-          </div>
+          <>
+            <div className="mb-8">
+              <h1 className="text-2xl font-bold">Leads en diffusion</h1>
+              <p className="text-gray-400 text-sm mt-1">{leadsLive.length} lead{leadsLive.length > 1 ? 's' : ''} en ligne</p>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+              {[
+                { label: 'En ligne', val: leadsLive.length, color: 'text-green-400' },
+                { label: 'Acheteurs positionnés', val: leadsLive.reduce((a, l) => a + (l.achats?.filter((ac: any) => ac.statut !== 'annule').length || 0), 0), color: 'text-[#c29a6b]' },
+                { label: 'Exclusifs pris', val: leadsLive.filter(l => l.achats?.some((ac: any) => ac.mode === 'exclusif' && ac.statut !== 'annule')).length, color: 'text-white' },
+                { label: 'Revenus potentiels', val: leadsLive.reduce((a, l) => {
+                  const acheteurs = l.achats?.filter((ac: any) => ac.statut !== 'annule') || []
+                  if (acheteurs.length === 0) return a
+                  return a + getPrixLabel(l.prix, acheteurs.length) * acheteurs.length
+                }, 0).toLocaleString('fr-FR') + ' €', color: 'text-[#c29a6b]' },
+              ].map(s => (
+                <div key={s.label} className="bg-[#111720] border border-white/10 rounded-xl p-4">
+                  <div className={`text-2xl font-bold ${s.color}`}>{s.val}</div>
+                  <div className="text-xs text-gray-500 mt-1">{s.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {loadingLive ? (
+              <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-gray-500" /></div>
+            ) : leadsLive.length === 0 ? (
+              <div className="text-center py-16 text-gray-500"><Zap className="w-8 h-8 mx-auto mb-3" />Aucun lead en diffusion.</div>
+            ) : (
+              <div className="space-y-4">
+                {leadsLive.map(lead => {
+                  const h = heuresRestantes(lead.date_expiration)
+                  const acheteurs = lead.achats?.filter((ac: any) => ac.statut !== 'annule') || []
+                  const exclusifPris = acheteurs.some((ac: any) => ac.mode === 'exclusif')
+                  const grille = getPrix(lead.prix)
+
+                  return (
+                    <div key={lead.id} className="bg-[#111720] border border-white/10 rounded-xl p-6 hover:border-white/20 transition-all">
+                      <div className="flex flex-col lg:flex-row lg:items-start gap-6">
+                        <div className="flex-1">
+                          {/* Header */}
+                          <div className="flex items-center gap-3 mb-3">
+                            <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-green-500/15 text-green-400 border border-green-500/20">
+                              <Zap className="w-3 h-3" /> En ligne
+                            </span>
+                            <span className={`text-xs font-bold flex items-center gap-1 ${timerColor(h)}`}>
+                              <Timer className="w-3 h-3" /> {Math.floor(h)}h {Math.floor((h % 1) * 60)}min restantes
+                            </span>
+                          </div>
+
+                          {lead.photos_urls?.length > 0 && (
+                            <img src={lead.photos_urls[0]} alt={lead.type} className="w-full h-40 object-cover rounded-xl mb-4" />
+                          )}
+
+                          <h3 className="font-semibold text-lg mb-1">{lead.type}</h3>
+                          <div className="flex flex-wrap gap-x-4 text-sm text-gray-400 mb-4">
+                            <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-[#c29a6b]" />{lead.adresse}, {lead.cp} {lead.ville}</span>
+                            <span className="flex items-center gap-1"><Euro className="w-3.5 h-3.5 text-[#c29a6b]" />{Number(lead.prix).toLocaleString('fr-FR')} €</span>
+                            {lead.profiles && <span className="flex items-center gap-1"><User className="w-3.5 h-3.5" />{lead.profiles.prenom} {lead.profiles.nom}</span>}
+                          </div>
+
+                          {/* Barre timer */}
+                          <div>
+                            <div className="flex justify-between text-xs text-gray-500 mb-1">
+                              <span>Temps écoulé</span>
+                              <span>{Math.floor(72 - h)}h / 72h</span>
+                            </div>
+                            <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                              <div className={`h-full rounded-full ${h < 24 ? 'bg-red-400' : h < 48 ? 'bg-orange-400' : 'bg-green-400'}`}
+                                style={{ width: `${((72 - h) / 72) * 100}%` }} />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Panel acheteurs + grille */}
+                        <div className="lg:w-72 flex-shrink-0 space-y-3">
+                          {/* Grille de prix */}
+                          <div className="bg-[#0b1220] rounded-xl border border-white/10 p-4">
+                            <p className="text-xs text-gray-500 uppercase tracking-widest mb-3">Grille de prix</p>
+                            <div className="space-y-2 text-xs">
+                              <div className="flex justify-between">
+                                <span className="text-[#c29a6b] font-medium">Exclusif (1 acheteur)</span>
+                                <span className="text-white font-bold">{grille.exclu} €</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-400">Partagé × 2</span>
+                                <span className="text-gray-300">{grille.deux} € / acheteur</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-400">Partagé × 3</span>
+                                <span className="text-gray-300">{grille.trois} € / acheteur</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Acheteurs */}
+                          <div className="bg-[#0b1220] rounded-xl border border-white/10 p-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <p className="text-xs text-gray-500 uppercase tracking-widest">Acheteurs</p>
+                              <span className="text-xs text-[#c29a6b]">
+                                {acheteurs.length} / {exclusifPris ? '1 (exclu)' : '3'}
+                              </span>
+                            </div>
+
+                            {acheteurs.length === 0 ? (
+                              <p className="text-xs text-gray-600 italic">Aucun acheteur pour l'instant</p>
+                            ) : (
+                              <div className="space-y-3">
+                                {acheteurs.map((ac: any, i: number) => (
+                                  <div key={i} className="text-xs border-t border-white/5 pt-2 first:border-0 first:pt-0">
+                                    <div className="flex items-center justify-between">
+                                      <p className="text-white font-medium">{ac.profiles?.societe || `${ac.profiles?.prenom} ${ac.profiles?.nom}`}</p>
+                                      <span className={`px-2 py-0.5 rounded-full text-xs ${ac.mode === 'exclusif' ? 'bg-[#c29a6b]/20 text-[#c29a6b]' : 'bg-blue-500/20 text-blue-400'}`}>
+                                        {ac.mode === 'exclusif' ? 'Exclu' : 'Partagé'}
+                                      </span>
+                                    </div>
+                                    <p className="text-gray-500 mt-0.5">{formatDate(ac.created_at)}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            <div className="mt-3 pt-3 border-t border-white/10">
+                              <div className="flex justify-between text-xs">
+                                <span className="text-gray-500">Revenu estimé</span>
+                                <span className="text-[#c29a6b] font-bold">
+                                  {acheteurs.length === 0 ? '—' : `${(getPrixLabel(lead.prix, acheteurs.length) * acheteurs.length).toLocaleString('fr-FR')} €`}
+                                </span>
+                              </div>
+                              <div className="flex justify-between text-xs mt-1">
+                                <span className="text-gray-500">Exclusivité</span>
+                                <span className={exclusifPris ? 'text-red-400' : 'text-green-400'}>
+                                  {exclusifPris ? 'Prise' : 'Disponible'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </>
         )}
 
-        {/* LEADS ACHETÉS */}
+        {/* ════ LEADS ACHETÉS ════ */}
         {section === 'achetes' && (
           <div className="text-center py-16 text-gray-500">
             <ShoppingCart className="w-8 h-8 mx-auto mb-3" />
@@ -251,7 +416,7 @@ export default function DashboardAdmin() {
           </div>
         )}
 
-        {/* SANS ACQUÉREUR */}
+        {/* ════ SANS ACQUÉREUR ════ */}
         {section === 'expires' && (
           <div className="text-center py-16 text-gray-500">
             <Ban className="w-8 h-8 mx-auto mb-3" />
@@ -276,7 +441,6 @@ export default function DashboardAdmin() {
                 </button>
               </div>
 
-              {/* Photos */}
               {selected.photos_urls?.length > 0 && (
                 <div className="mb-6">
                   <p className="text-xs text-gray-500 uppercase tracking-widest mb-3">Photos ({selected.photos_urls.length})</p>
@@ -294,7 +458,6 @@ export default function DashboardAdmin() {
                 </div>
               )}
 
-              {/* Infos */}
               <div className="grid grid-cols-3 gap-3 mb-6">
                 {[
                   { label: 'Prix demandé', val: `${Number(selected.prix).toLocaleString('fr-FR')} €` },
@@ -308,7 +471,29 @@ export default function DashboardAdmin() {
                 ))}
               </div>
 
-              {/* Apporteur */}
+              {/* Grille de prix applicable */}
+              <div className="bg-[#c29a6b]/5 border border-[#c29a6b]/20 rounded-xl p-4 mb-6">
+                <p className="text-xs text-[#c29a6b] uppercase tracking-widest mb-3">Grille de prix applicable</p>
+                {(() => { const g = getPrix(selected.prix); return (
+                  <div className="grid grid-cols-3 gap-3 text-center text-xs">
+                    <div className="bg-white/5 rounded-lg p-3">
+                      <p className="text-gray-400 mb-1">Exclusif</p>
+                      <p className="text-white font-bold text-base">{g.exclu} €</p>
+                    </div>
+                    <div className="bg-white/5 rounded-lg p-3">
+                      <p className="text-gray-400 mb-1">Partagé × 2</p>
+                      <p className="text-white font-bold text-base">{g.deux} €</p>
+                      <p className="text-gray-500">/ acheteur</p>
+                    </div>
+                    <div className="bg-white/5 rounded-lg p-3">
+                      <p className="text-gray-400 mb-1">Partagé × 3</p>
+                      <p className="text-white font-bold text-base">{g.trois} €</p>
+                      <p className="text-gray-500">/ acheteur</p>
+                    </div>
+                  </div>
+                )})()}
+              </div>
+
               {apporteur && (
                 <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-6">
                   <p className="text-xs text-[#c29a6b] uppercase tracking-widest mb-3">Apporteur</p>
@@ -317,7 +502,6 @@ export default function DashboardAdmin() {
                 </div>
               )}
 
-              {/* Description */}
               {selected.description && (
                 <div className="mb-4">
                   <p className="text-xs text-gray-500 uppercase tracking-widest mb-2">Description</p>
@@ -325,7 +509,6 @@ export default function DashboardAdmin() {
                 </div>
               )}
 
-              {/* Potentiel */}
               {selected.potentiel && (
                 <div className="mb-6">
                   <p className="text-xs text-gray-500 uppercase tracking-widest mb-2">Potentiel identifié</p>
@@ -335,17 +518,15 @@ export default function DashboardAdmin() {
                 </div>
               )}
 
-              {/* Réponse admin existante */}
               {selected.reponse_admin && (
                 <div className="mb-6">
                   <p className="text-xs text-gray-500 uppercase tracking-widest mb-3">Réponse envoyée</p>
-                  <div className={`p-4 rounded-xl border text-sm leading-relaxed ${
-                    selected.statut === 'diffuse' ? 'border-green-500/20 bg-green-500/5 text-green-300' : 'border-red-500/20 bg-red-500/5 text-red-300'
-                  }`}>{selected.reponse_admin}</div>
+                  <div className={`p-4 rounded-xl border text-sm leading-relaxed ${selected.statut === 'diffuse' ? 'border-green-500/20 bg-green-500/5 text-green-300' : 'border-red-500/20 bg-red-500/5 text-red-300'}`}>
+                    {selected.reponse_admin}
+                  </div>
                 </div>
               )}
 
-              {/* Zone de décision */}
               <div className="border-t border-white/10 pt-6">
                 {sent ? (
                   <div className="text-center py-6">
