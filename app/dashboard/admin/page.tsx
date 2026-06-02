@@ -81,7 +81,7 @@ export default function DashboardAdmin() {
     setLoading(true)
     const { data } = await supabase
       .from('biens')
-      .select('*, profiles!biens_apporteur_id_fkey(prenom, nom, tel, statut_pro)')
+      .select('*, profiles!biens_apporteur_id_fkey(prenom, nom, tel, email, statut_pro)')
       .order('created_at', { ascending: false })
     setBiens(data || [])
     setLoading(false)
@@ -139,6 +139,22 @@ export default function DashboardAdmin() {
           photos_urls: [],
         }).eq('id', selected.id)
       }
+      // Envoyer email au vendeur
+      if (apporteur?.email) {
+        await fetch('/api/emails/notify-vendeur', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: apporteur.email,
+            prenom: apporteur.prenom,
+            type: selected.type,
+            ville: selected.ville,
+            decision,
+            message: reponse,
+          }),
+        })
+      }
+
       await loadBiens()
       setSent(true)
     } catch (err: any) {
