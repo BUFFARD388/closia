@@ -266,7 +266,13 @@ export default function DashboardAdmin() {
                   <p className="text-xs text-gray-500 uppercase tracking-widest mb-3">Photos ({selected.photos_urls.length})</p>
                   <div className="grid grid-cols-3 gap-2">
                     {selected.photos_urls.map((url: string, i: number) => (
-                      <img key={i} src={url} alt={`Photo ${i + 1}`} className="w-full h-24 object-cover rounded-lg" />
+                      <div key={i} className="relative group">
+                        <img src={url} alt={`Photo ${i + 1}`} className="w-full h-24 object-cover rounded-lg" />
+                        <a href={url} download target="_blank" rel="noreferrer"
+                          className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
+                          <Download className="w-5 h-5 text-white" />
+                        </a>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -366,4 +372,3 @@ export default function DashboardAdmin() {
     </div>
   )
 }
-
