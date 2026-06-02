@@ -21,8 +21,7 @@ export default function LoginPage() {
     try {
       const { user } = await signIn(email, password)
       // Récupérer le rôle pour rediriger vers le bon dashboard
-      const { createClient } = await import('@/lib/supabase')
-      const supabase = createClient()
+      const { supabase } = await import('@/lib/supabase')
       const { data: profile } = await supabase
         .from('profiles')
         .select('role')
@@ -103,3 +102,4 @@ export default function LoginPage() {
     </div>
   )
 }
+
