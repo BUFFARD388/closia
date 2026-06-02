@@ -23,6 +23,11 @@ export default function RegisterAcheteur() {
     setError('')
     try {
       await signUp({ ...form, role: 'acheteur' })
+      await fetch('/api/emails/bienvenue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: form.email, prenom: form.prenom, role: 'acheteur' }),
+      })
       setStep(2)
     } catch (err: any) {
       setError(err.message === 'User already registered'
