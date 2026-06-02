@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, ArrowLeft, Loader2 } from 'lucide-react'
 import { signIn } from '@/lib/auth'
+import { supabase } from '@/lib/supabase'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -21,7 +22,6 @@ export default function LoginPage() {
     try {
       const { user } = await signIn(email, password)
       // Récupérer le rôle pour rediriger vers le bon dashboard
-      const { supabase } = await import('@/lib/supabase')
       const { data: profile } = await supabase
         .from('profiles')
         .select('role')
