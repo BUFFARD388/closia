@@ -53,7 +53,28 @@ export default function DashboardAcheteur() {
     if (params.get('payment') === 'success') {
       const achatId = params.get('achatId')
       if (achatId) {
-        supabase.from('achats').update({ statut: 'confirme' }).eq('id', achatId).then(() => {
+        supabase.from('achats').update({ statut: 'confirme' }).eq('id', achatId).then(async () => {
+          // Email confirmation achat exclusif
+          const { data: achat } = await supabase
+            .from('achats')
+            .select('*, biens(*)')
+            .eq('id', achatId)
+            .single()
+          if (achat && userProfile) {
+            await fetch('/api/emails/confirm-achat', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                email: userProfile.email,
+                prenom: userProfile.prenom,
+                type: achat.biens?.type,
+                ville: achat.biens?.ville,
+                cp: achat.biens?.cp,
+                mode: 'exclusif',
+                montant: achat.montant_paye,
+              }),
+            })
+          }
           window.history.replaceState({}, '', '/dashboard/acheteur')
         })
       }
@@ -130,8 +151,21 @@ export default function DashboardAcheteur() {
     if (error) { alert('Erreur : ' + error.message); return }
 
     if (buyMode === 'partage') {
-      // Pas de paiement immédiat pour le partagé
       await loadLeads(userId)
+      // Email confirmation liste d'attente
+      await fetch('/api/emails/confirm-achat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: userProfile?.email,
+          prenom: userProfile?.prenom,
+          type: selectedLead.type,
+          ville: selectedLead.ville,
+          cp: selectedLead.cp,
+          mode: 'partage',
+          montant: null,
+        }),
+      })
       setPayStep('confirm')
       return
     }
