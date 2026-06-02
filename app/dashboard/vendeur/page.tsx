@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   Plus, Building2, Clock, CheckCircle, Archive, LogOut,
   ChevronRight, Timer, Euro, MapPin, FileText, Eye, X,
-  Upload, ImageIcon, File, AlertCircle, Loader2
+  Upload, ImageIcon, File, AlertCircle, Loader2, ShoppingCart
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { soumettreUnBien } from '@/lib/biens'
@@ -14,6 +14,7 @@ const TABS = [
   { key: 'tous', label: 'Tous', icon: <Building2 className="w-4 h-4" /> },
   { key: 'pending', label: 'En analyse', icon: <Clock className="w-4 h-4" /> },
   { key: 'diffuse', label: 'Diffusés', icon: <Timer className="w-4 h-4" /> },
+  { key: 'achetes', label: 'Leads achetés', icon: <ShoppingCart className="w-4 h-4" /> },
   { key: 'rejected', label: 'Refusés', icon: <X className="w-4 h-4" /> },
   { key: 'archive', label: 'Archivés', icon: <Archive className="w-4 h-4" /> },
 ]
@@ -93,6 +94,7 @@ export default function DashboardVendeur() {
   const [showModal, setShowModal] = useState(false)
   const [step, setStep] = useState(1)
   const [biens, setBiens] = useState<any[]>([])
+  const [biensAchetes, setBiensAchetes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
@@ -140,6 +142,15 @@ export default function DashboardVendeur() {
       .eq('apporteur_id', uid)
       .order('created_at', { ascending: false })
     if (!error) setBiens(data || [])
+
+    // Biens achetés avec infos acheteurs
+    const { data: achatsData } = await supabase
+      .from('achats')
+      .select('*, biens!inner(*), profiles!achats_acheteur_id_fkey(prenom, nom, societe, tel, email, profil_type)')
+      .eq('biens.apporteur_id', uid)
+      .eq('statut', 'confirme')
+    setBiensAchetes(achatsData || [])
+
     setLoading(false)
   }
 
@@ -152,7 +163,7 @@ export default function DashboardVendeur() {
     return publicUrl
   }
 
-  const filtered = tab === 'tous' ? biens : biens.filter(b =>
+  const filtered = tab === 'achetes' ? [] : tab === 'tous' ? biens : biens.filter(b =>
     tab === 'pending' ? (b.statut === 'pending' || b.statut === 'analyse') :
     b.statut === tab
   )
@@ -263,9 +274,8 @@ export default function DashboardVendeur() {
                 {t.icon} {t.label}
                 {t.key !== 'tous' && (
                   <span className="ml-auto text-xs bg-white/10 px-2 py-0.5">
-                    {biens.filter(b =>
+                    {t.key === 'achetes' ? biensAchetes.length : biens.filter(b =>
                       t.key === 'pending' ? (b.statut === 'pending' || b.statut === 'analyse') :
-                      t.key === 'archive' ? (b.statut === 'archive' || b.statut === 'rejected') :
                       b.statut === t.key
                     ).length}
                   </span>
@@ -375,13 +385,63 @@ export default function DashboardVendeur() {
                   </div>
                 </div>
               ))}
-              {filtered.length === 0 && (
+              {filtered.length === 0 && tab !== 'achetes' && (
                 <div className="text-center py-16 text-gray-500">
                   <Building2 className="w-8 h-8 mx-auto mb-3" />
                   Aucun bien dans cette catégorie.
                 </div>
               )}
             </div>
+
+            {/* ── LEADS ACHETÉS ── */}
+            {tab === 'achetes' && (
+              <div className="space-y-4">
+                {biensAchetes.length === 0 ? (
+                  <div className="text-center py-16 text-gray-500">
+                    <ShoppingCart className="w-8 h-8 mx-auto mb-3" />
+                    Aucun lead acheté pour le moment.
+                  </div>
+                ) : biensAchetes.map((achat: any) => {
+                  const bien = achat.biens
+                  const acheteur = achat.profiles
+                  return (
+                    <div key={achat.id} className="bg-[#111720] border border-[#c29a6b]/30 rounded-xl overflow-hidden">
+                      <div className="flex">
+                        {bien.photos_urls?.length > 0 ? (
+                          <img src={bien.photos_urls[0]} alt={bien.type} className="w-32 h-full object-cover flex-shrink-0 hidden sm:block" style={{ minHeight: '120px' }} />
+                        ) : (
+                          <div className="w-32 flex-shrink-0 bg-[#c29a6b]/10 hidden sm:flex items-center justify-center" style={{ minHeight: '120px' }}>
+                            <ShoppingCart className="w-6 h-6 text-[#c29a6b]" />
+                          </div>
+                        )}
+                        <div className="flex-1 p-6">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-[#c29a6b]/20 text-[#c29a6b]">
+                              <CheckCircle className="w-3 h-3" /> Lead {achat.mode === 'exclusif' ? 'exclusif' : 'partagé'} acheté
+                            </span>
+                          </div>
+                          <h3 className="font-semibold text-lg">{bien.type}</h3>
+                          <div className="flex flex-wrap gap-x-4 mt-1 text-sm text-gray-400 mb-4">
+                            <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-[#c29a6b]" />{bien.adresse}, {bien.cp} {bien.ville}</span>
+                            <span className="flex items-center gap-1"><Euro className="w-3.5 h-3.5 text-[#c29a6b]" />{Number(bien.prix).toLocaleString('fr-FR')} €</span>
+                          </div>
+                          {/* Coordonnées acheteur */}
+                          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                            <p className="text-xs text-gray-500 uppercase tracking-widest mb-2">Acheteur</p>
+                            <div className="space-y-1 text-sm text-gray-300">
+                              <p>👤 {acheteur?.prenom} {acheteur?.nom} — {acheteur?.profil_type || 'Acheteur pro'}</p>
+                              {acheteur?.societe && <p>🏢 {acheteur.societe}</p>}
+                              {acheteur?.tel && <p>📞 {acheteur.tel}</p>}
+                              {acheteur?.email && <p>✉️ {acheteur.email}</p>}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           )}
         </main>
       </div>

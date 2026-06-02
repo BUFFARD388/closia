@@ -92,7 +92,10 @@ export default function DashboardAcheteur() {
     setLoading(false)
   }
 
+  const achetesIds = new Set(leadsAchetes.map((a: any) => a.bien_id))
+
   const filtered = leads.filter(l => {
+    if (achetesIds.has(l.id)) return false // masquer les leads déjà achetés
     if (prixMax && l.prix > parseInt(prixMax)) return false
     if (typeFilter !== 'Tous' && l.type !== typeFilter) return false
     if (search) {
