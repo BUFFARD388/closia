@@ -279,10 +279,11 @@ export default function DashboardVendeur() {
                 {t.icon} {t.label}
                 {t.key !== 'tous' && (
                   <span className="ml-auto text-xs bg-white/10 px-2 py-0.5">
-                    {t.key === 'achetes' ? biensAchetes.length : biens.filter(b =>
-                      t.key === 'pending' ? (b.statut === 'pending' || b.statut === 'analyse') :
-                      b.statut === t.key
-                    ).length}
+                    {t.key === 'achetes' ? biensAchetes.length : biens.filter(b => {
+                      if (biensAchetesIds.has(b.id)) return false
+                      if (t.key === 'pending') return b.statut === 'pending' || b.statut === 'analyse'
+                      return b.statut === t.key
+                    }).length}
                   </span>
                 )}
               </button>
