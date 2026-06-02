@@ -2,20 +2,45 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react'
+import { supabase } from '@/lib/supabaseClient'
 
 export default function LoginPage() {
+  const router = useRouter()
   const [show, setShow] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setErrorMessage('')
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    })
+
+    setLoading(false)
+
+    if (error) {
+      setErrorMessage(error.message)
+      return
+    }
+
+    router.push('/dashboard')
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
-        {/* Logo */}
         <Link href="/" className="flex items-center gap-2 text-gray-400 hover:text-white text-sm mb-8 transition-colors">
           <ArrowLeft className="w-4 h-4" /> Retour à l'accueil
         </Link>
+
         <div className="text-center mb-8">
           <img src="/logo.png" alt="Closia" className="h-16 w-auto mx-auto" />
           <h1 className="text-xl font-semibold mt-3 mb-1">Connexion</h1>
@@ -23,7 +48,11 @@ export default function LoginPage() {
         </div>
 
         <div className="card rounded-xl">
-          <form onSubmit={e => e.preventDefault()} className="space-y-5">
+          <form onSubmit={handleLogin} className="space-y-5">
+            {errorMessage && (
+              <div className="text-red-500 text-sm">{errorMessage}</div>
+            )}
+
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
               <input
@@ -32,8 +61,10 @@ export default function LoginPage() {
                 placeholder="vous@exemple.fr"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
+                required
               />
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">Mot de passe</label>
               <div className="relative">
@@ -43,6 +74,7 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
+                  required
                 />
                 <button
                   type="button"
@@ -54,16 +86,8 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2 text-gray-400 cursor-pointer">
-                <input type="checkbox" className="rounded" />
-                Se souvenir de moi
-              </label>
-              <a href="#" className="text-gold-500 hover:underline">Mot de passe oublié ?</a>
-            </div>
-
-            <button type="submit" className="btn-primary w-full justify-center">
-              Se connecter
+            <button type="submit" className="btn-primary w-full justify-center" disabled={loading}>
+              {loading ? 'Connexion…' : 'Se connecter'}
             </button>
           </form>
 
