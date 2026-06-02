@@ -192,8 +192,15 @@ export default function DashboardAdmin() {
                         {b.photos_urls?.length > 0 ? (
                           <img src={b.photos_urls[0]} alt={b.type} className="w-16 h-16 object-cover rounded-lg flex-shrink-0" />
                         ) : (
-                          <div className="w-16 h-16 bg-white/5 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <ImageIcon className="w-5 h-5 text-gray-600" />
+                          <div className={`w-16 h-16 rounded-lg flex flex-col items-center justify-center flex-shrink-0 gap-0.5 ${b.statut === 'rejected' ? 'bg-red-500/10' : 'bg-white/5'}`}>
+                            {b.statut === 'rejected' ? (
+                              <>
+                                <XCircle className="w-5 h-5 text-red-400" />
+                                <span className="text-xs text-red-400">Refusé</span>
+                              </>
+                            ) : (
+                              <ImageIcon className="w-5 h-5 text-gray-600" />
+                            )}
                           </div>
                         )}
                         <div className="flex-1">

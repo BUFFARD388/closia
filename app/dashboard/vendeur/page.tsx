@@ -331,8 +331,15 @@ export default function DashboardVendeur() {
                       <img src={bien.photos_urls[0]} alt={bien.type}
                         className="w-32 h-full object-cover flex-shrink-0 hidden sm:block" style={{ minHeight: '120px' }} />
                     ) : (
-                      <div className="w-32 flex-shrink-0 bg-white/5 hidden sm:flex items-center justify-center" style={{ minHeight: '120px' }}>
-                        <ImageIcon className="w-8 h-8 text-gray-600" />
+                      <div className={`w-32 flex-shrink-0 hidden sm:flex flex-col items-center justify-center gap-1 ${bien.statut === 'rejected' ? 'bg-red-500/10' : 'bg-white/5'}`} style={{ minHeight: '120px' }}>
+                        {bien.statut === 'rejected' ? (
+                          <>
+                            <X className="w-6 h-6 text-red-400" />
+                            <span className="text-xs text-red-400 font-medium">Refusé</span>
+                          </>
+                        ) : (
+                          <ImageIcon className="w-8 h-8 text-gray-600" />
+                        )}
                       </div>
                     )}
                     <div className="flex-1 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
