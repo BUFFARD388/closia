@@ -649,6 +649,14 @@ export default function DashboardVendeur() {
                       </div>
                     </div>
                   </div>
+
+                  <div className="flex items-start gap-3 bg-[#c29a6b]/5 border border-[#c29a6b]/20 rounded-xl p-4">
+                    <CheckCircle className="w-4 h-4 text-[#c29a6b] flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-gray-300 leading-relaxed">
+                      Si l'ensemble des éléments sont conformes et que l'analyse valide votre dossier, votre bien sera <span className="text-[#c29a6b] font-medium">automatiquement diffusé aux acheteurs professionnels</span> de notre réseau.
+                    </p>
+                  </div>
+
                   <div className="flex gap-3 pt-2">
                     <button type="button" onClick={resetModal} className="btn-outline flex-1 justify-center">Annuler</button>
                     <button type="submit" className="btn-primary flex-1 justify-center">Suivant <ChevronRight className="w-4 h-4" /></button>
