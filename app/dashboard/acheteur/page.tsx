@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Search, Filter, MapPin, Euro, Timer, Clock, LogOut,
-  ShoppingCart, Star, Archive, X, CheckCircle, Lock, Users, Zap, Loader2
+  ShoppingCart, Star, X, CheckCircle, Lock, Users, Zap, Loader2
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
@@ -28,7 +28,6 @@ function timerColor(h: number) {
 const TABS = [
   { key: 'disponibles', label: 'Leads disponibles', icon: <Zap className="w-4 h-4" /> },
   { key: 'achetes', label: 'Mes leads achetés', icon: <Star className="w-4 h-4" /> },
-  { key: 'archives', label: 'Archivés', icon: <Archive className="w-4 h-4" /> },
 ]
 
 export default function DashboardAcheteur() {
@@ -414,13 +413,6 @@ export default function DashboardAcheteur() {
           </div>
         )}
 
-        {/* ════ ARCHIVÉS ════ */}
-        {tab === 'archives' && (
-          <div className="text-center py-16 text-gray-500">
-            <Archive className="w-8 h-8 mx-auto mb-3" />
-            Aucun lead archivé.
-          </div>
-        )}
       </main>
 
       {/* ════ MODAL ACHAT ════ */}
