@@ -48,6 +48,19 @@ export default function DashboardAcheteur() {
 
   useEffect(() => { init() }, [])
 
+  // Confirmer l'achat exclusif au retour de Stripe
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('payment') === 'success') {
+      const achatId = params.get('achatId')
+      if (achatId) {
+        supabase.from('achats').update({ statut: 'confirme' }).eq('id', achatId).then(() => {
+          window.history.replaceState({}, '', '/dashboard/acheteur')
+        })
+      }
+    }
+  }, [])
+
   async function init() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/auth/login'); return }
@@ -316,16 +329,30 @@ export default function DashboardAcheteur() {
                             <span className="mx-2">·</span>
                             <Euro className="w-3.5 h-3.5 text-gold-500" /> {Number(bien.prix).toLocaleString('fr-FR')} €
                           </p>
-                          {achat.statut === 'confirme' ? (
-                            <div className="mt-4 bg-navy-700/60 rounded-xl p-4 border border-navy-600">
-                              <div className="flex items-center gap-2 text-gold-500 text-sm font-medium mb-2">
+                          {achat.mode === 'exclusif' && achat.statut === 'confirme' ? (
+                            <div className="mt-4 bg-[#c29a6b]/10 border border-[#c29a6b]/30 rounded-xl p-4">
+                              <div className="flex items-center gap-2 text-[#c29a6b] text-sm font-medium mb-2">
                                 <CheckCircle className="w-4 h-4" /> Coordonnées vendeur déverrouillées
                               </div>
-                              <p className="text-sm text-gray-300">Les coordonnées seront disponibles ici après confirmation du paiement.</p>
+                              <div className="space-y-1 text-sm text-gray-300">
+                                <p>📍 {bien.adresse}, {bien.cp} {bien.ville}</p>
+                                <p className="text-xs text-gray-500 mt-2">Les coordonnées complètes de l'apporteur seront affichées ici prochainement.</p>
+                              </div>
+                            </div>
+                          ) : achat.mode === 'exclusif' ? (
+                            <div className="mt-4 bg-orange-500/5 border border-orange-500/20 rounded-xl p-4">
+                              <p className="text-xs text-orange-300">Paiement en cours de confirmation…</p>
+                            </div>
+                          ) : achat.statut === 'confirme' ? (
+                            <div className="mt-4 bg-[#c29a6b]/10 border border-[#c29a6b]/30 rounded-xl p-4">
+                              <div className="flex items-center gap-2 text-[#c29a6b] text-sm font-medium mb-2">
+                                <CheckCircle className="w-4 h-4" /> Paiement confirmé — Coordonnées déverrouillées
+                              </div>
+                              <p className="text-xs text-gray-400">Les coordonnées complètes de l'apporteur seront affichées ici prochainement.</p>
                             </div>
                           ) : (
-                            <div className="mt-4 bg-orange-500/5 border border-orange-500/20 rounded-xl p-4">
-                              <p className="text-xs text-orange-300">En attente de la clôture du lead (72h). Vous recevrez un email avec le prix final.</p>
+                            <div className="mt-4 bg-blue-500/5 border border-blue-500/20 rounded-xl p-4">
+                              <p className="text-xs text-blue-300">⏳ En attente de la clôture du lead (72h). Vous recevrez un email avec le prix final à payer.</p>
                             </div>
                           )}
                         </>
