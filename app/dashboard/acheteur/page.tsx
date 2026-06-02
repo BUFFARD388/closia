@@ -583,3 +583,44 @@ export default function DashboardAcheteur() {
   )
 }
 
+                        <div className="bg-[#060d1a] border border-blue-500/30 rounded-xl p-5 mb-6">
+                          <p className="text-sm font-semibold text-white mb-2">⏳ Inscription sans paiement</p>
+                          <p className="text-xs text-gray-400">Aucun paiement aujourd'hui. À la clôture du lead, vous recevrez votre prix final.</p>
+                        </div>
+                        <button onClick={handleBuy}
+                          className="w-full justify-center inline-flex items-center text-xs tracking-widest uppercase bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-3.5 rounded-xl transition-colors">
+                          Confirmer mon inscription — Sans paiement
+                        </button>
+                      </>
+                    )}
+                  </>
+                )
+              })()}
+
+              {payStep === 'confirm' && (
+                <div className="py-4 text-center">
+                  <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${buyMode === 'exclu' ? 'bg-[#c29a6b]/20' : 'bg-blue-500/20'}`}>
+                    <CheckCircle className={`w-8 h-8 ${buyMode === 'exclu' ? 'text-[#c29a6b]' : 'text-blue-400'}`} />
+                  </div>
+                  <h3 className="text-xl font-bold mb-2">
+                    {buyMode === 'exclu' ? 'Achat confirmé !' : 'Inscription confirmée !'}
+                  </h3>
+                  <p className="text-gray-400 text-sm mb-6">
+                    {buyMode === 'exclu'
+                      ? 'Votre accès exclusif est enregistré. Les coordonnées seront disponibles après intégration du paiement.'
+                      : "Vous êtes inscrit sur la liste d'attente. Aucun paiement débité."}
+                  </p>
+                  <button onClick={() => { setSelectedLead(null); setTab('achetes') }}
+                    className="w-full justify-center inline-flex items-center text-xs tracking-widest uppercase bg-[#c29a6b] text-black font-semibold px-6 py-3.5 rounded-xl hover:bg-[#b8911f] transition-colors">
+                    Voir mes leads
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
