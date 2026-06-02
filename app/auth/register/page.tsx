@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
@@ -9,7 +8,6 @@ import { supabase } from '@/lib/supabaseClient'
 function RegisterForm() {
   const params = useSearchParams()
   const router = useRouter()
-
   const defaultRole = params.get('role') || ''
   const [role, setRole] = useState<'vendeur' | 'acheteur' | ''>(defaultRole as any)
   const [step, setStep] = useState(1)
@@ -23,13 +21,12 @@ function RegisterForm() {
   const [profil, setProfil] = useState('')
   const [statut, setStatut] = useState('')
   const [password, setPassword] = useState('')
-
   const [loading, setLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('handleRegister called', { email, password }) //
+    console.log('handleRegister called', { email, password })
     setLoading(true)
     setErrorMessage('')
 
@@ -65,19 +62,16 @@ function RegisterForm() {
         <Link href="/" className="flex items-center gap-2 text-gray-400 hover:text-white text-sm mb-8 transition-colors">
           <ArrowLeft className="w-4 h-4" /> Retour à l'accueil
         </Link>
-
         <div className="text-center mb-8">
           <img src="/logo.png" alt="Closia" className="h-16 w-auto mx-auto" />
           <h1 className="text-xl font-semibold mt-3 mb-1">Créer un compte</h1>
           <p className="text-gray-400 text-sm">Inscription gratuite · Accès immédiat aux leads</p>
         </div>
-
         <div className="card">
           {/* Étape 1 */}
           {step === 1 && (
             <div>
               <h2 className="font-semibold text-center mb-6">Vous êtes…</h2>
-
               <div className="grid grid-cols-2 gap-4 mb-8">
                 <button
                   onClick={() => setRole('vendeur')}
@@ -90,7 +84,6 @@ function RegisterForm() {
                   <Building2 className="w-8 h-8 mx-auto mb-3" />
                   <div className="font-semibold">Apporteur</div>
                 </button>
-
                 <button
                   onClick={() => setRole('acheteur')}
                   className={`p-5 rounded-xl border-2 transition-all text-center ${
@@ -103,7 +96,6 @@ function RegisterForm() {
                   <div className="font-semibold">Acheteur pro</div>
                 </button>
               </div>
-
               <button
                 disabled={!role}
                 onClick={() => setStep(2)}
@@ -125,20 +117,16 @@ function RegisterForm() {
                   {role === 'vendeur' ? 'Compte apporteur' : 'Compte acheteur pro'}
                 </h2>
               </div>
-
               <form onSubmit={handleRegister} className="space-y-4">
                 {errorMessage && (
                   <div className="text-red-500 text-sm">{errorMessage}</div>
                 )}
-
                 <div className="grid grid-cols-2 gap-4">
                   <input className="input" placeholder="Prénom" value={firstName} onChange={e => setFirstName(e.target.value)} required />
                   <input className="input" placeholder="Nom" value={lastName} onChange={e => setLastName(e.target.value)} required />
                 </div>
-
                 <input type="email" className="input" placeholder="Email professionnel" value={email} onChange={e => setEmail(e.target.value)} required />
                 <input type="tel" className="input" placeholder="Téléphone" value={phone} onChange={e => setPhone(e.target.value)} required />
-
                 {role === 'acheteur' && (
                   <>
                     <input className="input" placeholder="Société" value={company} onChange={e => setCompany(e.target.value)} />
@@ -151,7 +139,6 @@ function RegisterForm() {
                     </select>
                   </>
                 )}
-
                 {role === 'vendeur' && (
                   <select className="input" value={statut} onChange={e => setStatut(e.target.value)}>
                     <option value="">Statut…</option>
@@ -161,9 +148,7 @@ function RegisterForm() {
                     <option>Autre</option>
                   </select>
                 )}
-
                 <input type="password" className="input" placeholder="Mot de passe" value={password} onChange={e => setPassword(e.target.value)} required />
-
                 <button type="submit" className="btn-primary w-full justify-center" disabled={loading}>
                   {loading ? 'Création…' : 'Créer mon compte'}
                 </button>
