@@ -68,8 +68,9 @@ export default function DashboardAdmin() {
   async function checkAdmin() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/auth/login'); return }
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-    if (profile?.role !== 'admin') router.push('/')
+    const { data: profile, error } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    console.log('checkAdmin profile:', profile, 'error:', error, 'userId:', user.id)
+    if (profile && profile.role !== 'admin') router.push('/')
   }
 
   async function loadBiens() {
