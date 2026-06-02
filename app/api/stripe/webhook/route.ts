@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (event.type === 'checkout.session.completed') {
-    const session = event.data.object as Stripe.CheckoutSession
+    const session = event.data.object as any
     const { achatId, bienId, mode } = session.metadata!
 
     // Confirmer l'achat
