@@ -94,6 +94,7 @@ export default function DashboardVendeur() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
+  const [userName, setUserName] = useState<{ prenom: string; nom: string } | null>(null)
   const [photos, setPhotos] = useState<UploadedFile[]>([])
   const [docs, setDocs] = useState<UploadedFile[]>([])
 
@@ -122,6 +123,8 @@ export default function DashboardVendeur() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/auth/login'); return }
       setUserId(user.id)
+      const { data: profile } = await supabase.from('profiles').select('prenom, nom').eq('id', user.id).single()
+      if (profile) setUserName({ prenom: profile.prenom || '', nom: profile.nom || '' })
       await loadBiens(user.id)
     }
     init()
@@ -240,6 +243,16 @@ export default function DashboardVendeur() {
           <div className="mb-10">
             <img src="/logo.png" alt="Closia" className="h-12 w-auto" />
             <div className="text-xs text-gray-500 mt-2">Espace apporteur</div>
+            {userName && (
+              <div className="mt-3 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-[#c29a6b]/20 flex items-center justify-center text-[#c29a6b] text-xs font-bold flex-shrink-0">
+                  {userName.prenom?.[0]}{userName.nom?.[0]}
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-white">{userName.prenom} {userName.nom}</p>
+                </div>
+              </div>
+            )}
           </div>
           <nav className="flex-1 space-y-1">
             {TABS.map(t => (
