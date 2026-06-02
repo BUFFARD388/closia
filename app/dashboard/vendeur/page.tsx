@@ -332,6 +332,7 @@ export default function DashboardVendeur() {
           {loading ? (
             <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-gray-500" /></div>
           ) : (
+            <>
             <div className="space-y-4">
               {filtered.map(bien => (
                 <div key={bien.id} className="bg-[#111720] border border-white/10 hover:border-white/20 transition-all rounded-xl overflow-hidden">
@@ -394,6 +395,7 @@ export default function DashboardVendeur() {
             </div>
 
             {/* ── LEADS ACHETÉS ── */}
+
             {tab === 'achetes' && (
               <div className="space-y-4">
                 {biensAchetes.length === 0 ? (
@@ -442,6 +444,8 @@ export default function DashboardVendeur() {
                 })}
               </div>
             )}
+            </>
+          )}
         </main>
       </div>
 
