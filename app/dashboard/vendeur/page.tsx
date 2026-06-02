@@ -14,13 +14,15 @@ const TABS = [
   { key: 'tous', label: 'Tous', icon: <Building2 className="w-4 h-4" /> },
   { key: 'pending', label: 'En analyse', icon: <Clock className="w-4 h-4" /> },
   { key: 'diffuse', label: 'Diffusés', icon: <Timer className="w-4 h-4" /> },
+  { key: 'rejected', label: 'Refusés', icon: <X className="w-4 h-4" /> },
   { key: 'archive', label: 'Archivés', icon: <Archive className="w-4 h-4" /> },
 ]
 
 function StatutBadge({ statut }: { statut: string }) {
   if (statut === 'pending' || statut === 'analyse') return <span className="tag-analysis"><Clock className="w-3 h-3" /> En analyse</span>
   if (statut === 'diffuse') return <span className="tag-live"><Timer className="w-3 h-3" /> Diffusé</span>
-  if (statut === 'archive' || statut === 'rejected') return <span className="tag-archived"><Archive className="w-3 h-3" /> Archivé</span>
+  if (statut === 'rejected') return <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-red-500/15 text-red-400 border border-red-500/20"><X className="w-3 h-3" /> Refusé</span>
+  if (statut === 'archive') return <span className="tag-archived"><Archive className="w-3 h-3" /> Archivé</span>
   return null
 }
 
@@ -152,7 +154,6 @@ export default function DashboardVendeur() {
 
   const filtered = tab === 'tous' ? biens : biens.filter(b =>
     tab === 'pending' ? (b.statut === 'pending' || b.statut === 'analyse') :
-    tab === 'archive' ? (b.statut === 'archive' || b.statut === 'rejected') :
     b.statut === tab
   )
 
@@ -345,6 +346,11 @@ export default function DashboardVendeur() {
                           )}
                         </div>
                         <h3 className="font-semibold text-lg">{bien.type}</h3>
+                        {bien.statut === 'rejected' && bien.reponse_admin && (
+                          <div className="mt-2 border-l-2 border-red-500/40 pl-3 text-xs text-red-300 italic">
+                            {bien.reponse_admin}
+                          </div>
+                        )}
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm text-gray-400">
                           <span className="flex items-center gap-1">
                             <MapPin className="w-3.5 h-3.5 text-[#c29a6b]" />

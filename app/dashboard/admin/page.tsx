@@ -86,9 +86,18 @@ export default function DashboardAdmin() {
           date_expiration: expiration.toISOString(),
         }).eq('id', selected.id)
       } else {
+        // Supprimer les fichiers du storage
+        if (selected.photos_urls?.length > 0) {
+          const paths = selected.photos_urls.map((url: string) => {
+            const parts = url.split('/closia-documents/')
+            return parts[1] || ''
+          }).filter(Boolean)
+          if (paths.length > 0) await supabase.storage.from('closia-documents').remove(paths)
+        }
         await supabase.from('biens').update({
           statut: 'rejected',
           reponse_admin: reponse,
+          photos_urls: [],
         }).eq('id', selected.id)
       }
       await loadBiens()
@@ -335,7 +344,9 @@ export default function DashboardAdmin() {
                   <div className="text-center py-6">
                     <CheckCircle className="w-10 h-10 text-[#c29a6b] mx-auto mb-3" />
                     <p className="font-semibold mb-1">Décision enregistrée</p>
-                    <p className="text-sm text-gray-400">Le statut du bien a été mis à jour.</p>
+                    <p className="text-sm text-gray-400">
+                      {decision === 'reject' ? 'Bien refusé. Photos et documents supprimés.' : 'Bien validé et mis en diffusion pour 72h.'}
+                    </p>
                     <button onClick={() => setSelected(null)} className="btn-primary mt-6 justify-center">Fermer</button>
                   </div>
                 ) : (
@@ -372,3 +383,4 @@ export default function DashboardAdmin() {
     </div>
   )
 }
+
