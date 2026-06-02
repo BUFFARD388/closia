@@ -1,11 +1,10 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   Plus, Building2, Clock, CheckCircle, Archive, LogOut,
-  ChevronRight, Timer, Euro, MapPin, FileText, Eye, Trash2, X,
+  ChevronRight, Timer, Euro, MapPin, FileText, Eye, X,
   Upload, ImageIcon, File, AlertCircle, Loader2
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -25,7 +24,7 @@ function StatutBadge({ statut }: { statut: string }) {
   return null
 }
 
-interface UploadedFile { name: string; size: number; type: string }
+interface UploadedFile { file: File; name: string; size: number; preview?: string }
 
 function FileDropZone({ label, accept, multiple, files, onFiles, icon }: {
   label: string; accept: string; multiple?: boolean
@@ -33,11 +32,17 @@ function FileDropZone({ label, accept, multiple, files, onFiles, icon }: {
 }) {
   const ref = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
+
   const handleFiles = (fileList: FileList) => {
-    const arr = Array.from(fileList).map(f => ({ name: f.name, size: f.size, type: f.type }))
+    const arr: UploadedFile[] = Array.from(fileList).map(f => ({
+      file: f, name: f.name, size: f.size,
+      preview: f.type.startsWith('image/') ? URL.createObjectURL(f) : undefined
+    }))
     onFiles(multiple ? [...files, ...arr] : arr)
   }
+
   const removeFile = (i: number) => onFiles(files.filter((_, idx) => idx !== i))
+
   return (
     <div>
       <label className="block text-sm font-medium text-gray-300 mb-2">{label}</label>
@@ -46,7 +51,7 @@ function FileDropZone({ label, accept, multiple, files, onFiles, icon }: {
         onDragOver={e => { e.preventDefault(); setDragging(true) }}
         onDragLeave={() => setDragging(false)}
         onDrop={e => { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files) }}
-        className={`border-2 border-dashed rounded-none p-6 text-center cursor-pointer transition-all ${dragging ? 'border-[#c29a6b] bg-[#c29a6b]/5' : 'border-white/20 hover:border-white/40'}`}
+        className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${dragging ? 'border-[#c29a6b] bg-[#c29a6b]/5' : 'border-white/20 hover:border-white/40'}`}
       >
         <input ref={ref} type="file" accept={accept} multiple={multiple} className="hidden"
           onChange={e => e.target.files && handleFiles(e.target.files)} />
@@ -55,16 +60,22 @@ function FileDropZone({ label, accept, multiple, files, onFiles, icon }: {
         <p className="text-xs text-gray-600 mt-1">{accept.replace(/\./g, '').replace(/,/g, ', ').toUpperCase()}</p>
       </div>
       {files.length > 0 && (
-        <div className="mt-2 space-y-1">
+        <div className="mt-3 grid grid-cols-3 gap-2">
           {files.map((f, i) => (
-            <div key={i} className="flex items-center justify-between bg-white/5 px-3 py-2 text-xs text-gray-300">
-              <span className="flex items-center gap-2 truncate">
-                <File className="w-3 h-3 flex-shrink-0 text-[#c29a6b]" />
-                <span className="truncate">{f.name}</span>
-                <span className="text-gray-600 flex-shrink-0">({(f.size / 1024).toFixed(0)} Ko)</span>
-              </span>
-              <button onClick={e => { e.stopPropagation(); removeFile(i) }} className="text-gray-500 hover:text-white ml-2 flex-shrink-0">
-                <X className="w-3 h-3" />
+            <div key={i} className="relative group">
+              {f.preview ? (
+                <img src={f.preview} alt={f.name} className="w-full h-20 object-cover rounded-lg" />
+              ) : (
+                <div className="w-full h-20 bg-white/5 rounded-lg flex flex-col items-center justify-center gap-1">
+                  <File className="w-5 h-5 text-[#c29a6b]" />
+                  <span className="text-xs text-gray-400 truncate px-2 w-full text-center">{f.name}</span>
+                </div>
+              )}
+              <button
+                onClick={e => { e.stopPropagation(); removeFile(i) }}
+                className="absolute top-1 right-1 bg-black/60 rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <X className="w-3 h-3 text-white" />
               </button>
             </div>
           ))}
@@ -91,6 +102,9 @@ export default function DashboardVendeur() {
   const [editDescription, setEditDescription] = useState('')
   const [editPotentiel, setEditPotentiel] = useState('')
   const [saving, setSaving] = useState(false)
+  const [detailPhotos, setDetailPhotos] = useState<UploadedFile[]>([])
+  const [detailDocs, setDetailDocs] = useState<UploadedFile[]>([])
+  const [uploadingDetail, setUploadingDetail] = useState(false)
 
   // Champs formulaire
   const [formType, setFormType] = useState('')
@@ -124,6 +138,15 @@ export default function DashboardVendeur() {
     setLoading(false)
   }
 
+  async function uploadFile(file: File, bienId: string, type: 'photo' | 'doc'): Promise<string> {
+    const ext = file.name.split('.').pop()
+    const path = `biens/${bienId}/${type}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+    const { error } = await supabase.storage.from('closia-documents').upload(path, file)
+    if (error) throw error
+    const { data: { publicUrl } } = supabase.storage.from('closia-documents').getPublicUrl(path)
+    return publicUrl
+  }
+
   const filtered = tab === 'tous' ? biens : biens.filter(b =>
     tab === 'pending' ? (b.statut === 'pending' || b.statut === 'analyse') :
     tab === 'archive' ? (b.statut === 'archive' || b.statut === 'rejected') :
@@ -139,22 +162,22 @@ export default function DashboardVendeur() {
   }
 
   const handleSubmit = async () => {
-    console.log('handleSubmit userId:', userId)
-    if (!userId) { alert('Non connecté - userId null'); return }
+    if (!userId) return
     setSubmitting(true)
     try {
-      await soumettreUnBien({
-        type: formType,
-        adresse: formAdresse,
-        cp: formCp,
-        ville: formVille,
-        prix: Number(formPrix),
-        surface: formSurface ? Number(formSurface) : undefined,
-        situation: formSituation,
-        description: formDescription,
-        potentiel: formPotentiel,
-        mandat_exclu: true,
+      const bien = await soumettreUnBien({
+        type: formType, adresse: formAdresse, cp: formCp, ville: formVille,
+        prix: Number(formPrix), surface: formSurface ? Number(formSurface) : undefined,
+        situation: formSituation, description: formDescription,
+        potentiel: formPotentiel, mandat_exclu: true,
       }, userId)
+
+      // Upload photos
+      if (photos.length > 0) {
+        const urls = await Promise.all(photos.map(p => uploadFile(p.file, bien.id, 'photo')))
+        await supabase.from('biens').update({ photos_urls: urls }).eq('id', bien.id)
+      }
+
       await loadBiens(userId)
       setStep(3)
     } catch (err: any) {
@@ -164,27 +187,50 @@ export default function DashboardVendeur() {
     }
   }
 
-  const formatDate = (d: string) => new Date(d).toLocaleDateString('fr-FR')
-
   const openDetail = (bien: any) => {
     setSelectedBien(bien)
     setEditDescription(bien.description || '')
     setEditPotentiel(bien.potentiel || '')
+    setDetailPhotos([])
+    setDetailDocs([])
   }
 
   const saveDetail = async () => {
-    if (!selectedBien) return
+    if (!selectedBien || !userId) return
     setSaving(true)
-    const { error } = await supabase
-      .from('biens')
-      .update({ description: editDescription, potentiel: editPotentiel })
-      .eq('id', selectedBien.id)
-    if (!error) {
-      await loadBiens(userId!)
-      setSelectedBien((prev: any) => ({ ...prev, description: editDescription, potentiel: editPotentiel }))
+    try {
+      // Upload nouveaux fichiers
+      let newPhotoUrls: string[] = []
+      if (detailPhotos.length > 0) {
+        newPhotoUrls = await Promise.all(detailPhotos.map(p => uploadFile(p.file, selectedBien.id, 'photo')))
+      }
+      const allUrls = [...(selectedBien.photos_urls || []), ...newPhotoUrls]
+
+      const { error } = await supabase.from('biens').update({
+        description: editDescription,
+        potentiel: editPotentiel,
+        ...(newPhotoUrls.length > 0 ? { photos_urls: allUrls } : {})
+      }).eq('id', selectedBien.id)
+
+      if (!error) {
+        await loadBiens(userId)
+        setSelectedBien((prev: any) => ({
+          ...prev,
+          description: editDescription,
+          potentiel: editPotentiel,
+          photos_urls: allUrls
+        }))
+        setDetailPhotos([])
+        setDetailDocs([])
+      }
+    } catch (err: any) {
+      alert('Erreur upload : ' + err.message)
+    } finally {
+      setSaving(false)
     }
-    setSaving(false)
   }
+
+  const formatDate = (d: string) => new Date(d).toLocaleDateString('fr-FR')
 
   return (
     <div className="min-h-screen bg-[#0b1220] text-white">
@@ -264,35 +310,44 @@ export default function DashboardVendeur() {
           ) : (
             <div className="space-y-4">
               {filtered.map(bien => (
-                <div key={bien.id} className="bg-[#111720] border border-white/10 p-6 hover:border-white/20 transition-all rounded-xl">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <StatutBadge statut={bien.statut} />
-                        {(bien.statut === 'pending' || bien.statut === 'analyse') && (
-                          <span className="text-xs text-blue-400 flex items-center gap-1">
-                            <AlertCircle className="w-3 h-3" /> Réponse sous 48h
+                <div key={bien.id} className="bg-[#111720] border border-white/10 hover:border-white/20 transition-all rounded-xl overflow-hidden">
+                  <div className="flex">
+                    {/* Miniature photo */}
+                    {bien.photos_urls?.length > 0 ? (
+                      <img src={bien.photos_urls[0]} alt={bien.type}
+                        className="w-32 h-full object-cover flex-shrink-0 hidden sm:block" style={{ minHeight: '120px' }} />
+                    ) : (
+                      <div className="w-32 flex-shrink-0 bg-white/5 hidden sm:flex items-center justify-center" style={{ minHeight: '120px' }}>
+                        <ImageIcon className="w-8 h-8 text-gray-600" />
+                      </div>
+                    )}
+                    <div className="flex-1 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <StatutBadge statut={bien.statut} />
+                          {(bien.statut === 'pending' || bien.statut === 'analyse') && (
+                            <span className="text-xs text-blue-400 flex items-center gap-1">
+                              <AlertCircle className="w-3 h-3" /> Réponse sous 48h
+                            </span>
+                          )}
+                        </div>
+                        <h3 className="font-semibold text-lg">{bien.type}</h3>
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm text-gray-400">
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-3.5 h-3.5 text-[#c29a6b]" />
+                            {bien.adresse}, {bien.cp} {bien.ville}
                           </span>
-                        )}
+                          <span className="flex items-center gap-1">
+                            <Euro className="w-3.5 h-3.5 text-[#c29a6b]" />
+                            {Number(bien.prix).toLocaleString('fr-FR')} €
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <FileText className="w-3.5 h-3.5" />
+                            Déposé le {formatDate(bien.created_at)}
+                          </span>
+                        </div>
                       </div>
-                      <h3 className="font-semibold text-lg">{bien.type}</h3>
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm text-gray-400">
-                        <span className="flex items-center gap-1">
-                          <MapPin className="w-3.5 h-3.5 text-[#c29a6b]" />
-                          {bien.adresse}, {bien.cp} {bien.ville}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Euro className="w-3.5 h-3.5 text-[#c29a6b]" />
-                          {Number(bien.prix).toLocaleString('fr-FR')} €
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <FileText className="w-3.5 h-3.5" />
-                          Déposé le {formatDate(bien.created_at)}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => openDetail(bien)} className="border border-white/10 p-2 hover:border-white/30 transition-colors">
+                      <button onClick={() => openDetail(bien)} className="border border-white/10 p-2 hover:border-[#c29a6b] hover:text-[#c29a6b] transition-colors self-start sm:self-center">
                         <Eye className="w-4 h-4" />
                       </button>
                     </div>
@@ -325,6 +380,18 @@ export default function DashboardVendeur() {
                 </button>
               </div>
 
+              {/* Photos existantes */}
+              {selectedBien.photos_urls?.length > 0 && (
+                <div className="mb-6">
+                  <p className="text-sm font-medium text-gray-300 mb-3">Photos ({selectedBien.photos_urls.length})</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {selectedBien.photos_urls.map((url: string, i: number) => (
+                      <img key={i} src={url} alt={`Photo ${i + 1}`} className="w-full h-24 object-cover rounded-lg" />
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Infos */}
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="bg-white/5 p-4 rounded-xl">
@@ -353,41 +420,32 @@ export default function DashboardVendeur() {
               <div className="space-y-4 mb-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
-                  <textarea
-                    className="input min-h-[80px] resize-none"
-                    value={editDescription}
-                    onChange={e => setEditDescription(e.target.value)}
-                    placeholder="Décrivez le bien…"
-                  />
+                  <textarea className="input min-h-[80px] resize-none" value={editDescription}
+                    onChange={e => setEditDescription(e.target.value)} placeholder="Décrivez le bien…" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Potentiel identifié</label>
-                  <textarea
-                    className="input min-h-[80px] resize-none"
-                    value={editPotentiel}
-                    onChange={e => setEditPotentiel(e.target.value)}
-                    placeholder="Division, surélévation, changement d'usage…"
-                  />
+                  <textarea className="input min-h-[80px] resize-none" value={editPotentiel}
+                    onChange={e => setEditPotentiel(e.target.value)} placeholder="Division, surélévation…" />
                 </div>
               </div>
 
-              {/* Ajout de documents */}
-              <div className="border-t border-white/10 pt-6 mb-6">
-                <p className="text-sm font-medium text-gray-300 mb-4">Ajouter des documents</p>
-                <FileDropZone
-                  label="Photos ou documents"
-                  accept=".jpg,.jpeg,.png,.webp,.pdf"
-                  multiple
-                  files={[]}
-                  onFiles={() => {}}
-                  icon={<Upload className="w-6 h-6 mx-auto" />}
-                />
+              {/* Ajout photos */}
+              <div className="border-t border-white/10 pt-6 mb-4">
+                <FileDropZone label="Ajouter des photos" accept=".jpg,.jpeg,.png,.webp" multiple
+                  files={detailPhotos} onFiles={setDetailPhotos} icon={<ImageIcon className="w-6 h-6 mx-auto" />} />
+              </div>
+
+              {/* Ajout documents */}
+              <div className="mb-6">
+                <FileDropZone label="Ajouter des documents" accept=".pdf,.jpg,.png,.docx" multiple
+                  files={detailDocs} onFiles={setDetailDocs} icon={<Upload className="w-6 h-6 mx-auto" />} />
               </div>
 
               <div className="flex gap-3">
                 <button onClick={() => setSelectedBien(null)} className="btn-outline flex-1 justify-center">Fermer</button>
                 <button onClick={saveDetail} disabled={saving} className="btn-primary flex-1 justify-center disabled:opacity-50">
-                  {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Enregistrement…</> : 'Enregistrer les modifications'}
+                  {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Enregistrement…</> : 'Enregistrer'}
                 </button>
               </div>
             </div>
@@ -452,7 +510,7 @@ export default function DashboardVendeur() {
                     <label className="block text-sm font-medium text-gray-300 mb-2">Situation du bien *</label>
                     <div className="grid grid-cols-2 gap-2">
                       {['Bien libre', 'Bien occupé (bail)', 'Bien occupé (titre)', 'En succession'].map(s => (
-                        <label key={s} className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer bg-white/5 px-3 py-2">
+                        <label key={s} className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer bg-white/5 px-3 py-2 rounded-lg">
                           <input type="radio" name="situation" value={s} className="accent-[#c29a6b]" required
                             checked={formSituation === s} onChange={() => setFormSituation(s)} />
                           {s}
@@ -517,11 +575,6 @@ export default function DashboardVendeur() {
                         onFiles={f => setDocs(prev => [...prev, ...f])} icon={<File className="w-6 h-6 mx-auto" />} />
                     </div>
                   </div>
-                  {docs.length + photos.length > 0 && (
-                    <div className="bg-white/5 p-3 text-xs text-gray-400">
-                      {photos.length} photo{photos.length > 1 ? 's' : ''} · {docs.length} document{docs.length > 1 ? 's' : ''} joints
-                    </div>
-                  )}
                   <div className="flex gap-3 pt-2">
                     <button onClick={() => setStep(1)} className="btn-outline flex-1 justify-center">Retour</button>
                     <button onClick={handleSubmit} disabled={submitting} className="btn-primary flex-1 justify-center disabled:opacity-50">
