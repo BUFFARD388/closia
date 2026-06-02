@@ -178,8 +178,8 @@ export default function DashboardAcheteur() {
             <button key={t.key} onClick={() => setTab(t.key)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all ${tab === t.key ? 'bg-gold-500/15 text-gold-400 font-medium' : 'text-gray-400 hover:text-white hover:bg-navy-700'}`}>
               {t.icon} {t.label}
-              {t.key === 'disponibles' && leads.length > 0 && (
-                <span className="ml-auto text-xs bg-gold-500/20 text-gold-400 rounded-full px-2 py-0.5">{leads.length}</span>
+              {t.key === 'disponibles' && filtered.length > 0 && (
+                <span className="ml-auto text-xs bg-gold-500/20 text-gold-400 rounded-full px-2 py-0.5">{filtered.length}</span>
               )}
               {t.key === 'achetes' && leadsAchetes.length > 0 && (
                 <span className="ml-auto text-xs bg-gold-500/20 text-gold-400 rounded-full px-2 py-0.5">{leadsAchetes.length}</span>
