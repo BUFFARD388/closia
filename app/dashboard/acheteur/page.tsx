@@ -213,9 +213,6 @@ export default function DashboardAcheteur() {
 
                   return (
                     <div key={lead.id} className="card hover:border-gold-500/40 transition-all flex flex-col">
-                      {lead.photos_urls?.length > 0 && (
-                        <img src={lead.photos_urls[0]} alt={lead.type} className="w-full h-40 object-cover rounded-xl mb-4 -mx-0" />
-                      )}
                       <div className="flex items-center justify-between mb-4">
                         <span className="tag-live"><Timer className="w-3 h-3" /> En ligne</span>
                         <span className={`text-xs flex items-center gap-1 font-medium ${timerColor(h)}`}>
