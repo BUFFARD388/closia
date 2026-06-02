@@ -333,18 +333,57 @@ export default function DashboardAcheteur() {
                             <Euro className="w-3.5 h-3.5 text-gold-500" /> {Number(bien.prix).toLocaleString('fr-FR')} €
                           </p>
                           {achat.statut === 'confirme' ? (
-                            <div className="mt-4 bg-[#c29a6b]/10 border border-[#c29a6b]/30 rounded-xl p-4">
-                              <div className="flex items-center gap-2 text-[#c29a6b] text-sm font-medium mb-3">
-                                <CheckCircle className="w-4 h-4" /> Coordonnées apporteur déverrouillées
-                              </div>
-                              {bien.profiles ? (
-                                <div className="space-y-1.5 text-sm text-gray-300">
-                                  <p>👤 {bien.profiles.prenom} {bien.profiles.nom} — {bien.profiles.statut_pro || 'Apporteur'}</p>
-                                  {bien.profiles.tel && <p>📞 {bien.profiles.tel}</p>}
-                                  {bien.profiles.email && <p>✉️ {bien.profiles.email}</p>}
+                            <div className="mt-4 space-y-4">
+                              {/* Coordonnées apporteur */}
+                              <div className="bg-[#c29a6b]/10 border border-[#c29a6b]/30 rounded-xl p-4">
+                                <div className="flex items-center gap-2 text-[#c29a6b] text-sm font-medium mb-3">
+                                  <CheckCircle className="w-4 h-4" /> Coordonnées apporteur
                                 </div>
-                              ) : (
-                                <p className="text-xs text-gray-400">Coordonnées en cours de chargement…</p>
+                                {bien.profiles ? (
+                                  <div className="space-y-1.5 text-sm text-gray-300">
+                                    <p>👤 {bien.profiles.prenom} {bien.profiles.nom} — {bien.profiles.statut_pro || 'Apporteur'}</p>
+                                    {bien.profiles.tel && <p>📞 {bien.profiles.tel}</p>}
+                                    {bien.profiles.email && <p>✉️ {bien.profiles.email}</p>}
+                                  </div>
+                                ) : (
+                                  <p className="text-xs text-gray-400">Coordonnées en cours de chargement…</p>
+                                )}
+                              </div>
+
+                              {/* Détails du bien */}
+                              <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                                <p className="text-xs text-gray-500 uppercase tracking-widest mb-3">Dossier complet</p>
+                                <div className="space-y-2 text-sm text-gray-300">
+                                  <p>📍 {bien.adresse}, {bien.cp} {bien.ville}</p>
+                                  {bien.surface && <p>📐 {bien.surface} m²</p>}
+                                  {bien.situation && <p>🏠 {bien.situation}</p>}
+                                </div>
+                                {bien.description && (
+                                  <div className="mt-3 pt-3 border-t border-white/10">
+                                    <p className="text-xs text-gray-500 mb-1">Description</p>
+                                    <p className="text-sm text-gray-300 leading-relaxed">{bien.description}</p>
+                                  </div>
+                                )}
+                                {bien.potentiel && (
+                                  <div className="mt-3 pt-3 border-t border-white/10">
+                                    <p className="text-xs text-gray-500 mb-1">Potentiel identifié</p>
+                                    <p className="text-sm text-[#c29a6b] italic leading-relaxed">{bien.potentiel}</p>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Photos */}
+                              {bien.photos_urls?.length > 0 && (
+                                <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                                  <p className="text-xs text-gray-500 uppercase tracking-widest mb-3">Photos ({bien.photos_urls.length})</p>
+                                  <div className="grid grid-cols-3 gap-2">
+                                    {bien.photos_urls.map((url: string, i: number) => (
+                                      <a key={i} href={url} target="_blank" rel="noreferrer">
+                                        <img src={url} alt={`Photo ${i+1}`} className="w-full h-20 object-cover rounded-lg hover:opacity-80 transition-opacity" />
+                                      </a>
+                                    ))}
+                                  </div>
+                                </div>
                               )}
                             </div>
                           ) : achat.mode === 'exclusif' ? (
