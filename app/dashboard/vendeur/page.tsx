@@ -86,6 +86,12 @@ export default function DashboardVendeur() {
   const [photos, setPhotos] = useState<UploadedFile[]>([])
   const [docs, setDocs] = useState<UploadedFile[]>([])
 
+  // Modal détail
+  const [selectedBien, setSelectedBien] = useState<any | null>(null)
+  const [editDescription, setEditDescription] = useState('')
+  const [editPotentiel, setEditPotentiel] = useState('')
+  const [saving, setSaving] = useState(false)
+
   // Champs formulaire
   const [formType, setFormType] = useState('')
   const [formAdresse, setFormAdresse] = useState('')
@@ -159,6 +165,26 @@ export default function DashboardVendeur() {
   }
 
   const formatDate = (d: string) => new Date(d).toLocaleDateString('fr-FR')
+
+  const openDetail = (bien: any) => {
+    setSelectedBien(bien)
+    setEditDescription(bien.description || '')
+    setEditPotentiel(bien.potentiel || '')
+  }
+
+  const saveDetail = async () => {
+    if (!selectedBien) return
+    setSaving(true)
+    const { error } = await supabase
+      .from('biens')
+      .update({ description: editDescription, potentiel: editPotentiel })
+      .eq('id', selectedBien.id)
+    if (!error) {
+      await loadBiens(userId!)
+      setSelectedBien((prev: any) => ({ ...prev, description: editDescription, potentiel: editPotentiel }))
+    }
+    setSaving(false)
+  }
 
   return (
     <div className="min-h-screen bg-[#0b1220] text-white">
@@ -266,7 +292,7 @@ export default function DashboardVendeur() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button className="border border-white/10 p-2 hover:border-white/30 transition-colors">
+                      <button onClick={() => openDetail(bien)} className="border border-white/10 p-2 hover:border-white/30 transition-colors">
                         <Eye className="w-4 h-4" />
                       </button>
                     </div>
@@ -283,6 +309,91 @@ export default function DashboardVendeur() {
           )}
         </main>
       </div>
+
+      {/* MODAL DÉTAIL */}
+      {selectedBien && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#111720] border border-white/10 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-bold">{selectedBien.type}</h2>
+                  <p className="text-xs text-gray-500 mt-1">{selectedBien.adresse}, {selectedBien.cp} {selectedBien.ville}</p>
+                </div>
+                <button onClick={() => setSelectedBien(null)} className="text-gray-400 hover:text-white">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Infos */}
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-white/5 p-4 rounded-xl">
+                  <p className="text-xs text-gray-500 mb-1">Prix demandé</p>
+                  <p className="font-semibold">{Number(selectedBien.prix).toLocaleString('fr-FR')} €</p>
+                </div>
+                <div className="bg-white/5 p-4 rounded-xl">
+                  <p className="text-xs text-gray-500 mb-1">Statut</p>
+                  <StatutBadge statut={selectedBien.statut} />
+                </div>
+                {selectedBien.surface && (
+                  <div className="bg-white/5 p-4 rounded-xl">
+                    <p className="text-xs text-gray-500 mb-1">Surface</p>
+                    <p className="font-semibold">{selectedBien.surface} m²</p>
+                  </div>
+                )}
+                {selectedBien.situation && (
+                  <div className="bg-white/5 p-4 rounded-xl">
+                    <p className="text-xs text-gray-500 mb-1">Situation</p>
+                    <p className="font-semibold">{selectedBien.situation}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Description éditable */}
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
+                  <textarea
+                    className="input min-h-[80px] resize-none"
+                    value={editDescription}
+                    onChange={e => setEditDescription(e.target.value)}
+                    placeholder="Décrivez le bien…"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Potentiel identifié</label>
+                  <textarea
+                    className="input min-h-[80px] resize-none"
+                    value={editPotentiel}
+                    onChange={e => setEditPotentiel(e.target.value)}
+                    placeholder="Division, surélévation, changement d'usage…"
+                  />
+                </div>
+              </div>
+
+              {/* Ajout de documents */}
+              <div className="border-t border-white/10 pt-6 mb-6">
+                <p className="text-sm font-medium text-gray-300 mb-4">Ajouter des documents</p>
+                <FileDropZone
+                  label="Photos ou documents"
+                  accept=".jpg,.jpeg,.png,.webp,.pdf"
+                  multiple
+                  files={[]}
+                  onFiles={() => {}}
+                  icon={<Upload className="w-6 h-6 mx-auto" />}
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button onClick={() => setSelectedBien(null)} className="btn-outline flex-1 justify-center">Fermer</button>
+                <button onClick={saveDetail} disabled={saving} className="btn-primary flex-1 justify-center disabled:opacity-50">
+                  {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Enregistrement…</> : 'Enregistrer les modifications'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL SOUMISSION */}
       {showModal && (
