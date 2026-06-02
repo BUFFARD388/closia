@@ -346,11 +346,6 @@ export default function DashboardVendeur() {
                           )}
                         </div>
                         <h3 className="font-semibold text-lg">{bien.type}</h3>
-                        {bien.statut === 'rejected' && bien.reponse_admin && (
-                          <div className="mt-2 border-l-2 border-red-500/40 pl-3 text-xs text-red-300 italic">
-                            {bien.reponse_admin}
-                          </div>
-                        )}
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm text-gray-400">
                           <span className="flex items-center gap-1">
                             <MapPin className="w-3.5 h-3.5 text-[#c29a6b]" />
@@ -448,6 +443,19 @@ export default function DashboardVendeur() {
                     onChange={e => setEditPotentiel(e.target.value)} placeholder="Division, surélévation…" />
                 </div>
               </div>
+
+              {/* Motif de refus */}
+              {selectedBien.statut === 'rejected' && selectedBien.reponse_admin && (
+                <div className="mb-6 border border-red-500/20 rounded-xl overflow-hidden">
+                  <div className="bg-red-500/10 px-4 py-2 flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+                    <p className="text-xs font-semibold text-red-400 uppercase tracking-widest">Motif de refus</p>
+                  </div>
+                  <div className="p-4">
+                    <p className="text-sm text-red-300 italic leading-relaxed">{selectedBien.reponse_admin}</p>
+                  </div>
+                </div>
+              )}
 
               {/* Ajout photos */}
               <div className="border-t border-white/10 pt-6 mb-4">
@@ -586,12 +594,12 @@ export default function DashboardVendeur() {
                   <div className="border-t border-white/10 pt-6">
                     <p className="text-sm font-medium text-gray-300 mb-4">Documents</p>
                     <div className="space-y-4">
-                      <FileDropZone label="Plan cadastral" accept=".pdf,.jpg,.png" files={[]}
-                        onFiles={f => setDocs(prev => [...prev, ...f])} icon={<Upload className="w-6 h-6 mx-auto" />} />
-                      <FileDropZone label="Diagnostics techniques" accept=".pdf" multiple files={[]}
-                        onFiles={f => setDocs(prev => [...prev, ...f])} icon={<Upload className="w-6 h-6 mx-auto" />} />
-                      <FileDropZone label="Autres documents" accept=".pdf,.jpg,.png,.docx" multiple files={[]}
-                        onFiles={f => setDocs(prev => [...prev, ...f])} icon={<File className="w-6 h-6 mx-auto" />} />
+                      <FileDropZone label="Plan cadastral" accept=".pdf,.jpg,.png" multiple files={docs}
+                        onFiles={setDocs} icon={<Upload className="w-6 h-6 mx-auto" />} />
+                      <FileDropZone label="Diagnostics techniques" accept=".pdf" multiple files={docs}
+                        onFiles={setDocs} icon={<Upload className="w-6 h-6 mx-auto" />} />
+                      <FileDropZone label="Autres documents" accept=".pdf,.jpg,.png,.docx" multiple files={docs}
+                        onFiles={setDocs} icon={<File className="w-6 h-6 mx-auto" />} />
                     </div>
                   </div>
                   <div className="flex gap-3 pt-2">
