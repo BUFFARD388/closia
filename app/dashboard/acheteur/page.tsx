@@ -95,6 +95,9 @@ export default function DashboardAcheteur() {
 
   const filtered = leads.filter(l => {
     if (achetesIds.has(l.id)) return false // masquer les leads déjà achetés
+    // masquer les leads achetés en exclusivité par quelqu'un d'autre
+    const achatsActifs = l.achats?.filter((a: any) => a.statut !== 'annule') || []
+    if (achatsActifs.some((a: any) => a.mode === 'exclusif')) return false
     if (prixMax && l.prix > parseInt(prixMax)) return false
     if (typeFilter !== 'Tous' && l.type !== typeFilter) return false
     if (search) {
