@@ -81,10 +81,10 @@ export default function DashboardAcheteur() {
       .order('date_diffusion', { ascending: false })
     setLeads(biensData || [])
 
-    // Mes achats
+    // Mes achats avec infos apporteur
     const { data: achatData } = await supabase
       .from('achats')
-      .select('*, biens(*)')
+      .select('*, biens(*, profiles!biens_apporteur_id_fkey(prenom, nom, tel, email, statut_pro))')
       .eq('acheteur_id', uid)
       .neq('statut', 'annule')
     setLeadsAchetes(achatData || [])
@@ -177,6 +177,9 @@ export default function DashboardAcheteur() {
               {t.icon} {t.label}
               {t.key === 'disponibles' && leads.length > 0 && (
                 <span className="ml-auto text-xs bg-gold-500/20 text-gold-400 rounded-full px-2 py-0.5">{leads.length}</span>
+              )}
+              {t.key === 'achetes' && leadsAchetes.length > 0 && (
+                <span className="ml-auto text-xs bg-gold-500/20 text-gold-400 rounded-full px-2 py-0.5">{leadsAchetes.length}</span>
               )}
             </button>
           ))}
@@ -329,26 +332,24 @@ export default function DashboardAcheteur() {
                             <span className="mx-2">·</span>
                             <Euro className="w-3.5 h-3.5 text-gold-500" /> {Number(bien.prix).toLocaleString('fr-FR')} €
                           </p>
-                          {achat.mode === 'exclusif' && achat.statut === 'confirme' ? (
+                          {achat.statut === 'confirme' ? (
                             <div className="mt-4 bg-[#c29a6b]/10 border border-[#c29a6b]/30 rounded-xl p-4">
-                              <div className="flex items-center gap-2 text-[#c29a6b] text-sm font-medium mb-2">
-                                <CheckCircle className="w-4 h-4" /> Coordonnées vendeur déverrouillées
+                              <div className="flex items-center gap-2 text-[#c29a6b] text-sm font-medium mb-3">
+                                <CheckCircle className="w-4 h-4" /> Coordonnées apporteur déverrouillées
                               </div>
-                              <div className="space-y-1 text-sm text-gray-300">
-                                <p>📍 {bien.adresse}, {bien.cp} {bien.ville}</p>
-                                <p className="text-xs text-gray-500 mt-2">Les coordonnées complètes de l'apporteur seront affichées ici prochainement.</p>
-                              </div>
+                              {bien.profiles ? (
+                                <div className="space-y-1.5 text-sm text-gray-300">
+                                  <p>👤 {bien.profiles.prenom} {bien.profiles.nom} — {bien.profiles.statut_pro || 'Apporteur'}</p>
+                                  {bien.profiles.tel && <p>📞 {bien.profiles.tel}</p>}
+                                  {bien.profiles.email && <p>✉️ {bien.profiles.email}</p>}
+                                </div>
+                              ) : (
+                                <p className="text-xs text-gray-400">Coordonnées en cours de chargement…</p>
+                              )}
                             </div>
                           ) : achat.mode === 'exclusif' ? (
                             <div className="mt-4 bg-orange-500/5 border border-orange-500/20 rounded-xl p-4">
                               <p className="text-xs text-orange-300">Paiement en cours de confirmation…</p>
-                            </div>
-                          ) : achat.statut === 'confirme' ? (
-                            <div className="mt-4 bg-[#c29a6b]/10 border border-[#c29a6b]/30 rounded-xl p-4">
-                              <div className="flex items-center gap-2 text-[#c29a6b] text-sm font-medium mb-2">
-                                <CheckCircle className="w-4 h-4" /> Paiement confirmé — Coordonnées déverrouillées
-                              </div>
-                              <p className="text-xs text-gray-400">Les coordonnées complètes de l'apporteur seront affichées ici prochainement.</p>
                             </div>
                           ) : (
                             <div className="mt-4 bg-blue-500/5 border border-blue-500/20 rounded-xl p-4">
