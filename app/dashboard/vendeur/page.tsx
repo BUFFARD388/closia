@@ -163,10 +163,15 @@ export default function DashboardVendeur() {
     return publicUrl
   }
 
-  const filtered = tab === 'achetes' ? [] : tab === 'tous' ? biens : biens.filter(b =>
-    tab === 'pending' ? (b.statut === 'pending' || b.statut === 'analyse') :
-    b.statut === tab
-  )
+  const biensAchetesIds = new Set(biensAchetes.map((a: any) => a.biens?.id))
+
+  const filtered = tab === 'achetes' ? [] : tab === 'tous'
+    ? biens.filter(b => !biensAchetesIds.has(b.id))
+    : biens.filter(b => {
+        if (biensAchetesIds.has(b.id)) return false
+        if (tab === 'pending') return b.statut === 'pending' || b.statut === 'analyse'
+        return b.statut === tab
+      })
 
   const resetModal = () => {
     setStep(1); setPhotos([]); setDocs([])
