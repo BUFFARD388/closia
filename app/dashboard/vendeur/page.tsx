@@ -442,7 +442,6 @@ export default function DashboardVendeur() {
                 })}
               </div>
             )}
-          )}
         </main>
       </div>
 
