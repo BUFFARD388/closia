@@ -12,6 +12,7 @@ export default function LandingPage() {
   const [analyseModal, setAnalyseModal] = useState(false)
   const [analyseType, setAnalyseType] = useState<'simple' | 'complexe' | null>(null)
   const [analyseForm, setAnalyseForm] = useState({ nom: '', email: '', tel: '', adresse: '', description: '', message: '' })
+  const [analyseFiles, setAnalyseFiles] = useState<File[]>([])
   const [analyseSending, setAnalyseSending] = useState(false)
   const [analyseSent, setAnalyseSent] = useState(false)
 
@@ -889,11 +890,11 @@ export default function LandingPage() {
                 <form onSubmit={async e => {
                   e.preventDefault()
                   setAnalyseSending(true)
-                  await fetch('/api/emails/analyse-demande', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ ...analyseForm, type: analyseType }),
-                  })
+                  const fd = new FormData()
+                  Object.entries(analyseForm).forEach(([k, v]) => fd.append(k, v))
+                  fd.append('type', analyseType || '')
+                  analyseFiles.forEach(f => fd.append('files', f))
+                  await fetch('/api/emails/analyse-demande', { method: 'POST', body: fd })
                   setAnalyseSending(false)
                   setAnalyseSent(true)
                 }} className="space-y-4">
@@ -927,6 +928,37 @@ export default function LandingPage() {
                         value={analyseForm.message} onChange={e => setAnalyseForm(f => ({ ...f, message: e.target.value }))} />
                     </div>
                   )}
+                  {/* Zone upload fichiers */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Documents & photos <span className="text-gray-500 font-normal">(facultatif)</span></label>
+                    <div
+                      onClick={() => document.getElementById('analyse-files')?.click()}
+                      className="border-2 border-dashed border-white/20 rounded-xl p-5 text-center cursor-pointer hover:border-[#c29a6b]/50 transition-colors"
+                    >
+                      <input id="analyse-files" type="file" multiple accept=".jpg,.jpeg,.png,.pdf,.docx"
+                        className="hidden"
+                        onChange={e => {
+                          if (e.target.files) setAnalyseFiles(prev => [...prev, ...Array.from(e.target.files!)])
+                        }}
+                      />
+                      <p className="text-sm text-gray-400">Photos, cadastre, DPE, diagnostics…</p>
+                      <p className="text-xs text-gray-600 mt-1">JPG, PNG, PDF, DOCX</p>
+                    </div>
+                    {analyseFiles.length > 0 && (
+                      <div className="mt-3 space-y-1">
+                        {analyseFiles.map((f, i) => (
+                          <div key={i} className="flex items-center justify-between bg-white/5 rounded-lg px-3 py-2">
+                            <span className="text-xs text-gray-300 truncate">{f.name}</span>
+                            <button type="button" onClick={() => setAnalyseFiles(prev => prev.filter((_, idx) => idx !== i))}
+                              className="text-gray-500 hover:text-red-400 ml-2 flex-shrink-0">
+                              <XIcon className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
                   <div className="bg-[#c29a6b]/5 border border-[#c29a6b]/20 rounded-lg p-3">
                     <p className="text-xs text-[#c29a6b]">🔒 Tous les éléments transmis sont strictement confidentiels et ne seront jamais communiqués à un tiers.</p>
                   </div>
