@@ -65,6 +65,8 @@ export default function DashboardAdmin() {
   const [sent, setSent] = useState(false)
   const [analyses, setAnalyses] = useState<any[]>([])
   const [selectedAnalyse, setSelectedAnalyse] = useState<any | null>(null)
+  const [rapport, setRapport] = useState('')
+  const [savingRapport, setSavingRapport] = useState(false)
 
   useEffect(() => { checkAdmin(); loadBiens(); loadAnalyses() }, [])
   useEffect(() => { if (section === 'live') loadLeadsLive() }, [section])
@@ -99,9 +101,79 @@ export default function DashboardAdmin() {
   }
 
   async function marquerLivree(id: string) {
-    await supabase.from('analyses').update({ statut: 'livree' }).eq('id', id)
+    await supabase.from('analyses').update({ statut: 'livree', rapport }).eq('id', id)
     setSelectedAnalyse(null)
+    setRapport('')
     await loadAnalyses()
+  }
+
+  async function sauvegarderRapport() {
+    if (!selectedAnalyse) return
+    setSavingRapport(true)
+    await supabase.from('analyses').update({ rapport }).eq('id', selectedAnalyse.id)
+    setSavingRapport(false)
+  }
+
+  function imprimerRapport() {
+    if (!selectedAnalyse) return
+    const w = window.open('', '_blank')!
+    w.document.write(`
+      <!DOCTYPE html>
+      <html lang="fr">
+      <head>
+        <meta charset="UTF-8"/>
+        <title>Rapport d'analyse — ${selectedAnalyse.adresse}</title>
+        <style>
+          body { font-family: Georgia, serif; max-width: 800px; margin: 40px auto; padding: 40px; color: #1a1a1a; line-height: 1.7; }
+          .header { border-bottom: 2px solid #c29a6b; padding-bottom: 24px; margin-bottom: 32px; }
+          .logo { font-size: 24px; font-weight: bold; color: #c29a6b; letter-spacing: 4px; margin-bottom: 8px; }
+          .titre { font-size: 20px; font-weight: bold; margin-bottom: 4px; }
+          .sous-titre { color: #666; font-size: 14px; }
+          .section { margin-bottom: 28px; }
+          .section-label { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #c29a6b; margin-bottom: 8px; font-weight: bold; }
+          .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #f9f7f4; padding: 16px; border-radius: 8px; margin-bottom: 24px; }
+          .info-item label { font-size: 11px; color: #999; display: block; }
+          .info-item span { font-size: 14px; font-weight: 600; }
+          .rapport-content { white-space: pre-wrap; font-size: 15px; line-height: 1.8; }
+          .footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid #ddd; font-size: 12px; color: #999; text-align: center; }
+          @media print { body { margin: 0; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="logo">CLOSIA</div>
+          <div class="titre">Rapport d'analyse préalable</div>
+          <div class="sous-titre">Confidentiel — Usage exclusif du destinataire</div>
+        </div>
+
+        <div class="info-grid">
+          <div class="info-item"><label>Client</label><span>${selectedAnalyse.nom}</span></div>
+          <div class="info-item"><label>Email</label><span>${selectedAnalyse.email}</span></div>
+          <div class="info-item"><label>Téléphone</label><span>${selectedAnalyse.tel}</span></div>
+          <div class="info-item"><label>Date de la demande</label><span>${new Date(selectedAnalyse.created_at).toLocaleDateString('fr-FR')}</span></div>
+          <div class="info-item" style="grid-column: 1/-1"><label>Bien analysé</label><span>${selectedAnalyse.adresse}</span></div>
+        </div>
+
+        <div class="section">
+          <div class="section-label">Description transmise par le client</div>
+          <p>${selectedAnalyse.description}</p>
+          ${selectedAnalyse.message ? `<p><em>${selectedAnalyse.message}</em></p>` : ''}
+        </div>
+
+        <div class="section">
+          <div class="section-label">Rapport d'analyse expert</div>
+          <div class="rapport-content">${rapport || selectedAnalyse.rapport || ''}</div>
+        </div>
+
+        <div class="footer">
+          Closia · contact@closia.net · 06 87 76 33 40 · closia.net<br/>
+          Document confidentiel généré le ${new Date().toLocaleDateString('fr-FR')}
+        </div>
+      </body>
+      </html>
+    `)
+    w.document.close()
+    w.print()
   }
 
   async function loadLeadsLive() {
@@ -185,7 +257,7 @@ export default function DashboardAdmin() {
 
   const pendingCount = biens.filter(b => b.statut === 'pending').length
   const liveCount = biens.filter(b => b.statut === 'diffuse').length
-  const analysesPendingCount = analyses.filter(a => a.statut === 'payee').length
+  const analysesPendingCount = analyses.filter(a => a.statut !== 'livree').length
 
   if (!authChecked) {
     return (
@@ -337,7 +409,7 @@ export default function DashboardAdmin() {
                         <span>{a.tel}</span>
                       </div>
                     </div>
-                    <button onClick={() => setSelectedAnalyse(a)}
+                    <button onClick={() => { setSelectedAnalyse(a); setRapport(a.rapport || '') }}
                       className="btn-primary text-xs !py-2 !px-4 flex-shrink-0">
                       Voir <ChevronRight className="w-3.5 h-3.5" />
                     </button>
@@ -713,12 +785,35 @@ export default function DashboardAdmin() {
                 </div>
               )}
 
+              {/* Rédaction du rapport */}
+              <div className="border-t border-white/10 pt-6 mb-6">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs text-gray-500 uppercase tracking-widest">Rapport d'analyse</p>
+                  <div className="flex gap-2">
+                    <button onClick={sauvegarderRapport} disabled={savingRapport}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-gray-300 transition-colors disabled:opacity-50">
+                      {savingRapport ? 'Sauvegarde…' : '💾 Sauvegarder'}
+                    </button>
+                    <button onClick={imprimerRapport}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-[#c29a6b]/20 hover:bg-[#c29a6b]/30 text-[#c29a6b] transition-colors">
+                      🖨️ Imprimer / PDF
+                    </button>
+                  </div>
+                </div>
+                <textarea
+                  value={rapport}
+                  onChange={e => setRapport(e.target.value)}
+                  placeholder={`Rédigez ici votre analyse experte...\n\n• Potentiel de valorisation\n• Lecture PLU\n• Risques identifiés\n• Axes de création de valeur\n• Recommandations`}
+                  className="input min-h-[280px] resize-y rounded-xl text-sm leading-relaxed w-full"
+                />
+              </div>
+
               {/* Statut & action */}
               <div className="border-t border-white/10 pt-6">
                 {selectedAnalyse.statut === 'payee' ? (
                   <div className="space-y-3">
                     <div className="bg-[#c29a6b]/5 border border-[#c29a6b]/20 rounded-xl p-4 text-sm text-[#c29a6b]">
-                      ✦ Paiement confirmé — 150 € reçus. Livrez le rapport par email à <strong>{selectedAnalyse.email}</strong>, puis marquez comme livrée.
+                      ✦ Paiement confirmé — 150 € reçus. Rédigez le rapport ci-dessus, imprimez-le en PDF et envoyez-le à <strong>{selectedAnalyse.email}</strong>.
                     </div>
                     <button onClick={() => marquerLivree(selectedAnalyse.id)}
                       className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white font-semibold text-xs tracking-widest uppercase py-3.5 rounded-xl transition-colors">
@@ -726,8 +821,16 @@ export default function DashboardAdmin() {
                     </button>
                   </div>
                 ) : (
-                  <div className="text-center text-sm text-green-400 py-4">
-                    <CheckCircle className="w-8 h-8 mx-auto mb-2" /> Analyse livrée le {formatDate(selectedAnalyse.created_at)}
+                  <div className="space-y-3">
+                    <div className="text-center text-sm text-green-400 py-2">
+                      <CheckCircle className="w-6 h-6 mx-auto mb-1" /> Analyse livrée
+                    </div>
+                    {selectedAnalyse.rapport && (
+                      <button onClick={imprimerRapport}
+                        className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs tracking-widest uppercase py-3 rounded-xl transition-colors">
+                        🖨️ Réimprimer le rapport
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
