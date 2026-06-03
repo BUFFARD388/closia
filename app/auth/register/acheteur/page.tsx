@@ -11,7 +11,7 @@ export default function RegisterAcheteur() {
   const [error, setError] = useState('')
   const [form, setForm] = useState({
     prenom: '', nom: '', email: '', tel: '', societe: '',
-    profil_type: '', zones: '', password: '',
+    siret: '', profil_type: '', zones: '', password: '',
   })
 
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
@@ -81,6 +81,10 @@ export default function RegisterAcheteur() {
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Société *</label>
                 <input className="input" placeholder="Nom de votre société" required value={form.societe} onChange={set('societe')} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Numéro SIRET *</label>
+                <input className="input" placeholder="XXX XXX XXX XXXXX" required value={form.siret} onChange={set('siret')} pattern="\d{14}" title="Le SIRET doit contenir 14 chiffres" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Profil *</label>

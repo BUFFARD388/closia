@@ -12,7 +12,7 @@ export default function RegisterVendeur() {
   const [error, setError] = useState('')
   const [step, setStep] = useState(1)
   const [form, setForm] = useState({
-    prenom: '', nom: '', email: '', tel: '', statut_pro: '', password: '',
+    prenom: '', nom: '', email: '', tel: '', statut_pro: '', societe_vendeur: '', siret: '', password: '',
   })
 
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
@@ -81,6 +81,14 @@ export default function RegisterVendeur() {
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Téléphone *</label>
                   <input type="tel" className="input" placeholder="06 12 34 56 78" value={form.tel} onChange={set('tel')} required />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Société *</label>
+                  <input className="input" placeholder="Nom de votre société" value={form.societe_vendeur} onChange={set('societe_vendeur')} required />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Numéro SIRET *</label>
+                  <input className="input" placeholder="XXX XXX XXX XXXXX" value={form.siret} onChange={set('siret')} required pattern="\d{14}" title="Le SIRET doit contenir 14 chiffres" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Statut professionnel *</label>

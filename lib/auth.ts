@@ -11,6 +11,8 @@ export interface SignUpData {
   tel?: string
   role: UserRole
   societe?: string
+  societe_vendeur?: string
+  siret?: string
   profil_type?: string
   statut_pro?: string
   zones?: string
@@ -35,7 +37,7 @@ export async function signUp(data: SignUpData) {
   // 2. Compléter le profil avec les infos supplémentaires
   const { error: profileError } = await supabase
     .from('profiles')
-    .update({ tel: rest.tel, societe: rest.societe, profil_type: rest.profil_type, statut_pro: rest.statut_pro, zones: rest.zones })
+    .update({ tel: rest.tel, societe: rest.societe, societe_vendeur: rest.societe_vendeur, siret: rest.siret, profil_type: rest.profil_type, statut_pro: rest.statut_pro, zones: rest.zones })
     .eq('id', authData.user.id)
 
   if (profileError) console.warn('Profil partiel :', profileError.message)
@@ -77,3 +79,4 @@ export async function resetPassword(email: string) {
   })
   if (error) throw error
 }
+
