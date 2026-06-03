@@ -67,6 +67,8 @@ export default function DashboardAdmin() {
   const [selectedAnalyse, setSelectedAnalyse] = useState<any | null>(null)
   const [rapport, setRapport] = useState('')
   const [savingRapport, setSavingRapport] = useState(false)
+  const [sendingRapport, setSendingRapport] = useState(false)
+  const [rapportEnvoye, setRapportEnvoye] = useState(false)
 
   useEffect(() => { checkAdmin(); loadBiens(); loadAnalyses() }, [])
   useEffect(() => { if (section === 'live') loadLeadsLive() }, [section])
@@ -100,11 +102,32 @@ export default function DashboardAdmin() {
     setAnalyses(data || [])
   }
 
-  async function marquerLivree(id: string) {
-    await supabase.from('analyses').update({ statut: 'livree', rapport }).eq('id', id)
-    setSelectedAnalyse(null)
-    setRapport('')
-    await loadAnalyses()
+  async function envoyerRapport() {
+    if (!selectedAnalyse || !rapport.trim()) return
+    setSendingRapport(true)
+    try {
+      const res = await fetch('/api/emails/envoyer-rapport', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          analyseId: selectedAnalyse.id,
+          nom: selectedAnalyse.nom,
+          email: selectedAnalyse.email,
+          adresse: selectedAnalyse.adresse,
+          description: selectedAnalyse.description,
+          rapport,
+          fichiers: selectedAnalyse.fichiers || [],
+        }),
+      })
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      setRapportEnvoye(true)
+      await loadAnalyses()
+    } catch (err: any) {
+      alert('Erreur : ' + err.message)
+    } finally {
+      setSendingRapport(false)
+    }
   }
 
   async function sauvegarderRapport() {
@@ -409,7 +432,7 @@ export default function DashboardAdmin() {
                         <span>{a.tel}</span>
                       </div>
                     </div>
-                    <button onClick={() => { setSelectedAnalyse(a); setRapport(a.rapport || '') }}
+                    <button onClick={() => { setSelectedAnalyse(a); setRapport(a.rapport || ''); setRapportEnvoye(false) }}
                       className="btn-primary text-xs !py-2 !px-4 flex-shrink-0">
                       Voir <ChevronRight className="w-3.5 h-3.5" />
                     </button>
@@ -810,27 +833,42 @@ export default function DashboardAdmin() {
 
               {/* Statut & action */}
               <div className="border-t border-white/10 pt-6">
-                {selectedAnalyse.statut === 'payee' ? (
+                {rapportEnvoye ? (
+                  <div className="text-center py-6">
+                    <CheckCircle className="w-10 h-10 text-green-400 mx-auto mb-3" />
+                    <p className="font-semibold text-green-400 mb-1">Rapport envoyé et archivé</p>
+                    <p className="text-sm text-gray-400 mb-6">Le rapport a été envoyé à <strong>{selectedAnalyse.email}</strong> et la demande est archivée.</p>
+                    <button onClick={() => { setSelectedAnalyse(null); setRapport(''); setRapportEnvoye(false) }}
+                      className="btn-primary justify-center">Fermer</button>
+                  </div>
+                ) : selectedAnalyse.statut === 'livree' ? (
                   <div className="space-y-3">
-                    <div className="bg-[#c29a6b]/5 border border-[#c29a6b]/20 rounded-xl p-4 text-sm text-[#c29a6b]">
-                      ✦ Paiement confirmé — 150 € reçus. Rédigez le rapport ci-dessus, imprimez-le en PDF et envoyez-le à <strong>{selectedAnalyse.email}</strong>.
+                    <div className="flex items-center justify-center gap-2 text-sm text-green-400 py-2">
+                      <CheckCircle className="w-5 h-5" /> Analyse envoyée et archivée
                     </div>
-                    <button onClick={() => marquerLivree(selectedAnalyse.id)}
-                      className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white font-semibold text-xs tracking-widest uppercase py-3.5 rounded-xl transition-colors">
-                      <CheckCircle className="w-4 h-4" /> Marquer comme livrée
+                    <button onClick={imprimerRapport}
+                      className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs tracking-widest uppercase py-3 rounded-xl transition-colors">
+                      🖨️ Réimprimer le rapport
                     </button>
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    <div className="text-center text-sm text-green-400 py-2">
-                      <CheckCircle className="w-6 h-6 mx-auto mb-1" /> Analyse livrée
-                    </div>
-                    {selectedAnalyse.rapport && (
-                      <button onClick={imprimerRapport}
-                        className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs tracking-widest uppercase py-3 rounded-xl transition-colors">
-                        🖨️ Réimprimer le rapport
-                      </button>
+                    {!rapport.trim() && (
+                      <p className="text-xs text-center text-gray-500 italic">Rédigez le rapport ci-dessus pour pouvoir l'envoyer.</p>
                     )}
+                    <button
+                      onClick={imprimerRapport}
+                      disabled={!rapport.trim()}
+                      className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed text-white font-semibold text-xs tracking-widest uppercase py-3 rounded-xl transition-colors">
+                      🖨️ Aperçu / Imprimer en PDF
+                    </button>
+                    <button
+                      onClick={envoyerRapport}
+                      disabled={!rapport.trim() || sendingRapport}
+                      className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 disabled:opacity-30 disabled:cursor-not-allowed text-white font-semibold text-xs tracking-widest uppercase py-3.5 rounded-xl transition-colors">
+                      {sendingRapport ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                      {sendingRapport ? 'Envoi en cours…' : `Envoyer à ${selectedAnalyse.email}`}
+                    </button>
                   </div>
                 )}
               </div>
