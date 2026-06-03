@@ -253,6 +253,9 @@ export default function LandingPage() {
                 <Link href="/auth/register/vendeur" className="inline-flex items-center text-xs tracking-widest uppercase bg-white text-black font-semibold px-6 py-3 hover:bg-gray-100 transition-all duration-300 rounded-lg">
                   Soumettre un dossier gratuitement
                 </Link>
+                <a href="#analyse" className="inline-flex items-center text-xs tracking-widest uppercase border border-[#c29a6b]/40 text-[#c29a6b] font-semibold px-6 py-3 hover:bg-[#c29a6b]/10 transition-all duration-300 rounded-lg">
+                  Demander une analyse préalable — 150 €
+                </a>
               </div>
             </div>
 
@@ -773,7 +776,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── ANALYSE PRÉALABLE ── */}
-      <section className="px-6 lg:px-10 py-24 bg-[#111720]">
+      <section id="analyse" className="px-6 lg:px-10 py-24 bg-[#111720]">
         <div className="max-w-7xl mx-auto">
           <p className="text-xs tracking-[0.3em] uppercase text-[#c29a6b] mb-4">Service expert</p>
           <h2 className="text-3xl font-bold mb-4">Vous avez un bien à analyser<br />avant de le diffuser ?</h2>
