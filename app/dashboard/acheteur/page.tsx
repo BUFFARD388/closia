@@ -51,6 +51,7 @@ export default function DashboardAcheteur() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (params.get('payment') === 'success') {
+      setTab('achetes')
       const achatId = params.get('achatId')
       if (achatId) {
         supabase.from('achats').update({ statut: 'confirme' }).eq('id', achatId).then(async () => {
