@@ -819,7 +819,7 @@ export default function LandingPage() {
               </div>
               <button onClick={() => { setAnalyseType('simple'); setAnalyseModal(true) }}
                 className="w-full inline-flex items-center justify-center text-xs tracking-widest uppercase bg-[#c29a6b] text-black font-semibold px-6 py-3.5 rounded-xl hover:bg-[#b8911f] transition-colors">
-                Demander une analyse — 150 €
+                Demander une analyse
               </button>
             </div>
 
