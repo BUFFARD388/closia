@@ -9,6 +9,11 @@ export default function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [testimonialIdx, setTestimonialIdx] = useState(0)
   const [bienIdx, setBienIdx] = useState(0)
+  const [analyseModal, setAnalyseModal] = useState(false)
+  const [analyseType, setAnalyseType] = useState<'simple' | 'complexe' | null>(null)
+  const [analyseForm, setAnalyseForm] = useState({ nom: '', email: '', tel: '', adresse: '', description: '', message: '' })
+  const [analyseSending, setAnalyseSending] = useState(false)
+  const [analyseSent, setAnalyseSent] = useState(false)
 
   const TEMOIGNAGES = [
     { role: 'Mandataire immobilier', region: 'Région lyonnaise', initiale: 'S.R.', type: 'apporteur',
@@ -766,6 +771,176 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── ANALYSE PRÉALABLE ── */}
+      <section className="px-6 lg:px-10 py-24 bg-[#111720]">
+        <div className="max-w-7xl mx-auto">
+          <p className="text-xs tracking-[0.3em] uppercase text-[#c29a6b] mb-4">Service expert</p>
+          <h2 className="text-3xl font-bold mb-4">Vous avez un bien à analyser<br />avant de le diffuser ?</h2>
+          <p className="text-sm text-gray-400 leading-relaxed mb-4 max-w-2xl">
+            Avant de soumettre un bien sur la plateforme, certains dossiers méritent une analyse préalable approfondie. Potentiel de valorisation, lecture PLU, faisabilité, risques — obtenez un avis d'expert en toute confidentialité.
+          </p>
+          <div className="flex items-center gap-3 mb-12">
+            <span className="w-2 h-2 rounded-full bg-[#c29a6b]" />
+            <p className="text-sm text-[#c29a6b] font-medium">Tous les éléments transmis sont strictement confidentiels et ne seront jamais communiqués à un tiers.</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6 mb-10">
+            {/* Analyse simple */}
+            <div className="relative border border-[#c29a6b]/30 rounded-2xl p-8 bg-[#c29a6b]/5 hover:border-[#c29a6b]/60 transition-all group">
+              <div className="flex items-start justify-between mb-6">
+                <div>
+                  <p className="text-xs tracking-widest uppercase text-[#c29a6b] mb-2">Analyse simple</p>
+                  <h3 className="text-xl font-bold text-white">Avis expert standard</h3>
+                </div>
+                <div className="text-right">
+                  <p className="text-3xl font-black text-[#c29a6b]">150 €</p>
+                  <p className="text-xs text-gray-500">HT · paiement sécurisé</p>
+                </div>
+              </div>
+              <div className="space-y-2 text-sm text-gray-400 mb-8">
+                {[
+                  'Analyse du potentiel de valorisation',
+                  'Lecture urbanistique (PLU)',
+                  'Identification des risques',
+                  'Axes de création de valeur',
+                  'Rapport écrit sous 48h',
+                ].map(item => (
+                  <div key={item} className="flex items-center gap-2">
+                    <span className="text-[#c29a6b]">→</span> {item}
+                  </div>
+                ))}
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-lg p-3 mb-6">
+                <p className="text-xs text-gray-400 leading-relaxed">🔒 Vos documents et informations restent strictement confidentiels. Aucune transmission à un tiers, aucune diffusion.</p>
+              </div>
+              <button onClick={() => { setAnalyseType('simple'); setAnalyseModal(true) }}
+                className="w-full inline-flex items-center justify-center text-xs tracking-widest uppercase bg-[#c29a6b] text-black font-semibold px-6 py-3.5 rounded-xl hover:bg-[#b8911f] transition-colors">
+                Demander une analyse — 150 €
+              </button>
+            </div>
+
+            {/* Analyse complexe */}
+            <div className="relative border border-white/10 rounded-2xl p-8 bg-[#0b1220] hover:border-white/20 transition-all group">
+              <div className="flex items-start justify-between mb-6">
+                <div>
+                  <p className="text-xs tracking-widest uppercase text-gray-500 mb-2">Analyse complexe</p>
+                  <h3 className="text-xl font-bold text-white">Étude approfondie sur devis</h3>
+                </div>
+                <div className="text-right">
+                  <p className="text-xl font-black text-white">Sur devis</p>
+                  <p className="text-xs text-gray-500">réponse sous 24h</p>
+                </div>
+              </div>
+              <div className="space-y-2 text-sm text-gray-400 mb-8">
+                {[
+                  'Dossiers multi-lots ou atypiques',
+                  'Opérations de promotion ou division complexe',
+                  'Analyse de faisabilité approfondie',
+                  'Étude de marché ciblée',
+                  'Accompagnement sur mesure',
+                ].map(item => (
+                  <div key={item} className="flex items-center gap-2">
+                    <span className="text-white/40">→</span> {item}
+                  </div>
+                ))}
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-lg p-3 mb-6">
+                <p className="text-xs text-gray-400 leading-relaxed">🔒 Confidentialité garantie. Vos éléments ne sont jamais partagés avec des tiers.</p>
+              </div>
+              <button onClick={() => { setAnalyseType('complexe'); setAnalyseModal(true) }}
+                className="w-full inline-flex items-center justify-center text-xs tracking-widest uppercase border border-white/20 text-white font-semibold px-6 py-3.5 rounded-xl hover:border-white/40 hover:bg-white/5 transition-colors">
+                Demander un devis
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* MODAL ANALYSE */}
+      {analyseModal && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+          <div className="bg-[#111720] border border-white/10 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-bold">{analyseType === 'simple' ? 'Analyse simple — 150 €' : 'Demande de devis'}</h2>
+                  <p className="text-xs text-gray-500 mt-1">{analyseType === 'simple' ? 'Rapport expert sous 48h' : 'Réponse sous 24h'}</p>
+                </div>
+                <button onClick={() => { setAnalyseModal(false); setAnalyseSent(false); setAnalyseType(null) }} className="text-gray-400 hover:text-white">
+                  <XIcon className="w-5 h-5" />
+                </button>
+              </div>
+
+              {analyseSent ? (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 rounded-full bg-[#c29a6b]/20 flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl">✓</span>
+                  </div>
+                  <h3 className="text-lg font-bold mb-2">{analyseType === 'simple' ? 'Demande envoyée !' : 'Devis demandé !'}</h3>
+                  <p className="text-sm text-gray-400 mb-6">
+                    {analyseType === 'simple'
+                      ? 'Nous vous contacterons sous 24h pour finaliser le paiement et démarrer l\'analyse.'
+                      : 'Nous vous enverrons un devis personnalisé sous 24h à l\'adresse indiquée.'}
+                  </p>
+                  <button onClick={() => { setAnalyseModal(false); setAnalyseSent(false); setAnalyseType(null) }}
+                    className="btn-primary justify-center">Fermer</button>
+                </div>
+              ) : (
+                <form onSubmit={async e => {
+                  e.preventDefault()
+                  setAnalyseSending(true)
+                  await fetch('/api/emails/analyse-demande', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...analyseForm, type: analyseType }),
+                  })
+                  setAnalyseSending(false)
+                  setAnalyseSent(true)
+                }} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Nom complet *</label>
+                      <input className="input" required value={analyseForm.nom} onChange={e => setAnalyseForm(f => ({ ...f, nom: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Téléphone *</label>
+                      <input type="tel" className="input" required value={analyseForm.tel} onChange={e => setAnalyseForm(f => ({ ...f, tel: e.target.value }))} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Email *</label>
+                    <input type="email" className="input" required value={analyseForm.email} onChange={e => setAnalyseForm(f => ({ ...f, email: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Adresse du bien *</label>
+                    <input className="input" placeholder="Adresse, CP, ville" required value={analyseForm.adresse} onChange={e => setAnalyseForm(f => ({ ...f, adresse: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Description du bien *</label>
+                    <textarea className="input min-h-[80px] resize-none" required placeholder="Type, surface, situation, potentiel identifié…"
+                      value={analyseForm.description} onChange={e => setAnalyseForm(f => ({ ...f, description: e.target.value }))} />
+                  </div>
+                  {analyseType === 'complexe' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Précisions sur la complexité</label>
+                      <textarea className="input min-h-[80px] resize-none" placeholder="Nature de la complexité, attentes particulières…"
+                        value={analyseForm.message} onChange={e => setAnalyseForm(f => ({ ...f, message: e.target.value }))} />
+                    </div>
+                  )}
+                  <div className="bg-[#c29a6b]/5 border border-[#c29a6b]/20 rounded-lg p-3">
+                    <p className="text-xs text-[#c29a6b]">🔒 Tous les éléments transmis sont strictement confidentiels et ne seront jamais communiqués à un tiers.</p>
+                  </div>
+                  <button type="submit" disabled={analyseSending}
+                    className="w-full inline-flex items-center justify-center gap-2 text-xs tracking-widest uppercase bg-[#c29a6b] text-black font-semibold px-6 py-3.5 rounded-xl hover:bg-[#b8911f] transition-colors disabled:opacity-50">
+                    {analyseSending ? 'Envoi…' : analyseType === 'simple' ? 'Envoyer ma demande' : 'Demander mon devis'}
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── FOOTER ── */}
       <footer className="bg-[#0a0d12] border-t border-white/5 px-6 lg:px-10 py-16">
         <div className="max-w-7xl mx-auto">
@@ -831,3 +1006,4 @@ export default function LandingPage() {
     </div>
   )
 }
+
