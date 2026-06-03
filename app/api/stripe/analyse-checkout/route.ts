@@ -69,6 +69,7 @@ export async function POST(req: NextRequest) {
         analyseId: analyse.id,
         type: 'analyse',
       },
+      allow_promotion_codes: true,
       customer_email: email,
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/?analyse=success`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/?analyse=cancel`,
@@ -85,3 +86,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }
+

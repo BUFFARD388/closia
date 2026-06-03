@@ -39,13 +39,14 @@ export async function POST(req: NextRequest) {
           quantity: 1,
         },
       ],
+      allow_promotion_codes: true,
       metadata: {
         bienId,
         achatId,
         mode,
       },
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/acheteur?payment=success&achatId=${achatId}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/acheteur?payment=cancel`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/acheteur?payment=cancel&achatId=${achatId}`,
     })
 
     return NextResponse.json({ url: session.url })
