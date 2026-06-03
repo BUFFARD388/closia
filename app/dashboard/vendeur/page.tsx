@@ -176,7 +176,7 @@ export default function DashboardVendeur() {
       })
 
   const resetModal = () => {
-    setStep(1); setPhotos([]); setDocs([])
+    setStep(1); setPhotos([])
     setFormType(''); setFormAdresse(''); setFormCp(''); setFormVille('')
     setFormPrix(''); setFormSurface(''); setFormSituation('')
     setFormDescription(''); setFormPotentiel('')
