@@ -254,7 +254,7 @@ export default function LandingPage() {
                   Soumettre un dossier gratuitement
                 </Link>
                 <a href="#analyse" className="inline-flex items-center text-xs tracking-widest uppercase border border-[#c29a6b]/40 text-[#c29a6b] font-semibold px-6 py-3 hover:bg-[#c29a6b]/10 transition-all duration-300 rounded-lg">
-                  Demander une analyse préalable — 150 €
+                  Demander une analyse préalable
                 </a>
               </div>
             </div>
