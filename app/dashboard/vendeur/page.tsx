@@ -100,7 +100,9 @@ export default function DashboardVendeur() {
   const [userId, setUserId] = useState<string | null>(null)
   const [userName, setUserName] = useState<{ prenom: string; nom: string } | null>(null)
   const [photos, setPhotos] = useState<UploadedFile[]>([])
-  const [docs, setDocs] = useState<UploadedFile[]>([])
+  const [docsCadastre, setDocsCadastre] = useState<UploadedFile[]>([])
+  const [docsDiag, setDocsDiag] = useState<UploadedFile[]>([])
+  const [docsAutres, setDocsAutres] = useState<UploadedFile[]>([])
 
   // Modal détail
   const [selectedBien, setSelectedBien] = useState<any | null>(null)
@@ -178,6 +180,7 @@ export default function DashboardVendeur() {
     setFormType(''); setFormAdresse(''); setFormCp(''); setFormVille('')
     setFormPrix(''); setFormSurface(''); setFormSituation('')
     setFormDescription(''); setFormPotentiel('')
+    setDocsCadastre([]); setDocsDiag([]); setDocsAutres([])
     setShowModal(false)
   }
 
@@ -678,12 +681,12 @@ export default function DashboardVendeur() {
                   <div className="border-t border-white/10 pt-6">
                     <p className="text-sm font-medium text-gray-300 mb-4">Documents</p>
                     <div className="space-y-4">
-                      <FileDropZone label="Plan cadastral" accept=".pdf,.jpg,.png" multiple files={docs}
-                        onFiles={setDocs} icon={<Upload className="w-6 h-6 mx-auto" />} />
-                      <FileDropZone label="Diagnostics techniques" accept=".pdf" multiple files={docs}
-                        onFiles={setDocs} icon={<Upload className="w-6 h-6 mx-auto" />} />
-                      <FileDropZone label="Autres documents" accept=".pdf,.jpg,.png,.docx" multiple files={docs}
-                        onFiles={setDocs} icon={<File className="w-6 h-6 mx-auto" />} />
+                      <FileDropZone label="Plan cadastral" accept=".pdf,.jpg,.png" multiple files={docsCadastre}
+                        onFiles={setDocsCadastre} icon={<Upload className="w-6 h-6 mx-auto" />} />
+                      <FileDropZone label="Diagnostics techniques" accept=".pdf" multiple files={docsDiag}
+                        onFiles={setDocsDiag} icon={<Upload className="w-6 h-6 mx-auto" />} />
+                      <FileDropZone label="Autres documents" accept=".pdf,.jpg,.png,.docx" multiple files={docsAutres}
+                        onFiles={setDocsAutres} icon={<File className="w-6 h-6 mx-auto" />} />
                     </div>
                   </div>
                   <div className="flex gap-3 pt-2">
