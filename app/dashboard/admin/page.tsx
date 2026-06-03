@@ -35,6 +35,7 @@ function heuresRestantes(dateExpiration: string) {
 
 const SECTIONS = [
   { key: 'dossiers', label: 'Dossiers', icon: <FileText className="w-4 h-4" />, alert: true },
+  { key: 'analyses', label: 'Analyses préalables', icon: <Eye className="w-4 h-4" />, alert: true },
   { key: 'live', label: 'En diffusion', icon: <Zap className="w-4 h-4" /> },
   { key: 'achetes', label: 'Leads achetés', icon: <ShoppingCart className="w-4 h-4" /> },
   { key: 'expires', label: 'Sans acquéreur', icon: <Ban className="w-4 h-4" /> },
@@ -62,8 +63,10 @@ export default function DashboardAdmin() {
   const [reponse, setReponse] = useState('')
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
+  const [analyses, setAnalyses] = useState<any[]>([])
+  const [selectedAnalyse, setSelectedAnalyse] = useState<any | null>(null)
 
-  useEffect(() => { checkAdmin(); loadBiens() }, [])
+  useEffect(() => { checkAdmin(); loadBiens(); loadAnalyses() }, [])
   useEffect(() => { if (section === 'live') loadLeadsLive() }, [section])
 
   async function checkAdmin() {
@@ -85,6 +88,20 @@ export default function DashboardAdmin() {
       .order('created_at', { ascending: false })
     setBiens(data || [])
     setLoading(false)
+  }
+
+  async function loadAnalyses() {
+    const { data } = await supabase
+      .from('analyses')
+      .select('*')
+      .order('created_at', { ascending: false })
+    setAnalyses(data || [])
+  }
+
+  async function marquerLivree(id: string) {
+    await supabase.from('analyses').update({ statut: 'livree' }).eq('id', id)
+    setSelectedAnalyse(null)
+    await loadAnalyses()
   }
 
   async function loadLeadsLive() {
@@ -168,6 +185,7 @@ export default function DashboardAdmin() {
 
   const pendingCount = biens.filter(b => b.statut === 'pending').length
   const liveCount = biens.filter(b => b.statut === 'diffuse').length
+  const analysesPendingCount = analyses.filter(a => a.statut === 'payee').length
 
   if (!authChecked) {
     return (
@@ -193,6 +211,9 @@ export default function DashboardAdmin() {
               {s.icon} {s.label}
               {s.key === 'dossiers' && pendingCount > 0 && (
                 <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400">{pendingCount}</span>
+              )}
+              {s.key === 'analyses' && analysesPendingCount > 0 && (
+                <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-[#c29a6b]/20 text-[#c29a6b]">{analysesPendingCount}</span>
               )}
               {s.key === 'live' && liveCount > 0 && (
                 <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-400">{liveCount}</span>
@@ -284,6 +305,46 @@ export default function DashboardAdmin() {
                 )}
               </div>
             )}
+          </>
+        )}
+
+        {/* ════ ANALYSES PRÉALABLES ════ */}
+        {section === 'analyses' && (
+          <>
+            <div className="mb-8">
+              <h1 className="text-2xl font-bold">Analyses préalables</h1>
+              <p className="text-gray-400 text-sm mt-1">{analysesPendingCount} en attente · {analyses.filter(a => a.statut === 'livree').length} livrées</p>
+            </div>
+
+            <div className="space-y-3">
+              {analyses.length === 0 && (
+                <div className="text-center py-16 text-gray-500"><Eye className="w-8 h-8 mx-auto mb-3" />Aucune demande d'analyse.</div>
+              )}
+              {analyses.map(a => (
+                <div key={a.id} className="bg-[#111720] border border-white/10 rounded-xl p-5 hover:border-white/20 transition-all">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        {a.statut === 'payee' && <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-[#c29a6b]/15 text-[#c29a6b] border border-[#c29a6b]/20">✦ Payée — À traiter</span>}
+                        {a.statut === 'livree' && <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-green-500/15 text-green-400 border border-green-500/20"><CheckCircle className="w-3 h-3" /> Livrée</span>}
+                        {a.statut === 'pending' && <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-gray-500/15 text-gray-400 border border-gray-500/20">En attente paiement</span>}
+                        <span className="text-xs text-gray-500 flex items-center gap-1"><Clock className="w-3 h-3" />{formatDate(a.created_at)}</span>
+                      </div>
+                      <h3 className="font-semibold">{a.nom}</h3>
+                      <div className="flex flex-wrap gap-x-4 mt-1 text-sm text-gray-400">
+                        <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-[#c29a6b]" />{a.adresse}</span>
+                        <span>{a.email}</span>
+                        <span>{a.tel}</span>
+                      </div>
+                    </div>
+                    <button onClick={() => setSelectedAnalyse(a)}
+                      className="btn-primary text-xs !py-2 !px-4 flex-shrink-0">
+                      Voir <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </>
         )}
 
@@ -597,6 +658,84 @@ export default function DashboardAdmin() {
           </div>
         </div>
       )}
+      {/* PANEL DÉTAIL ANALYSE */}
+      {selectedAnalyse && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex justify-end">
+          <div className="bg-[#111720] border-l border-white/10 w-full max-w-2xl h-full overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-start justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-bold">Analyse préalable — {selectedAnalyse.nom}</h2>
+                  <p className="text-sm text-gray-400 mt-1">{selectedAnalyse.adresse}</p>
+                </div>
+                <button onClick={() => setSelectedAnalyse(null)} className="text-gray-400 hover:text-white">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Infos client */}
+              <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-6">
+                <p className="text-xs text-[#c29a6b] uppercase tracking-widest mb-3">Client</p>
+                <div className="space-y-1 text-sm text-gray-300">
+                  <p>👤 {selectedAnalyse.nom}</p>
+                  <p>✉️ {selectedAnalyse.email}</p>
+                  <p>📞 {selectedAnalyse.tel}</p>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="mb-6">
+                <p className="text-xs text-gray-500 uppercase tracking-widest mb-2">Description du bien</p>
+                <p className="text-sm text-gray-300 leading-relaxed">{selectedAnalyse.description}</p>
+              </div>
+
+              {/* Message complexité */}
+              {selectedAnalyse.message && (
+                <div className="mb-6">
+                  <p className="text-xs text-gray-500 uppercase tracking-widest mb-2">Précisions</p>
+                  <p className="text-sm text-gray-300 leading-relaxed">{selectedAnalyse.message}</p>
+                </div>
+              )}
+
+              {/* Documents */}
+              {selectedAnalyse.fichiers?.length > 0 && (
+                <div className="mb-6">
+                  <p className="text-xs text-gray-500 uppercase tracking-widest mb-3">Documents ({selectedAnalyse.fichiers.length})</p>
+                  <div className="space-y-2">
+                    {selectedAnalyse.fichiers.map((f: any, i: number) => (
+                      <a key={i} href={f.url} target="_blank" rel="noreferrer"
+                        className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-lg px-4 py-3 hover:border-[#c29a6b]/40 transition-all">
+                        <Download className="w-4 h-4 text-[#c29a6b]" />
+                        <span className="text-sm text-gray-300">{f.name}</span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Statut & action */}
+              <div className="border-t border-white/10 pt-6">
+                {selectedAnalyse.statut === 'payee' ? (
+                  <div className="space-y-3">
+                    <div className="bg-[#c29a6b]/5 border border-[#c29a6b]/20 rounded-xl p-4 text-sm text-[#c29a6b]">
+                      ✦ Paiement confirmé — 150 € reçus. Livrez le rapport par email à <strong>{selectedAnalyse.email}</strong>, puis marquez comme livrée.
+                    </div>
+                    <button onClick={() => marquerLivree(selectedAnalyse.id)}
+                      className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white font-semibold text-xs tracking-widest uppercase py-3.5 rounded-xl transition-colors">
+                      <CheckCircle className="w-4 h-4" /> Marquer comme livrée
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-center text-sm text-green-400 py-4">
+                    <CheckCircle className="w-8 h-8 mx-auto mb-2" /> Analyse livrée le {formatDate(selectedAnalyse.created_at)}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }
