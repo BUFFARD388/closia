@@ -263,6 +263,77 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── NOTRE PARTI PRIS ── */}
+      <section className="bg-[#111720] px-6 lg:px-10 py-24">
+        <div className="max-w-7xl mx-auto">
+          <p className="text-xs tracking-[0.3em] uppercase text-gray-500 mb-4">Notre parti pris</p>
+          <h2 className="text-3xl font-bold mb-2">Une maison standard n'a pas besoin de nous.</h2>
+          <h3 className="text-3xl font-bold text-[#c29a6b] mb-8">Un immeuble à découper, si.</h3>
+          <p className="text-sm text-gray-400 mb-2 max-w-2xl leading-relaxed">
+            Les portails classiques savent vendre un bien lisible.
+          </p>
+          <p className="text-sm text-gray-400 mb-16 max-w-2xl leading-relaxed">
+            Notre métier commence là où il faut une lecture urbanistique, de l'imagination, une stratégie patrimoniale
+            — là où le vendeur voit un bien, et où le professionnel voit une création de valeur.
+          </p>
+
+          {/* Ce que nous publions */}
+          <p className="text-xs tracking-[0.3em] uppercase text-gray-500 mb-4">Ce que nous publions</p>
+          <h3 className="text-2xl font-bold mb-2">Uniquement des biens à potentiel,</h3>
+          <p className="text-2xl font-bold text-gray-400 mb-10">jamais des biens standards.</p>
+
+          <div className="mb-8">
+            <div className="flex gap-2 flex-wrap mb-6">
+              {BIENS_SLIDER.map((b, i) => (
+                <button key={i} onClick={() => setBienIdx(i)}
+                  className={`text-xs px-4 py-2 rounded-full transition-all duration-300 ${i === bienIdx ? 'bg-[#c29a6b] text-black font-semibold' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}>
+                  {b.titre}
+                </button>
+              ))}
+            </div>
+            <div className="relative overflow-hidden">
+              <div className="flex transition-transform duration-500 ease-in-out" style={{ transform: `translateX(-${bienIdx * 100}%)` }}>
+                {BIENS_SLIDER.map((b, i) => (
+                  <div key={i} className="w-full flex-shrink-0">
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div className="p-8 rounded-2xl border border-[#c29a6b]/20 bg-[#c29a6b]/5">
+                        <div className="text-4xl mb-5">{b.icon}</div>
+                        <h3 className="text-xl font-bold text-white mb-3">{b.titre}</h3>
+                        <p className="text-sm text-gray-300 leading-relaxed mb-6">{b.desc}</p>
+                        <div className="border-t border-[#c29a6b]/15 pt-5">
+                          <p className="text-xs text-[#c29a6b] uppercase tracking-widest mb-2">Exemple concret</p>
+                          <p className="text-sm text-gray-400 italic">{b.ex}</p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-3">
+                        {BIENS_SLIDER.filter((_, idx) => idx !== i).slice(0, 3).map((other, j) => (
+                          <button key={j} onClick={() => setBienIdx(BIENS_SLIDER.indexOf(other))}
+                            className="text-left p-4 rounded-xl border border-white/10 bg-[#0b1220] hover:border-[#c29a6b]/30 transition-all group flex items-center gap-4">
+                            <span className="text-xl opacity-40 group-hover:opacity-100 transition-opacity">{other.icon}</span>
+                            <div>
+                              <p className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">{other.titre}</p>
+                              <p className="text-xs text-gray-600 mt-0.5">{other.desc.slice(0, 50)}…</p>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-[#c29a6b] ml-auto transition-colors" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <p className="text-xs tracking-[0.2em] uppercase text-[#c29a6b] mb-4">Ce que nous refusons.</p>
+          <div className="space-y-2 text-sm text-gray-400">
+            <p>→ Biens standards vendables à des particuliers.</p>
+            <p>→ Biens sans potentiels de valorisation.</p>
+            <p>→ Des prix déjà alignés sur le marché.</p>
+          </div>
+        </div>
+      </section>
+
       {/* ── CHIFFRES ── */}
       <section className="px-6 lg:px-10 py-28">
         <div className="max-w-7xl mx-auto">
@@ -383,85 +454,6 @@ export default function LandingPage() {
               ))}
             </div>
 
-          </div>
-        </div>
-      </section>
-
-      {/* ── NOTRE PARTI PRIS ── */}
-      <section className="bg-[#111720] px-6 lg:px-10 py-24">
-        <div className="max-w-7xl mx-auto">
-          <p className="text-xs tracking-[0.3em] uppercase text-gray-500 mb-4">Notre parti pris</p>
-          <h2 className="text-3xl font-bold mb-2">Une maison standard n'a pas besoin de nous.</h2>
-          <h3 className="text-3xl font-bold text-[#c29a6b] mb-8">Un immeuble à découper, si.</h3>
-          <p className="text-sm text-gray-400 mb-2 max-w-2xl leading-relaxed">
-            Les portails classiques savent vendre un bien lisible.
-          </p>
-          <p className="text-sm text-gray-400 mb-16 max-w-2xl leading-relaxed">
-            Notre métier commence là où il faut une lecture urbanistique, de l'imagination, une stratégie patrimoniale
-            — là où le vendeur voit un bien, et où le professionnel voit une création de valeur.
-          </p>
-
-          {/* Ce que nous publions */}
-          <p className="text-xs tracking-[0.3em] uppercase text-gray-500 mb-4">Ce que nous publions</p>
-          <h3 className="text-2xl font-bold mb-2">Uniquement des biens à potentiel,</h3>
-          <p className="text-2xl font-bold text-gray-400 mb-10">jamais des biens standards.</p>
-
-          {/* Slider biens */}
-          <div className="mb-8">
-            {/* Tabs navigation */}
-            <div className="flex gap-2 flex-wrap mb-6">
-              {BIENS_SLIDER.map((b, i) => (
-                <button key={i} onClick={() => setBienIdx(i)}
-                  className={`text-xs px-4 py-2 rounded-full transition-all duration-300 ${i === bienIdx ? 'bg-[#c29a6b] text-black font-semibold' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}>
-                  {b.titre}
-                </button>
-              ))}
-            </div>
-
-            {/* Contenu actif */}
-            <div className="relative overflow-hidden">
-              <div
-                className="flex transition-transform duration-500 ease-in-out"
-                style={{ transform: `translateX(-${bienIdx * 100}%)` }}
-              >
-                {BIENS_SLIDER.map((b, i) => (
-                  <div key={i} className="w-full flex-shrink-0">
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      <div className="p-8 rounded-2xl border border-[#c29a6b]/20 bg-[#c29a6b]/5">
-                        <div className="text-4xl mb-5">{b.icon}</div>
-                        <h3 className="text-xl font-bold text-white mb-3">{b.titre}</h3>
-                        <p className="text-sm text-gray-300 leading-relaxed mb-6">{b.desc}</p>
-                        <div className="border-t border-[#c29a6b]/15 pt-5">
-                          <p className="text-xs text-[#c29a6b] uppercase tracking-widest mb-2">Exemple concret</p>
-                          <p className="text-sm text-gray-400 italic">{b.ex}</p>
-                        </div>
-                      </div>
-                      <div className="flex flex-col gap-3">
-                        {BIENS_SLIDER.filter((_, idx) => idx !== i).slice(0, 3).map((other, j) => (
-                          <button key={j} onClick={() => setBienIdx(BIENS_SLIDER.indexOf(other))}
-                            className="text-left p-4 rounded-xl border border-white/10 bg-[#0b1220] hover:border-[#c29a6b]/30 transition-all group flex items-center gap-4">
-                            <span className="text-xl opacity-40 group-hover:opacity-100 transition-opacity">{other.icon}</span>
-                            <div>
-                              <p className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">{other.titre}</p>
-                              <p className="text-xs text-gray-600 mt-0.5">{other.desc.slice(0, 50)}…</p>
-                            </div>
-                            <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-[#c29a6b] ml-auto transition-colors" />
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Ce que nous refusons */}
-          <p className="text-xs tracking-[0.2em] uppercase text-[#c29a6b] mb-4">Ce que nous refusons.</p>
-          <div className="space-y-2 text-sm text-gray-400">
-            <p>→ Biens standards vendables à des particuliers.</p>
-            <p>→ Biens sans potentiels de valorisation.</p>
-            <p>→ Des prix déjà alignés sur le marché.</p>
           </div>
         </div>
       </section>
@@ -1041,3 +1033,4 @@ export default function LandingPage() {
     </div>
   )
 }
+
