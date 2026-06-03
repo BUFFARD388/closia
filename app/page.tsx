@@ -889,9 +889,23 @@ export default function LandingPage() {
                   Object.entries(analyseForm).forEach(([k, v]) => fd.append(k, v))
                   fd.append('type', analyseType || '')
                   analyseFiles.forEach(f => fd.append('files', f))
-                  await fetch('/api/emails/analyse-demande', { method: 'POST', body: fd })
-                  setAnalyseSending(false)
-                  setAnalyseSent(true)
+
+                  if (analyseType === 'simple') {
+                    // Redirection vers Stripe Checkout
+                    const res = await fetch('/api/stripe/analyse-checkout', { method: 'POST', body: fd })
+                    const data = await res.json()
+                    if (data.url) {
+                      window.location.href = data.url
+                    } else {
+                      setAnalyseSending(false)
+                      alert('Une erreur est survenue. Veuillez réessayer.')
+                    }
+                  } else {
+                    // Devis complexe : envoi email simple
+                    await fetch('/api/emails/analyse-demande', { method: 'POST', body: fd })
+                    setAnalyseSending(false)
+                    setAnalyseSent(true)
+                  }
                 }} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
