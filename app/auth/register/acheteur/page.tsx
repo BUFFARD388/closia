@@ -83,8 +83,8 @@ export default function RegisterAcheteur() {
                 <input className="input" placeholder="Nom de votre société" required value={form.societe} onChange={set('societe')} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Numéro SIRET *</label>
-                <input className="input" placeholder="XXX XXX XXX XXXXX" required value={form.siret} onChange={set('siret')} pattern="\d{14}" title="Le SIRET doit contenir 14 chiffres" />
+                <label className="block text-sm font-medium text-gray-300 mb-2">Numéro SIREN *</label>
+                <input className="input" placeholder="XXX XXX XXX" required value={form.siret} onChange={set('siret')} pattern="\d{9}" title="Le SIREN doit contenir 9 chiffres" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Profil *</label>

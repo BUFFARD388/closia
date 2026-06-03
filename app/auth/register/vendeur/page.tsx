@@ -87,8 +87,8 @@ export default function RegisterVendeur() {
                   <input className="input" placeholder="Nom de votre société" value={form.societe_vendeur} onChange={set('societe_vendeur')} required />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Numéro SIRET *</label>
-                  <input className="input" placeholder="XXX XXX XXX XXXXX" value={form.siret} onChange={set('siret')} required pattern="\d{14}" title="Le SIRET doit contenir 14 chiffres" />
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Numéro SIREN *</label>
+                  <input className="input" placeholder="XXX XXX XXX" value={form.siret} onChange={set('siret')} required pattern="\d{9}" title="Le SIREN doit contenir 9 chiffres" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Statut professionnel *</label>
