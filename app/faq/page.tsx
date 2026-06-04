@@ -7,51 +7,51 @@ import { ChevronDown } from 'lucide-react'
 const FAQS = [
   {
     q: "Qu'est-ce que Closia exactement ?",
-    a: "Closia est une plateforme off-market reservee aux professionnels de l'immobilier. Elle met en relation des apporteurs de biens a fort potentiel (agents, mandataires, notaires) avec des acheteurs specialises (marchands de biens, promoteurs, foncieres, lotisseurs). Chaque bien est analyse par un expert avant d'etre diffuse — ce n'est pas un portail, c'est un filtre.",
+    a: "Closia est une plateforme off-market réservée aux professionnels de l'immobilier. Elle met en relation des apporteurs de biens à fort potentiel (agents, mandataires, notaires) avec des acheteurs spécialisés (marchands de biens, promoteurs, foncières, lotisseurs). Chaque bien est analysé par un expert avant d'être diffusé — ce n'est pas un portail, c'est un filtre.",
   },
   {
-    q: "A qui s'adresse Closia ?",
-    a: "A deux types de professionnels : d'un cote les apporteurs (agents immobiliers, mandataires, notaires) qui ont des biens complexes a placer ; de l'autre les acheteurs (marchands de biens, promoteurs, foncieres, lotisseurs) qui cherchent des opportunites de valorisation. L'acces est strictement reserve aux professionnels.",
+    q: "À qui s'adresse Closia ?",
+    a: "À deux types de professionnels : d'un côté les apporteurs (agents immobiliers, mandataires, notaires) qui ont des biens complexes à placer ; de l'autre les acheteurs (marchands de biens, promoteurs, foncières, lotisseurs) qui cherchent des opportunités de valorisation. L'accès est strictement réservé aux professionnels.",
   },
   {
     q: "Quels types de biens publie Closia ?",
-    a: "Uniquement des biens a fort potentiel : immeubles a restructurer ou decouper, terrains divisibles, locaux a transformer, biens avec droits a batir residuels, dents creuses, actifs sous-exploites. Closia ne publie jamais de biens standards vendables a des particuliers.",
+    a: "Uniquement des biens à fort potentiel : immeubles à restructurer ou découper, terrains divisibles, locaux à transformer, biens avec droits à bâtir résiduels, dents creuses, actifs sous-exploités. Closia ne publie jamais de biens standards vendables à des particuliers.",
   },
   {
-    q: "Comment fonctionne le processus de depot d'un bien ?",
-    a: "Vous soumettez votre dossier via le formulaire vendeur. Notre expert l'analyse sous 48h (lecture PLU, potentiel de valorisation, coherence prix, risques). Si le bien est retenu, il est diffuse pendant 72h en off-market strict aupres de 3 acheteurs professionnels maximum. Vous recevez un retour dans tous les cas.",
+    q: "Comment fonctionne le processus de dépôt d'un bien ?",
+    a: "Vous soumettez votre dossier via le formulaire vendeur. Notre expert l'analyse sous 48h (lecture PLU, potentiel de valorisation, cohérence prix, risques). Si le bien est retenu, il est diffusé pendant 72h auprès de l'ensemble des acheteurs inscrits et sélectionnés sur la plateforme. Parmi ceux qui se positionnent, 3 acheteurs maximum peuvent acheter le lead. Vous recevez un retour dans tous les cas.",
   },
   {
-    q: "Combien cela coute-t-il pour l'apporteur ?",
-    a: "Rien. La soumission d'un bien est totalement gratuite pour l'apporteur. Aucun frais, aucune commission sur la transaction. Le modele economique de Closia repose uniquement sur les acheteurs qui debloquent les coordonnees.",
+    q: "Combien cela coûte-t-il pour l'apporteur ?",
+    a: "Rien. La soumission d'un bien est totalement gratuite pour l'apporteur. Aucun frais, aucune commission sur la transaction. Le modèle économique de Closia repose uniquement sur les acheteurs qui débloquent les coordonnées.",
   },
   {
-    q: "Combien coute l'acces a un lead pour un acheteur ?",
-    a: "Le prix depend de la valeur du bien et du mode d'acces choisi. En lead exclusif : 490 EUR (bien < 300 000 EUR), 890 EUR (300k-1M EUR) ou 1 490 EUR (> 1M EUR). En lead partage (2-3 acheteurs max), les tarifs sont degressifs. L'inscription sur la plateforme est gratuite.",
+    q: "Combien coûte l'accès à un lead pour un acheteur ?",
+    a: "Le prix dépend de la valeur du bien et du mode d'accès choisi. En lead exclusif : 490 € (bien < 300 000 €), 890 € (300k–1M €) ou 1 490 € (> 1M €). En lead partagé, les tarifs sont dégressifs selon le nombre d'acheteurs. L'inscription sur la plateforme est gratuite.",
   },
   {
-    q: "Qu'est-ce que le lead exclusif et le lead partage ?",
-    a: "Le lead exclusif donne un acces immediat et unique aux coordonnees de l'apporteur — vous etes le seul acheteur sur ce dossier. Le lead partage permet a 2 ou 3 acheteurs maximum d'acceder aux memes coordonnees, avec un tarif plus bas. Dans les deux cas, le bien n'est jamais diffuse publiquement.",
+    q: "Qu'est-ce que le lead exclusif et le lead partagé ?",
+    a: "Le lead est diffusé à l'ensemble des acheteurs inscrits et sélectionnés sur la plateforme. Parmi ceux qui se positionnent, 3 acheteurs maximum peuvent acheter le lead. Le lead exclusif donne un accès unique aux coordonnées de l'apporteur — vous êtes le seul acheteur sur ce dossier. Le lead partagé permet à 2 ou 3 acheteurs d'accéder aux mêmes coordonnées, avec un tarif dégressif. Dans les deux cas, le bien n'est jamais diffusé publiquement.",
   },
   {
-    q: "Qu'est-ce que l'analyse prealable ?",
-    a: "C'est un service expert a 150 EUR HT : vous soumettez un bien avant meme de l'inscrire sur la plateforme, et notre expert realise une analyse complete (PLU, potentiel, faisabilite, risques) avec un rapport ecrit remis sous 48h. Utile pour conforter votre position face a un vendeur ou un client.",
+    q: "Qu'est-ce que l'analyse préalable ?",
+    a: "C'est un service expert à 150 € HT : vous soumettez un bien avant même de l'inscrire sur la plateforme, et notre expert réalise une analyse complète (PLU, potentiel, faisabilité, risques) avec un rapport écrit remis sous 48h. Utile pour conforter votre position face à un vendeur ou accélérer la signature d'un mandat exclusif.",
   },
   {
-    q: "Comment est garantie la confidentialite ?",
-    a: "Les biens ne sont jamais diffuses publiquement. L'acces est limite a des acheteurs professionnels verifies. Les coordonnees du vendeur ne sont transmises qu'apres paiement valide. Chaque dossier disparait automatiquement a expiration du delai de 72h. Aucune capture ni redistribution n'est autorisee.",
+    q: "Comment est garantie la confidentialité ?",
+    a: "Les biens ne sont jamais diffusés publiquement. L'accès est limité à des acheteurs professionnels vérifiés et sélectionnés. Les coordonnées du vendeur ne sont transmises qu'après paiement validé. Chaque dossier disparaît automatiquement à expiration du délai de 72h. Aucune capture ni redistribution n'est autorisée.",
   },
   {
     q: "Que se passe-t-il si aucun acheteur ne se positionne en 72h ?",
-    a: "Le lead expire et le dossier est retire de la diffusion. L'apporteur est informe. Selon le potentiel du bien, une nouvelle diffusion peut etre envisagee apres requalification, ou nous pouvons orienter vers d'autres solutions.",
+    a: "Le lead expire et le dossier est retiré de la diffusion. L'apporteur est informé. Selon le potentiel du bien, une nouvelle diffusion peut être envisagée après requalification.",
   },
   {
-    q: "Closia intervient-il dans la negociation ou la transaction ?",
-    a: "Non. Une fois les coordonnees transmises, l'acheteur et l'apporteur traitent directement entre eux. Closia ne percoit aucune commission sur la transaction immobiliere. Notre role s'arrete a la mise en relation qualifiee.",
+    q: "Closia intervient-il dans la négociation ou la transaction ?",
+    a: "Non. Une fois les coordonnées transmises, l'acheteur et l'apporteur traitent directement entre eux. Closia ne perçoit aucune commission sur la transaction immobilière. Notre rôle s'arrête à la mise en relation qualifiée.",
   },
   {
     q: "Comment s'inscrire sur Closia ?",
-    a: "L'inscription est gratuite et immediate. Selon votre profil, rendez-vous sur la page d'inscription apporteur ou acheteur, renseignez vos informations professionnelles (SIREN, statut, coordonnees) et vous accedez a la plateforme apres validation de votre email.",
+    a: "L'inscription est gratuite et immédiate. Selon votre profil, rendez-vous sur la page d'inscription apporteur ou acheteur, renseignez vos informations professionnelles (SIREN, statut, coordonnées) et accédez à la plateforme après validation de votre email.",
   },
 ]
 
@@ -73,7 +73,7 @@ export default function FAQ() {
 
       <main className="max-w-3xl mx-auto px-6 lg:px-10 py-16">
         <p className="text-xs text-gray-500 uppercase tracking-widest mb-2">Aide</p>
-        <h1 className="text-3xl font-bold text-white mb-2">Questions frequentes</h1>
+        <h1 className="text-3xl font-bold text-white mb-2">Questions fréquentes</h1>
         <p className="text-gray-400 mb-12">Tout ce que vous devez savoir sur Closia.</p>
 
         <div className="space-y-3">
@@ -97,7 +97,7 @@ export default function FAQ() {
 
         <div className="mt-16 border border-[#c29a6b]/20 rounded-xl p-8 bg-[#c29a6b]/5 text-center">
           <p className="text-white font-semibold mb-2">Vous avez une autre question ?</p>
-          <p className="text-gray-400 text-sm mb-6">Notre equipe vous repond sous 24h.</p>
+          <p className="text-gray-400 text-sm mb-6">Notre équipe vous répond sous 24h.</p>
           <a href="mailto:contact@closia.net"
             className="inline-flex items-center text-xs tracking-widest uppercase bg-[#c29a6b] text-black font-semibold px-6 py-3 rounded-lg hover:bg-[#b8911f] transition-colors">
             Nous contacter
@@ -109,10 +109,10 @@ export default function FAQ() {
         <div className="flex flex-wrap justify-center gap-4">
           <Link href="/legal/cgu" className="hover:text-gray-400">CGU</Link>
           <Link href="/legal/cgv" className="hover:text-gray-400">CGV</Link>
-          <Link href="/legal/confidentialite" className="hover:text-gray-400">Confidentialite</Link>
+          <Link href="/legal/confidentialite" className="hover:text-gray-400">Confidentialité</Link>
           <Link href="/legal/cookies" className="hover:text-gray-400">Cookies</Link>
         </div>
-        <p className="mt-3">2026 Closia. Tous droits reserves.</p>
+        <p className="mt-3">© 2026 Closia. Tous droits réservés.</p>
       </footer>
     </div>
   )
