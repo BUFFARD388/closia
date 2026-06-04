@@ -9,6 +9,61 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
+// ── Formatage du rapport en HTML email ─────────────────────
+function renderInline(text: string): string {
+  return text
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/\[À VÉRIFIER\]/gi, '<span style="background:#fff8ed;border:1px solid #e8c87a;border-radius:3px;padding:1px 6px;font-size:11px;color:#b8860b;font-weight:700;">[À VÉRIFIER]</span>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#fff;font-weight:600;">$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+}
+
+function renderLines(lines: string[]): string {
+  let html = ''
+  let inList = false
+  for (const line of lines) {
+    const t = line.trim()
+    if (!t) { if (inList) { html += '</ul>'; inList = false } continue }
+    if (/^[-•·]\s+/.test(t)) {
+      if (!inList) { html += '<ul style="padding-left:18px;margin:8px 0;">'; inList = true }
+      html += `<li style="margin-bottom:5px;color:#d1d5db;">${renderInline(t.replace(/^[-•·]\s+/, ''))}</li>`
+    } else {
+      if (inList) { html += '</ul>'; inList = false }
+      html += `<p style="margin:0 0 9px;color:#d1d5db;">${renderInline(t)}</p>`
+    }
+  }
+  if (inList) html += '</ul>'
+  return html
+}
+
+function formatRapportHtml(texte: string): string {
+  const allLines = texte.split('\n')
+  const sections: { num: string; title: string; lines: string[] }[] = []
+  let cur: { num: string; title: string; lines: string[] } | null = null
+
+  for (const line of allLines) {
+    const m = line.match(/^(\d+)[.)]\s+(.+)$/)
+    if (m) {
+      if (cur) sections.push(cur)
+      cur = { num: m[1], title: m[2].trim(), lines: [] }
+    } else if (cur) {
+      cur.lines.push(line)
+    }
+  }
+  if (cur) sections.push(cur)
+
+  if (sections.length === 0) return renderLines(allLines)
+
+  return sections.map(s => `
+    <div style="margin-bottom:28px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid rgba(194,154,107,0.2);">
+        <div style="background:#c29a6b;color:#fff;width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;text-align:center;line-height:24px;">${s.num}</div>
+        <span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#fff;">${s.title}</span>
+      </div>
+      <div style="font-size:14px;line-height:1.8;">${renderLines(s.lines)}</div>
+    </div>`).join('')
+}
+
 export async function POST(req: Request) {
   try {
     const { analyseId, nom, email, adresse, description, rapport, fichiers } = await req.json()
@@ -44,8 +99,8 @@ export async function POST(req: Request) {
           </div>
 
           <div style="margin-bottom:32px;">
-            <p style="color:#c29a6b;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin:0 0 16px;">Rapport d'analyse expert</p>
-            <div style="color:#e5e7eb;font-size:15px;line-height:1.85;white-space:pre-wrap;border-left:2px solid rgba(194,154,107,0.4);padding-left:20px;">${rapport}</div>
+            <p style="color:#c29a6b;font-size:11px;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 20px;font-weight:700;">Rapport d'analyse expert</p>
+            ${formatRapportHtml(rapport)}
           </div>
 
           ${filesHtml}
