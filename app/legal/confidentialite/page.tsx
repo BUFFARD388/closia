@@ -19,21 +19,26 @@ export default function Confidentialite() {
         <h2 className="text-lg font-semibold text-[#c29a6b] uppercase tracking-widest mb-4">2. Données collectées</h2>
         <p className="text-gray-300 leading-relaxed mb-4">Dans le cadre de l'utilisation de la plateforme, Closia collecte les données suivantes :</p>
         <div className="space-y-3">
-          {[
-            { titre: 'Données d'identification', contenu: 'Nom, prénom, adresse email, numéro de téléphone, numéro SIREN, société, statut professionnel.' },
-            { titre: 'Données de connexion', contenu: 'Adresse IP, identifiant de session, date et heure de connexion.' },
-            { titre: 'Données transactionnelles', contenu: 'Historique des achats, montants payés, statut des commandes. Les données bancaires sont traitées exclusivement par Stripe et ne transitent pas par les serveurs de Closia.' },
-            { titre: 'Données relatives aux biens', contenu: 'Adresse, description, photos, documents transmis par les apporteurs.' },
-            { titre: 'Données de navigation', contenu: 'Cookies techniques et analytiques (voir politique de cookies).' },
-          ].map(d => (
-            <div key={d.titre} className="flex gap-3 bg-[#111720] border border-white/10 rounded-lg p-4">
-              <span className="text-[#c29a6b] flex-shrink-0 mt-0.5">→</span>
-              <div>
-                <p className="text-white font-medium text-sm mb-1">{d.titre}</p>
-                <p className="text-gray-400 text-sm">{d.contenu}</p>
-              </div>
-            </div>
-          ))}
+          <div className="flex gap-3 bg-[#111720] border border-white/10 rounded-lg p-4">
+            <span className="text-[#c29a6b] flex-shrink-0 mt-0.5">→</span>
+            <div><p className="text-white font-medium text-sm mb-1">Données d'identification</p><p className="text-gray-400 text-sm">Nom, prénom, adresse email, numéro de téléphone, numéro SIREN, société, statut professionnel.</p></div>
+          </div>
+          <div className="flex gap-3 bg-[#111720] border border-white/10 rounded-lg p-4">
+            <span className="text-[#c29a6b] flex-shrink-0 mt-0.5">→</span>
+            <div><p className="text-white font-medium text-sm mb-1">Données de connexion</p><p className="text-gray-400 text-sm">Adresse IP, identifiant de session, date et heure de connexion.</p></div>
+          </div>
+          <div className="flex gap-3 bg-[#111720] border border-white/10 rounded-lg p-4">
+            <span className="text-[#c29a6b] flex-shrink-0 mt-0.5">→</span>
+            <div><p className="text-white font-medium text-sm mb-1">Données transactionnelles</p><p className="text-gray-400 text-sm">Historique des achats, montants payés, statut des commandes. Les données bancaires sont traitées exclusivement par Stripe et ne transitent pas par les serveurs de Closia.</p></div>
+          </div>
+          <div className="flex gap-3 bg-[#111720] border border-white/10 rounded-lg p-4">
+            <span className="text-[#c29a6b] flex-shrink-0 mt-0.5">→</span>
+            <div><p className="text-white font-medium text-sm mb-1">Données relatives aux biens</p><p className="text-gray-400 text-sm">Adresse, description, photos, documents transmis par les apporteurs.</p></div>
+          </div>
+          <div className="flex gap-3 bg-[#111720] border border-white/10 rounded-lg p-4">
+            <span className="text-[#c29a6b] flex-shrink-0 mt-0.5">→</span>
+            <div><p className="text-white font-medium text-sm mb-1">Données de navigation</p><p className="text-gray-400 text-sm">Cookies techniques et analytiques (voir politique de cookies).</p></div>
+          </div>
         </div>
       </section>
 
@@ -108,3 +113,4 @@ export default function Confidentialite() {
     </div>
   )
 }
+
