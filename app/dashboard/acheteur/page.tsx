@@ -47,38 +47,43 @@ export default function DashboardAcheteur() {
 
   useEffect(() => { init() }, [])
 
-  // Confirmer l'achat exclusif au retour de Stripe
+  // Gérer le retour de Stripe (succès ou annulation)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    if (params.get('payment') === 'success') {
+    const achatId = params.get('achatId')
+
+    if (params.get('payment') === 'success' && achatId) {
       setTab('achetes')
-      const achatId = params.get('achatId')
-      if (achatId) {
-        supabase.from('achats').update({ statut: 'confirme' }).eq('id', achatId).then(async () => {
-          // Email confirmation achat exclusif
-          const { data: achat } = await supabase
-            .from('achats')
-            .select('*, biens(*)')
-            .eq('id', achatId)
-            .single()
-          if (achat && userProfile) {
-            await fetch('/api/emails/confirm-achat', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                email: userProfile.email,
-                prenom: userProfile.prenom,
-                type: achat.biens?.type,
-                ville: achat.biens?.ville,
-                cp: achat.biens?.cp,
-                mode: 'exclusif',
-                montant: achat.montant_paye,
-              }),
-            })
-          }
-          window.history.replaceState({}, '', '/dashboard/acheteur')
-        })
-      }
+      supabase.from('achats').update({ statut: 'confirme' }).eq('id', achatId).then(async () => {
+        const { data: achat } = await supabase
+          .from('achats')
+          .select('*, biens(*)')
+          .eq('id', achatId)
+          .single()
+        if (achat && userProfile) {
+          await fetch('/api/emails/confirm-achat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: userProfile.email,
+              prenom: userProfile.prenom,
+              type: achat.biens?.type,
+              ville: achat.biens?.ville,
+              cp: achat.biens?.cp,
+              mode: 'exclusif',
+              montant: achat.montant_paye,
+            }),
+          })
+        }
+        window.history.replaceState({}, '', '/dashboard/acheteur')
+      })
+    }
+
+    if (params.get('payment') === 'cancel' && achatId) {
+      // Annuler l'achat si l'utilisateur a abandonné le paiement
+      supabase.from('achats').update({ statut: 'annule' }).eq('id', achatId).then(() => {
+        window.history.replaceState({}, '', '/dashboard/acheteur')
+      })
     }
   }, [])
 
@@ -300,6 +305,7 @@ export default function DashboardAcheteur() {
                       <div className="space-y-1.5 mb-4 text-sm text-gray-400">
                         <div className="flex items-center gap-2"><MapPin className="w-3.5 h-3.5 text-gold-500" />{lead.cp} – {lead.ville}</div>
                         <div className="flex items-center gap-2"><Euro className="w-3.5 h-3.5 text-gold-500" />{Number(lead.prix).toLocaleString('fr-FR')} €</div>
+                        {lead.surface && <div className="flex items-center gap-2"><span className="text-gold-500 text-xs font-medium">m²</span>{lead.surface} m²</div>}
                       </div>
 
                       <div className="bg-navy-700/50 rounded-lg p-3 mb-4 relative overflow-hidden">
