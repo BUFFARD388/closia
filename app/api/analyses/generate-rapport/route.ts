@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     // 1. Géocodage de l'adresse
     let lat: number | null = null
     let lon: number | null = null
-    let ville = ''
+    let villeGeo = ''
     let codePostal = ''
     let adresseNormalisee = adresse
 
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       if (geoData.features?.length > 0) {
         const f = geoData.features[0]
         ;[lon, lat] = f.geometry.coordinates
-        ville = f.properties.city || ''
+        villeGeo = f.properties.city || ''
         codePostal = f.properties.postcode || ''
         adresseNormalisee = f.properties.label || adresse
       }
@@ -84,7 +84,7 @@ Quand des données sont manquantes, tu l'indiques clairement avec [À VÉRIFIER]
 INFORMATIONS DU BIEN :
 - Type : ${type_bien || 'Non précisé'}
 - Adresse : ${adresseNormalisee}
-- Ville : ${ville || codePostal ? `${ville} (${codePostal})` : 'Non précisée'}
+- Ville : ${ville || villeGeo || 'Non précisée'} (${cp || codePostal || '—'})
 - Code postal : ${cp || codePostal || 'Non précisé'}
 ${parcelle ? `- Numéro de parcelle cadastrale : ${parcelle}` : ''}
 - Description transmise par le demandeur : ${description}
