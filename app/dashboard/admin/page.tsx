@@ -251,6 +251,22 @@ export default function DashboardAdmin() {
           photos_urls: [],
         }).eq('id', selected.id)
       }
+      // Notifier les acheteurs si validation
+      if (decision === 'validate') {
+        fetch('/api/emails/notify-acheteurs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            bienId: selected.id,
+            type: selected.type,
+            ville: selected.ville,
+            cp: selected.cp,
+            prix: selected.prix,
+            surface: selected.surface,
+          }),
+        }).catch(console.warn) // non bloquant
+      }
+
       // Envoyer email au vendeur
       if (apporteur?.email) {
         await fetch('/api/emails/notify-vendeur', {
