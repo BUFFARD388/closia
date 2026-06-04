@@ -167,62 +167,158 @@ export default function DashboardAdmin() {
 
   function imprimerRapport() {
     if (!selectedAnalyse) return
+
+    const logoUrl = window.location.origin + '/logo.png'
+    const rapportTexte = rapport || selectedAnalyse.rapport || ''
+
+    // --- Parseur markdown simplifié ---
+    function renderInline(text: string): string {
+      return text
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/\[À VÉRIFIER\]/gi, '<span style="background:#fff8ed;border:1px solid #e8c87a;border-radius:3px;padding:1px 7px;font-size:11px;color:#b8860b;font-weight:700;">[À VÉRIFIER]</span>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    }
+
+    function renderLines(lines: string[]): string {
+      let html = ''
+      let inList = false
+      for (const line of lines) {
+        const t = line.trim()
+        if (!t) { if (inList) { html += '</ul>'; inList = false } continue }
+        if (/^[-•·]\s+/.test(t)) {
+          if (!inList) { html += '<ul>'; inList = true }
+          html += `<li>${renderInline(t.replace(/^[-•·]\s+/, ''))}</li>`
+        } else {
+          if (inList) { html += '</ul>'; inList = false }
+          html += `<p>${renderInline(t)}</p>`
+        }
+      }
+      if (inList) html += '</ul>'
+      return html
+    }
+
+    // Découpe en sections numérotées
+    const allLines = rapportTexte.split('\n')
+    const sections: { num: string; title: string; lines: string[] }[] = []
+    let cur: { num: string; title: string; lines: string[] } | null = null
+
+    for (const line of allLines) {
+      const m = line.match(/^(\d+)[.)]\s+(.+)$/)
+      if (m) {
+        if (cur) sections.push(cur)
+        cur = { num: m[1], title: m[2].trim(), lines: [] }
+      } else if (cur) {
+        cur.lines.push(line)
+      }
+    }
+    if (cur) sections.push(cur)
+
+    const sectionsHtml = sections.length > 0
+      ? sections.map(s => `
+          <div class="section-block">
+            <div class="section-header">
+              <div class="section-num">${s.num}</div>
+              <div class="section-title">${s.title}</div>
+            </div>
+            <div class="section-body">${renderLines(s.lines)}</div>
+          </div>`).join('')
+      : `<div class="section-body">${renderLines(allLines)}</div>`
+
     const w = window.open('', '_blank')!
-    w.document.write(`
-      <!DOCTYPE html>
-      <html lang="fr">
-      <head>
-        <meta charset="UTF-8"/>
-        <title>Rapport d'analyse — ${selectedAnalyse.adresse}</title>
-        <style>
-          body { font-family: Georgia, serif; max-width: 800px; margin: 40px auto; padding: 40px; color: #1a1a1a; line-height: 1.7; }
-          .header { border-bottom: 2px solid #c29a6b; padding-bottom: 24px; margin-bottom: 32px; }
-          .logo { font-size: 24px; font-weight: bold; color: #c29a6b; letter-spacing: 4px; margin-bottom: 8px; }
-          .titre { font-size: 20px; font-weight: bold; margin-bottom: 4px; }
-          .sous-titre { color: #666; font-size: 14px; }
-          .section { margin-bottom: 28px; }
-          .section-label { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #c29a6b; margin-bottom: 8px; font-weight: bold; }
-          .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #f9f7f4; padding: 16px; border-radius: 8px; margin-bottom: 24px; }
-          .info-item label { font-size: 11px; color: #999; display: block; }
-          .info-item span { font-size: 14px; font-weight: 600; }
-          .rapport-content { white-space: pre-wrap; font-size: 15px; line-height: 1.8; }
-          .footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid #ddd; font-size: 12px; color: #999; text-align: center; }
-          @media print { body { margin: 0; } }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div class="logo">CLOSIA</div>
-          <div class="titre">Rapport d'analyse préalable</div>
-          <div class="sous-titre">Confidentiel — Usage exclusif du destinataire</div>
-        </div>
+    w.document.write(`<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Rapport d'analyse — ${selectedAnalyse.adresse}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Arial,Helvetica,sans-serif;color:#1a1a2e;background:#fff;font-size:13.5px;line-height:1.75}
+    /* HEADER */
+    .cover{background:linear-gradient(135deg,#0b1220 0%,#1b2a4a 100%);padding:40px 56px 36px;color:#fff;display:flex;align-items:center;justify-content:space-between}
+    .cover-left{}
+    .cover-logo{height:52px;margin-bottom:20px;display:block}
+    .cover-logo-text{font-size:26px;font-weight:700;color:#c29a6b;letter-spacing:6px;margin-bottom:20px}
+    .cover-title{font-size:20px;font-weight:600;color:#fff;margin-bottom:6px}
+    .cover-sub{font-size:11px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:1.5px}
+    .cover-badge{background:rgba(194,154,107,.12);border:1px solid rgba(194,154,107,.35);border-radius:6px;padding:10px 18px;text-align:center}
+    .cover-badge-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.5);margin-bottom:4px}
+    .cover-badge-date{font-size:14px;font-weight:600;color:#c29a6b}
+    /* INFO STRIP */
+    .info-strip{background:#f7f5f0;border-bottom:1px solid #e8e2d5;padding:24px 56px}
+    .info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .info-item{background:#fff;border:1px solid #e8e2d5;border-radius:8px;padding:12px 14px}
+    .info-item.wide{grid-column:1/-1}
+    .info-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#9ca3af;margin-bottom:3px}
+    .info-value{font-size:13px;font-weight:600;color:#1a1a2e}
+    /* DESCRIPTION */
+    .desc-strip{padding:20px 56px;background:#fffdf9;border-bottom:1px solid #e8e2d5;border-left:4px solid #c29a6b}
+    .desc-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#c29a6b;margin-bottom:6px;font-weight:700}
+    .desc-text{font-size:13px;color:#4b5563;line-height:1.7}
+    /* CONTENT */
+    .content{padding:36px 56px 48px}
+    /* SECTIONS */
+    .section-block{margin-bottom:32px;page-break-inside:avoid}
+    .section-header{display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #f0ebe0}
+    .section-num{background:#c29a6b;color:#fff;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+    .section-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#1a1a2e}
+    .section-body{color:#374151;font-size:13.5px;line-height:1.8}
+    .section-body p{margin-bottom:9px}
+    .section-body ul{padding-left:18px;margin-bottom:9px}
+    .section-body li{margin-bottom:5px}
+    .section-body strong{color:#1a1a2e;font-weight:600}
+    /* FOOTER */
+    .footer{padding:16px 56px;background:#f7f5f0;border-top:1px solid #e8e2d5;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#9ca3af}
+    .footer-brand{font-weight:600;color:#c29a6b;letter-spacing:2px;font-size:12px}
+    .confidential{background:#fff8ed;border:1px solid rgba(194,154,107,.4);border-radius:4px;padding:3px 10px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#c29a6b;font-weight:700}
+    @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.section-block{page-break-inside:avoid}}
+  </style>
+</head>
+<body>
 
-        <div class="info-grid">
-          <div class="info-item"><label>Client</label><span>${selectedAnalyse.nom}</span></div>
-          <div class="info-item"><label>Email</label><span>${selectedAnalyse.email}</span></div>
-          <div class="info-item"><label>Téléphone</label><span>${selectedAnalyse.tel}</span></div>
-          <div class="info-item"><label>Date de la demande</label><span>${new Date(selectedAnalyse.created_at).toLocaleDateString('fr-FR')}</span></div>
-          <div class="info-item" style="grid-column: 1/-1"><label>Bien analysé</label><span>${selectedAnalyse.adresse}</span></div>
-        </div>
+<div class="cover">
+  <div class="cover-left">
+    <img src="${logoUrl}" class="cover-logo" onerror="this.style.display='none';document.getElementById('logo-text').style.display='block'"/>
+    <div id="logo-text" class="cover-logo-text" style="display:none">CLOSIA</div>
+    <div class="cover-title">Rapport d'analyse préalable</div>
+    <div class="cover-sub">Document confidentiel — Usage exclusif du destinataire</div>
+  </div>
+  <div class="cover-badge">
+    <div class="cover-badge-label">Généré le</div>
+    <div class="cover-badge-date">${new Date().toLocaleDateString('fr-FR')}</div>
+  </div>
+</div>
 
-        <div class="section">
-          <div class="section-label">Description transmise par le client</div>
-          <p>${selectedAnalyse.description}</p>
-          ${selectedAnalyse.message ? `<p><em>${selectedAnalyse.message}</em></p>` : ''}
-        </div>
+<div class="info-strip">
+  <div class="info-grid">
+    <div class="info-item"><div class="info-label">Client</div><div class="info-value">${selectedAnalyse.nom}</div></div>
+    <div class="info-item"><div class="info-label">Téléphone</div><div class="info-value">${selectedAnalyse.tel}</div></div>
+    <div class="info-item"><div class="info-label">Email</div><div class="info-value">${selectedAnalyse.email}</div></div>
+    <div class="info-item"><div class="info-label">Type de bien</div><div class="info-value">${selectedAnalyse.type_bien || '—'}</div></div>
+    <div class="info-item"><div class="info-label">Date de la demande</div><div class="info-value">${new Date(selectedAnalyse.created_at).toLocaleDateString('fr-FR')}</div></div>
+    ${selectedAnalyse.parcelle ? `<div class="info-item"><div class="info-label">Parcelle cadastrale</div><div class="info-value">${selectedAnalyse.parcelle}</div></div>` : '<div></div>'}
+    <div class="info-item wide"><div class="info-label">Bien analysé</div><div class="info-value">${selectedAnalyse.adresse}</div></div>
+  </div>
+</div>
 
-        <div class="section">
-          <div class="section-label">Rapport d'analyse expert</div>
-          <div class="rapport-content">${rapport || selectedAnalyse.rapport || ''}</div>
-        </div>
+${selectedAnalyse.description ? `
+<div class="desc-strip">
+  <div class="desc-label">Description transmise par le client</div>
+  <div class="desc-text">${selectedAnalyse.description}${selectedAnalyse.message ? '<br/><br/><em>' + selectedAnalyse.message + '</em>' : ''}</div>
+</div>` : ''}
 
-        <div class="footer">
-          Closia · contact@closia.net · 06 87 76 33 40 · closia.net<br/>
-          Document confidentiel généré le ${new Date().toLocaleDateString('fr-FR')}
-        </div>
-      </body>
-      </html>
-    `)
+<div class="content">
+  ${sectionsHtml}
+</div>
+
+<div class="footer">
+  <div class="footer-brand">CLOSIA</div>
+  <div>contact@closia.net &nbsp;·&nbsp; 06 87 76 33 40 &nbsp;·&nbsp; closia.net</div>
+  <div class="confidential">Confidentiel</div>
+</div>
+
+</body>
+</html>`)
     w.document.close()
     w.print()
   }
