@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
+import { Resend } from 'resend'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2026-05-27.dahlia',
@@ -10,6 +11,8 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
+
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(req: NextRequest) {
   try {
@@ -54,6 +57,38 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (dbError) throw new Error(dbError.message)
+
+    // Notifier l'admin immédiatement
+    const filesHtml = fichiers.length > 0
+      ? fichiers.map(f => `<p style="margin:4px 0;"><a href="${f.url}" style="color:#c29a6b;">${f.name}</a></p>`).join('')
+      : '<p style="color:#6b7280;">Aucun document joint</p>'
+
+    await resend.emails.send({
+      from: 'Closia <noreply@closia.net>',
+      to: 'contact@closia.net',
+      subject: `Nouvelle demande d'analyse — ${nom}`,
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:32px;background:#0b1220;color:#fff;border-radius:12px;">
+          <p style="color:#c29a6b;font-size:11px;text-transform:uppercase;letter-spacing:2px;margin:0 0 16px;">Nouvelle demande d'analyse préalable</p>
+          <h2 style="margin:0 0 24px;color:#fff;">${nom}</h2>
+          <div style="background:#111720;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:16px;margin-bottom:16px;">
+            <p style="margin:0 0 4px;"><strong>Email :</strong> ${email}</p>
+            <p style="margin:0 0 4px;"><strong>Tél :</strong> ${tel}</p>
+            <p style="margin:0;"><strong>Adresse :</strong> ${adresse}</p>
+          </div>
+          <div style="background:#111720;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:16px;margin-bottom:16px;">
+            <p style="color:#9ca3af;font-size:12px;margin:0 0 8px;">Description</p>
+            <p style="margin:0;">${description}</p>
+            ${message ? `<p style="margin:8px 0 0;color:#9ca3af;">${message}</p>` : ''}
+          </div>
+          <div style="background:#111720;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:16px;">
+            <p style="color:#9ca3af;font-size:12px;margin:0 0 8px;">Documents</p>
+            ${filesHtml}
+          </div>
+          <p style="margin-top:24px;color:#6b7280;font-size:12px;">Le paiement est en cours — consultez le dashboard admin pour suivre le statut.</p>
+        </div>
+      `,
+    }).catch(console.warn)
 
     // Créer la session Stripe Checkout
     const session = await stripe.checkout.sessions.create({
