@@ -26,7 +26,9 @@ export async function POST(req: Request) {
     // Récupérer les emails via auth admin
     const { data: { users } } = await supabase.auth.admin.listUsers({ perPage: 1000 })
 
-    const userEmailMap = new Map(users.map(u => [u.id, u.email]))
+    const userEmailMap = new Map<string, string>(
+      users.map(u => [u.id, u.email ?? ''] as [string, string])
+    )
 
     // Filtrer par zones (ville, département ou zones vides = tous)
     const departement = cp?.substring(0, 2) || ''
