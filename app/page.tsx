@@ -72,6 +72,7 @@ export default function LandingPage() {
             <a href="#confidentialite" className="hover:text-white transition-colors">Confidentialité</a>
             <a href="#vendeurs" className="hover:text-white transition-colors">Vendeurs pro</a>
             <a href="#acheteurs" className="hover:text-white transition-colors">Acheteurs pro</a>
+            <Link href="/faq" className="hover:text-white transition-colors">FAQ</Link>
             <Link href="/auth/login" className="hover:text-white transition-colors">Connexion</Link>
           </div>
 
@@ -97,6 +98,7 @@ export default function LandingPage() {
             <a href="#vendeurs" onClick={() => setMenuOpen(false)} className="block text-sm text-gray-300 hover:text-white py-2 border-b border-white/5 tracking-widest uppercase">Vendeurs pro</a>
             <a href="#acheteurs" onClick={() => setMenuOpen(false)} className="block text-sm text-gray-300 hover:text-white py-2 border-b border-white/5 tracking-widest uppercase">Acheteurs pro</a>
             <a href="#confidentialite" onClick={() => setMenuOpen(false)} className="block text-sm text-gray-300 hover:text-white py-2 border-b border-white/5 tracking-widest uppercase">Confidentialité</a>
+            <Link href="/faq" onClick={() => setMenuOpen(false)} className="block text-sm text-gray-300 hover:text-white py-2 border-b border-white/5 tracking-widest uppercase">FAQ</Link>
             <Link href="/auth/login" onClick={() => setMenuOpen(false)} className="block text-sm text-gray-300 hover:text-white py-2 border-b border-white/5 tracking-widest uppercase">Connexion</Link>
             <div className="pt-2 space-y-3">
               <Link href="/auth/register/acheteur" onClick={() => setMenuOpen(false)} className="block text-center text-xs tracking-widest uppercase bg-[#c29a6b] text-black font-semibold px-6 py-3 rounded-lg">
@@ -1008,6 +1010,7 @@ export default function LandingPage() {
                 <a href="#acheteurs" className="block hover:text-white transition-colors">Acheteurs professionnels</a>
                 <a href="#analyse" className="block hover:text-white transition-colors">Analyse préalable</a>
                 <a href="#confidentialite" className="block hover:text-white transition-colors">Confidentialité</a>
+                <Link href="/faq" className="block hover:text-white transition-colors">FAQ</Link>
               </div>
               <p className="text-white font-medium mt-6 mb-3">Propriété intellectuelle</p>
               <p className="text-gray-600 leading-relaxed">L'ensemble du contenu (textes, images, interface, logique applicative) est protégé par le droit d'auteur. Toute reproduction est interdite sans autorisation.</p>
