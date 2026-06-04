@@ -139,7 +139,11 @@ export default function DashboardAdmin() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          type_bien: selectedAnalyse.type_bien,
           adresse: selectedAnalyse.adresse,
+          cp: selectedAnalyse.cp,
+          ville: selectedAnalyse.ville,
+          parcelle: selectedAnalyse.parcelle,
           description: selectedAnalyse.description,
           message: selectedAnalyse.message,
         }),
@@ -816,6 +820,22 @@ export default function DashboardAdmin() {
                   <p>✉️ {selectedAnalyse.email}</p>
                   <p>📞 {selectedAnalyse.tel}</p>
                 </div>
+              </div>
+
+              {/* Infos bien */}
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                {selectedAnalyse.type_bien && (
+                  <div className="bg-white/5 rounded-lg p-3">
+                    <div className="text-xs text-gray-500 mb-1">Type</div>
+                    <div className="text-sm font-medium">{selectedAnalyse.type_bien}</div>
+                  </div>
+                )}
+                {selectedAnalyse.parcelle && (
+                  <div className="bg-white/5 rounded-lg p-3">
+                    <div className="text-xs text-gray-500 mb-1">Parcelle cadastrale</div>
+                    <div className="text-sm font-medium">{selectedAnalyse.parcelle}</div>
+                  </div>
+                )}
               </div>
 
               {/* Description */}

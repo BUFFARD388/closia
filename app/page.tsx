@@ -11,7 +11,7 @@ export default function LandingPage() {
   const [bienIdx, setBienIdx] = useState(0)
   const [analyseModal, setAnalyseModal] = useState(false)
   const [analyseType, setAnalyseType] = useState<'simple' | 'complexe' | null>(null)
-  const [analyseForm, setAnalyseForm] = useState({ nom: '', email: '', tel: '', adresse: '', description: '', message: '' })
+  const [analyseForm, setAnalyseForm] = useState({ nom: '', email: '', tel: '', type_bien: '', adresse: '', cp: '', ville: '', parcelle: '', description: '', message: '' })
   const [analyseFiles, setAnalyseFiles] = useState<File[]>([])
   const [analyseSending, setAnalyseSending] = useState(false)
   const [analyseSent, setAnalyseSent] = useState(false)
@@ -924,12 +924,39 @@ export default function LandingPage() {
                     <input type="email" className="input" required value={analyseForm.email} onChange={e => setAnalyseForm(f => ({ ...f, email: e.target.value }))} />
                   </div>
                   <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Type de bien *</label>
+                    <select className="input" required value={analyseForm.type_bien} onChange={e => setAnalyseForm(f => ({ ...f, type_bien: e.target.value }))}>
+                      <option value="">Sélectionner…</option>
+                      <option value="Maison individuelle">Maison individuelle</option>
+                      <option value="Immeuble de rapport">Immeuble de rapport</option>
+                      <option value="Terrain à bâtir">Terrain à bâtir</option>
+                      <option value="Local commercial">Local commercial</option>
+                      <option value="Appartement">Appartement</option>
+                      <option value="Ensemble immobilier">Ensemble immobilier</option>
+                      <option value="Autre">Autre</option>
+                    </select>
+                  </div>
+                  <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">Adresse du bien *</label>
-                    <input className="input" placeholder="Adresse, CP, ville" required value={analyseForm.adresse} onChange={e => setAnalyseForm(f => ({ ...f, adresse: e.target.value }))} />
+                    <input className="input" placeholder="Numéro et nom de rue" required value={analyseForm.adresse} onChange={e => setAnalyseForm(f => ({ ...f, adresse: e.target.value }))} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Code postal *</label>
+                      <input className="input" placeholder="Ex : 39200" required value={analyseForm.cp} onChange={e => setAnalyseForm(f => ({ ...f, cp: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Ville *</label>
+                      <input className="input" placeholder="Ex : Saint-Claude" required value={analyseForm.ville} onChange={e => setAnalyseForm(f => ({ ...f, ville: e.target.value }))} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Numéro de parcelle <span className="text-gray-500 font-normal">(facultatif)</span></label>
+                    <input className="input" placeholder="Ex : 39391000AA0045" value={analyseForm.parcelle} onChange={e => setAnalyseForm(f => ({ ...f, parcelle: e.target.value }))} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">Description du bien *</label>
-                    <textarea className="input min-h-[80px] resize-none" required placeholder="Type, surface, situation, potentiel identifié…"
+                    <textarea className="input min-h-[80px] resize-none" required placeholder="Surface, situation, potentiel identifié…"
                       value={analyseForm.description} onChange={e => setAnalyseForm(f => ({ ...f, description: e.target.value }))} />
                   </div>
                   {analyseType === 'complexe' && (

@@ -5,7 +5,7 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 export async function POST(req: NextRequest) {
   try {
-    const { adresse, description, message } = await req.json()
+    const { adresse, type_bien, cp, ville, parcelle, description, message } = await req.json()
 
     // 1. Géocodage de l'adresse
     let lat: number | null = null
@@ -15,8 +15,9 @@ export async function POST(req: NextRequest) {
     let adresseNormalisee = adresse
 
     try {
+      const queryGeo = [adresse, cp, ville].filter(Boolean).join(' ')
       const geoRes = await fetch(
-        `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(adresse)}&limit=1`
+        `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(queryGeo)}&limit=1`
       )
       const geoData = await geoRes.json()
       if (geoData.features?.length > 0) {
@@ -81,8 +82,11 @@ Quand des données sont manquantes, tu l'indiques clairement avec [À VÉRIFIER]
     const userPrompt = `Génère un rapport d'analyse préalable complet pour le bien suivant.
 
 INFORMATIONS DU BIEN :
+- Type : ${type_bien || 'Non précisé'}
 - Adresse : ${adresseNormalisee}
-- Ville : ${ville} (${codePostal})
+- Ville : ${ville || codePostal ? `${ville} (${codePostal})` : 'Non précisée'}
+- Code postal : ${cp || codePostal || 'Non précisé'}
+${parcelle ? `- Numéro de parcelle cadastrale : ${parcelle}` : ''}
 - Description transmise par le demandeur : ${description}
 ${message ? `- Informations complémentaires : ${message}` : ''}
 

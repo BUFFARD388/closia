@@ -21,7 +21,12 @@ export async function POST(req: NextRequest) {
     const nom = formData.get('nom') as string
     const email = formData.get('email') as string
     const tel = formData.get('tel') as string
+    const type_bien = formData.get('type_bien') as string || ''
     const adresse = formData.get('adresse') as string
+    const cp = formData.get('cp') as string || ''
+    const ville = formData.get('ville') as string || ''
+    const parcelle = formData.get('parcelle') as string || ''
+    const adresseComplete = [adresse, cp, ville].filter(Boolean).join(', ')
     const description = formData.get('description') as string
     const message = formData.get('message') as string || ''
     const files = formData.getAll('files') as File[]
@@ -48,7 +53,11 @@ export async function POST(req: NextRequest) {
     const { data: analyse, error: dbError } = await supabase
       .from('analyses')
       .insert({
-        nom, email, tel, adresse, description, message,
+        nom, email, tel,
+        type_bien,
+        adresse: adresseComplete,
+        cp, ville, parcelle,
+        description, message,
         type: 'simple',
         statut: 'pending',
         fichiers,
