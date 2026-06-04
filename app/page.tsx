@@ -986,56 +986,60 @@ export default function LandingPage() {
       <footer className="bg-[#0a0d12] border-t border-white/5 px-6 lg:px-10 py-16">
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-4 gap-12 mb-12 text-xs text-gray-500">
-            {/* Col 1 */}
+            {/* Col 1 — Légal */}
             <div>
+              <p className="text-white font-medium mb-3">Mentions légales</p>
               <div className="space-y-2 mb-6">
-                <a href="#" className="block hover:text-white transition-colors">CGU</a>
-                <a href="#" className="block hover:text-white transition-colors">CGV</a>
-                <a href="#" className="block hover:text-white transition-colors">Politique cookies</a>
+                <Link href="/legal/cgu" className="block hover:text-white transition-colors">CGU</Link>
+                <Link href="/legal/cgv" className="block hover:text-white transition-colors">CGV</Link>
+                <Link href="/legal/confidentialite" className="block hover:text-white transition-colors">Politique de confidentialité</Link>
+                <Link href="/legal/cookies" className="block hover:text-white transition-colors">Politique cookies</Link>
               </div>
-              <p className="text-gray-600">Rcs Lyon : 401 801 204</p>
+              <p className="text-gray-600">RCS Lyon : 401 801 204</p>
               <p className="text-gray-600">APE : 6201Z</p>
-              <p className="text-gray-600 mt-2">Siège social : 18, avenue Carnot, 69250 Neuville sur Saône (France)</p>
-              <p className="text-gray-600 mt-2">Email : contact@closia.eu · Portable : 06 87 76 33 40</p>
+              <p className="text-gray-600 mt-2">Siège social : 18 avenue Carnot, 69250 Neuville sur Saône</p>
             </div>
 
-            {/* Col 2 */}
+            {/* Col 2 — Produit */}
             <div>
               <p className="text-white font-medium mb-3">Produit</p>
               <div className="space-y-2">
-                <a href="#" className="block hover:text-white transition-colors">Fonctionnalités</a>
-                <a href="#" className="block hover:text-white transition-colors">Tarifs</a>
-                <a href="#" className="block hover:text-white transition-colors">FAQ</a>
+                <a href="#vendeurs" className="block hover:text-white transition-colors">Apporteurs de biens</a>
+                <a href="#acheteurs" className="block hover:text-white transition-colors">Acheteurs professionnels</a>
+                <a href="#analyse" className="block hover:text-white transition-colors">Analyse préalable</a>
+                <a href="#confidentialite" className="block hover:text-white transition-colors">Confidentialité</a>
               </div>
               <p className="text-white font-medium mt-6 mb-3">Propriété intellectuelle</p>
               <p className="text-gray-600 leading-relaxed">L'ensemble du contenu (textes, images, interface, logique applicative) est protégé par le droit d'auteur. Toute reproduction est interdite sans autorisation.</p>
             </div>
 
-            {/* Col 3 */}
+            {/* Col 3 — RGPD & Hébergement */}
             <div>
-              <p className="text-white font-medium mb-3">Mentions Vos droits RGPD</p>
-              <p className="text-gray-600 mb-3">Droit de retirer votre consentement à tout moment</p>
-              <a href="#" className="text-[#c29a6b] hover:underline">→ Politique de confidentialité</a>
+              <p className="text-white font-medium mb-3">Vos droits RGPD</p>
+              <p className="text-gray-600 mb-3">Droit d'accès, rectification, effacement, portabilité et retrait du consentement à tout moment.</p>
+              <Link href="/legal/confidentialite" className="text-[#c29a6b] hover:underline">→ Politique de confidentialité</Link>
 
               <div className="mt-8">
-                <p className="text-white font-medium mb-3">Responsabilité</p>
-                <p className="text-gray-600 leading-relaxed">L'éditeur ne peut être tenu responsable en cas d'erreur de calcul, d'indisponibilité du service ou d'usage non conforme.</p>
-              </div>
-
-              <div className="mt-8">
-                <p className="text-gray-600">Bubble Group, Inc.</p>
-                <p className="text-gray-600">Adresse : 22 W 21st St, New York, NY 10010, USA</p>
-                <p className="text-gray-600">Site : https://bubble.io</p>
-                <p className="text-gray-600">Téléphone : +1 (844) 932-8225</p>
-                <p className="text-gray-600">Directeur de publication : Laurent BUFFARD</p>
+                <p className="text-white font-medium mb-3">Hébergement</p>
+                <p className="text-gray-600">Vercel Inc.</p>
+                <p className="text-gray-600">340 Pine Street, Suite 900</p>
+                <p className="text-gray-600">San Francisco, CA 94104, USA</p>
+                <p className="text-gray-600 mt-2">Directeur de publication : Laurent BUFFARD</p>
               </div>
             </div>
 
-            {/* Col 4 */}
+            {/* Col 4 — Contact */}
             <div>
               <p className="text-white font-medium mb-3">Contact</p>
-              <p className="text-gray-600">Support : contact@closia.eu</p>
-              <p className="text-gray-600 mt-1">DPO (Données personnelles) : contact@closia.eu</p>
+              <p className="text-gray-600">Laurent Buffard</p>
+              <p className="text-gray-600 mt-1">
+                <a href="mailto:contact@closia.net" className="hover:text-white transition-colors">contact@closia.net</a>
+              </p>
+              <p className="text-gray-600 mt-1">06 87 76 33 40</p>
+              <p className="text-gray-600 mt-4">DPO (Données personnelles) :</p>
+              <p className="text-gray-600">
+                <a href="mailto:contact@closia.net" className="hover:text-white transition-colors">contact@closia.net</a>
+              </p>
             </div>
           </div>
 
