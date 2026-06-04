@@ -11,7 +11,7 @@ export default function LandingPage() {
   const [bienIdx, setBienIdx] = useState(0)
   const [analyseModal, setAnalyseModal] = useState(false)
   const [analyseType, setAnalyseType] = useState<'simple' | 'complexe' | null>(null)
-  const [analyseForm, setAnalyseForm] = useState({ nom: '', email: '', tel: '', type_bien: '', adresse: '', cp: '', ville: '', parcelle: '', description: '', message: '' })
+  const [analyseForm, setAnalyseForm] = useState({ nom: '', email: '', tel: '', type_bien: '', adresse: '', cp: '', ville: '', parcelle: '', surface: '', prix_acquisition: '', frais_notaire: 'marchand', budget_travaux: '', prix_revente_cible: '', type_operation: '', description: '', message: '' })
   const [analyseFiles, setAnalyseFiles] = useState<File[]>([])
   const [analyseSending, setAnalyseSending] = useState(false)
   const [analyseSent, setAnalyseSent] = useState(false)
@@ -954,9 +954,53 @@ export default function LandingPage() {
                     <label className="block text-sm font-medium text-gray-300 mb-2">Numéro de parcelle <span className="text-gray-500 font-normal">(facultatif)</span></label>
                     <input className="input" placeholder="Ex : 39391000AA0045" value={analyseForm.parcelle} onChange={e => setAnalyseForm(f => ({ ...f, parcelle: e.target.value }))} />
                   </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Surface totale (m²) *</label>
+                      <input type="number" className="input" placeholder="Ex : 750" required value={analyseForm.surface} onChange={e => setAnalyseForm(f => ({ ...f, surface: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Type d'opération *</label>
+                      <select className="input" required value={analyseForm.type_operation} onChange={e => setAnalyseForm(f => ({ ...f, type_operation: e.target.value }))}>
+                        <option value="">Sélectionner…</option>
+                        <option value="Rénovation + revente">Rénovation + revente</option>
+                        <option value="Changement de destination">Changement de destination</option>
+                        <option value="Division parcellaire">Division parcellaire</option>
+                        <option value="Construction neuve">Construction neuve</option>
+                        <option value="Location">Location / Exploitation</option>
+                        <option value="Autre">Autre / À définir</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div style={{borderTop:'1px solid rgba(255,255,255,0.08)',paddingTop:'16px',marginTop:'4px'}}>
+                    <p className="text-xs text-gray-500 uppercase tracking-widest mb-3">Données financières <span className="normal-case text-gray-600">(facultatif mais recommandé pour un rapport précis)</span></p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">Prix d'acquisition (€)</label>
+                        <input type="number" className="input" placeholder="Ex : 670000" value={analyseForm.prix_acquisition} onChange={e => setAnalyseForm(f => ({ ...f, prix_acquisition: e.target.value }))} />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">Frais de notaire</label>
+                        <select className="input" value={analyseForm.frais_notaire} onChange={e => setAnalyseForm(f => ({ ...f, frais_notaire: e.target.value }))}>
+                          <option value="marchand">2,5% (marchand de biens)</option>
+                          <option value="standard">8% (standard)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">Budget travaux estimé (€)</label>
+                        <input type="number" className="input" placeholder="Ex : 550000" value={analyseForm.budget_travaux} onChange={e => setAnalyseForm(f => ({ ...f, budget_travaux: e.target.value }))} />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">Prix de revente cible (€)</label>
+                        <input type="number" className="input" placeholder="Ex : 1950000" value={analyseForm.prix_revente_cible} onChange={e => setAnalyseForm(f => ({ ...f, prix_revente_cible: e.target.value }))} />
+                      </div>
+                    </div>
+                  </div>
+
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">Description du bien *</label>
-                    <textarea className="input min-h-[80px] resize-none" required placeholder="Surface, situation, potentiel identifié…"
+                    <textarea className="input min-h-[80px] resize-none" required placeholder="État général, dépendances, particularités…"
                       value={analyseForm.description} onChange={e => setAnalyseForm(f => ({ ...f, description: e.target.value }))} />
                   </div>
                   {analyseType === 'complexe' && (

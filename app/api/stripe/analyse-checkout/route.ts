@@ -26,6 +26,12 @@ export async function POST(req: NextRequest) {
     const cp = formData.get('cp') as string || ''
     const ville = formData.get('ville') as string || ''
     const parcelle = formData.get('parcelle') as string || ''
+    const surface = formData.get('surface') as string || ''
+    const type_operation = formData.get('type_operation') as string || ''
+    const prix_acquisition = formData.get('prix_acquisition') as string || ''
+    const frais_notaire = formData.get('frais_notaire') as string || 'marchand'
+    const budget_travaux = formData.get('budget_travaux') as string || ''
+    const prix_revente_cible = formData.get('prix_revente_cible') as string || ''
     const adresseComplete = [adresse, cp, ville].filter(Boolean).join(', ')
     const description = formData.get('description') as string
     const message = formData.get('message') as string || ''
@@ -54,9 +60,10 @@ export async function POST(req: NextRequest) {
       .from('analyses')
       .insert({
         nom, email, tel,
-        type_bien,
+        type_bien, surface, type_operation,
         adresse: adresseComplete,
         cp, ville, parcelle,
+        prix_acquisition, frais_notaire, budget_travaux, prix_revente_cible,
         description, message,
         type: 'simple',
         statut: 'pending',
@@ -98,6 +105,45 @@ export async function POST(req: NextRequest) {
         </div>
       `,
     }).catch(console.warn)
+
+    // Email de confirmation immédiat au client
+    await resend.emails.send({
+      from: 'Laurent Buffard — Closia <noreply@closia.net>',
+      to: email,
+      subject: 'Votre demande d\'analyse a bien été reçue — Closia',
+      html: `
+        <div style="font-family:Arial,Helvetica,sans-serif;max-width:600px;margin:0 auto;background:#0b1220;color:#fff;border-radius:12px;overflow:hidden;">
+          <div style="background:linear-gradient(135deg,#0b1220 0%,#1b2a4a 100%);padding:40px 48px 32px;border-bottom:1px solid rgba(194,154,107,0.3);">
+            <img src="https://closia.net/logo.png" alt="Closia" style="height:44px;margin-bottom:24px;display:block;" />
+            <p style="font-size:18px;font-weight:600;color:#fff;margin:0 0 6px;">Demande bien reçue ✓</p>
+            <p style="font-size:12px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:1.5px;margin:0;">Analyse préalable de valorisation</p>
+          </div>
+          <div style="padding:36px 48px;">
+            <p style="color:#9ca3af;margin:0 0 16px;">Bonjour ${nom},</p>
+            <p style="color:#d1d5db;line-height:1.75;margin:0 0 28px;">
+              Votre demande d'analyse a bien été enregistrée. Dès réception de votre paiement,
+              nous lançons l'analyse et vous recevrez votre rapport expert
+              <strong style="color:#fff;">sous 72h</strong> à cette adresse email.
+            </p>
+            <div style="background:#111720;border:1px solid rgba(194,154,107,0.25);border-radius:10px;padding:18px 20px;margin-bottom:28px;">
+              <p style="color:#c29a6b;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 10px;font-weight:700;">Récapitulatif de votre demande</p>
+              ${type_bien ? `<p style="color:#9ca3af;font-size:12px;margin:0 0 4px;">Type de bien</p><p style="color:#fff;font-size:14px;font-weight:600;margin:0 0 12px;">${type_bien}</p>` : ''}
+              <p style="color:#9ca3af;font-size:12px;margin:0 0 4px;">Adresse</p>
+              <p style="color:#fff;font-size:14px;font-weight:600;margin:0 0 12px;">${adresseComplete}</p>
+              ${parcelle ? `<p style="color:#9ca3af;font-size:12px;margin:0 0 4px;">Parcelle cadastrale</p><p style="color:#fff;font-size:14px;font-weight:600;margin:0;">${parcelle}</p>` : ''}
+            </div>
+            <div style="background:rgba(194,154,107,0.06);border:1px solid rgba(194,154,107,0.2);border-radius:8px;padding:14px 18px;margin-bottom:32px;">
+              <p style="color:#c29a6b;font-size:13px;margin:0;">🔒 Vos informations sont strictement confidentielles et ne seront jamais communiquées à des tiers.</p>
+            </div>
+          </div>
+          <div style="padding:20px 48px;border-top:1px solid rgba(255,255,255,0.08);text-align:center;">
+            <p style="color:#6b7280;font-size:11px;margin:0;">Laurent Buffard · Fondateur Closia</p>
+            <p style="color:#6b7280;font-size:11px;margin:4px 0;">contact@closia.net · 06 87 76 33 40</p>
+            <a href="https://closia.net" style="color:#c29a6b;font-size:11px;">closia.net</a>
+          </div>
+        </div>
+      `,
+    }).catch(console.warn) // non bloquant
 
     // Créer la session Stripe Checkout
     const session = await stripe.checkout.sessions.create({
