@@ -69,6 +69,7 @@ export default function DashboardAdmin() {
   const [savingRapport, setSavingRapport] = useState(false)
   const [sendingRapport, setSendingRapport] = useState(false)
   const [rapportEnvoye, setRapportEnvoye] = useState(false)
+  const [generatingRapport, setGeneratingRapport] = useState(false)
 
   useEffect(() => { checkAdmin(); loadBiens(); loadAnalyses() }, [])
   useEffect(() => { if (section === 'live') loadLeadsLive() }, [section])
@@ -127,6 +128,29 @@ export default function DashboardAdmin() {
       alert('Erreur : ' + err.message)
     } finally {
       setSendingRapport(false)
+    }
+  }
+
+  async function genererRapportIA() {
+    if (!selectedAnalyse) return
+    setGeneratingRapport(true)
+    try {
+      const res = await fetch('/api/analyses/generate-rapport', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          adresse: selectedAnalyse.adresse,
+          description: selectedAnalyse.description,
+          message: selectedAnalyse.message,
+        }),
+      })
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      setRapport(data.rapport)
+    } catch (err: any) {
+      alert('Erreur génération IA : ' + err.message)
+    } finally {
+      setGeneratingRapport(false)
     }
   }
 
@@ -828,21 +852,34 @@ export default function DashboardAdmin() {
               <div className="border-t border-white/10 pt-6 mb-6">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-xs text-gray-500 uppercase tracking-widest">Rapport d'analyse</p>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap justify-end">
+                    <button onClick={genererRapportIA} disabled={generatingRapport}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-[#c29a6b] hover:bg-[#b8911f] text-black font-semibold transition-colors disabled:opacity-50 flex items-center gap-1.5">
+                      {generatingRapport ? (
+                        <><Loader2 className="w-3 h-3 animate-spin" /> Génération en cours…</>
+                      ) : (
+                        <>✦ Générer avec l'IA</>
+                      )}
+                    </button>
                     <button onClick={sauvegarderRapport} disabled={savingRapport}
                       className="text-xs px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-gray-300 transition-colors disabled:opacity-50">
                       {savingRapport ? 'Sauvegarde…' : '💾 Sauvegarder'}
                     </button>
                     <button onClick={imprimerRapport}
-                      className="text-xs px-3 py-1.5 rounded-lg bg-[#c29a6b]/20 hover:bg-[#c29a6b]/30 text-[#c29a6b] transition-colors">
-                      🖨️ Imprimer / PDF
+                      className="text-xs px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 transition-colors">
+                      🖨️ PDF
                     </button>
                   </div>
                 </div>
+                {generatingRapport && (
+                  <div className="bg-[#c29a6b]/5 border border-[#c29a6b]/20 rounded-xl p-4 mb-3 text-sm text-[#c29a6b] text-center">
+                    ✦ Analyse en cours — collecte des données PLU, risques et marché local…
+                  </div>
+                )}
                 <textarea
                   value={rapport}
                   onChange={e => setRapport(e.target.value)}
-                  placeholder={`Rédigez ici votre analyse experte...\n\n• Potentiel de valorisation\n• Lecture PLU\n• Risques identifiés\n• Axes de création de valeur\n• Recommandations`}
+                  placeholder={`Cliquez sur "Générer avec l'IA" pour produire un premier rapport automatiquement, ou rédigez directement ici.\n\n• Potentiel de valorisation\n• Lecture PLU\n• Risques identifiés\n• Axes de création de valeur\n• Recommandations`}
                   className="input min-h-[280px] resize-y rounded-xl text-sm leading-relaxed w-full"
                 />
               </div>
