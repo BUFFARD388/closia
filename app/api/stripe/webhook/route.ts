@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
               <img src="https://closia.net/logo.png" alt="Closia" style="height:48px;margin-bottom:32px;" />
               <h2 style="color:#c29a6b;">Paiement reçu — Votre analyse est lancée</h2>
               <p style="color:#9ca3af;">Bonjour ${analyse.nom},</p>
-              <p style="color:#d1d5db;">Votre paiement de <strong>150€</strong> a bien été reçu. Votre rapport d'analyse expert vous sera remis <strong>sous 48h</strong> à cette adresse email.</p>
+              <p style="color:#d1d5db;">Votre paiement de <strong>150€</strong> a bien été reçu. Votre rapport d'analyse expert vous sera remis <strong>sous 72h</strong> à cette adresse email.</p>
               <div style="background:#111720;border:1px solid rgba(194,154,107,0.3);border-radius:8px;padding:16px;margin:24px 0;">
                 <p style="color:#c29a6b;font-size:12px;margin:0 0 4px;text-transform:uppercase;">Bien concerné</p>
                 <p style="color:#fff;margin:0;">${analyse.adresse}</p>

@@ -166,7 +166,7 @@ export default function LandingPage() {
               {[
                 { val: '20 ans', label: "d'expérience" },
                 { val: '48h', label: "d'analyse" },
-                { val: '0 €', label: 'pour l\'apporteur' },
+                { val: 'Gratuit', label: 'pour l\'apporteur' },
               ].map((s, i) => (
                 <div key={i}>
                   <div className="text-sm font-bold text-[#c29a6b]">{s.val}</div>
