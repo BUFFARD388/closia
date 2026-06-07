@@ -7,8 +7,8 @@ export const metadata: Metadata = {
   description: 'Plateforme de leads immobiliers off-market pour marchands de biens, promoteurs et foncières.',
 }
 
-// Remplacez META_PIXEL_ID par l'identifiant de votre pixel (Meta Events Manager > Sources de données > Votre pixel)
-const META_PIXEL_ID = 'META_PIXEL_ID'
+// Remplacez LINKEDIN_PARTNER_ID par votre Partner ID (Campaign Manager > Analyser > Insight Tag)
+const LINKEDIN_PARTNER_ID = 'LINKEDIN_PARTNER_ID'
 
 export default function RootLayout({
   children,
@@ -18,19 +18,21 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body>
-        {/* Pixel Meta (Facebook) — pour le retargeting des visiteurs n'ayant pas converti */}
-        <Script id="meta-pixel" strategy="afterInteractive">
+        {/* LinkedIn Insight Tag — pour le retargeting et le suivi des conversions des visiteurs venant de LinkedIn */}
+        <Script id="linkedin-insight" strategy="afterInteractive">
           {`
-            !function(f,b,e,v,n,t,s)
-            {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-            n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-            if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-            n.queue=[];t=b.createElement(e);t.async=!0;
-            t.src=v;s=b.getElementsByTagName(e)[0];
-            s.parentNode.insertBefore(t,s)}(window, document,'script',
-            'https://connect.facebook.net/en_US/fbevents.js');
-            fbq('init', '${META_PIXEL_ID}');
-            fbq('track', 'PageView');
+            _linkedin_partner_id = "${LINKEDIN_PARTNER_ID}";
+            window._linkedin_data_partner_ids = window._linkedin_data_partner_ids || [];
+            window._linkedin_data_partner_ids.push(_linkedin_partner_id);
+            (function(l) {
+              if (!l){window.lintrk = function(a,b){window.lintrk.q.push([a,b])};
+              window.lintrk.q=[]}
+              var s = document.getElementsByTagName("script")[0];
+              var b = document.createElement("script");
+              b.type = "text/javascript";b.async = true;
+              b.src = "https://snap.licdn.com/li.lms-analytics/insight.min.js";
+              s.parentNode.insertBefore(b, s);
+            })(window.lintrk);
           `}
         </Script>
         <noscript>
@@ -39,8 +41,8 @@ export default function RootLayout({
             height="1"
             width="1"
             style={{ display: 'none' }}
-            src={`https://www.facebook.com/tr?id=${META_PIXEL_ID}&ev=PageView&noscript=1`}
             alt=""
+            src={`https://px.ads.linkedin.com/collect/?pid=${LINKEDIN_PARTNER_ID}&fmt=gif`}
           />
         </noscript>
         {children}

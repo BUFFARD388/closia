@@ -132,7 +132,7 @@ export default function LandingPage() {
                 Rejoindre Closia — gratuit
               </Link>
               <span className="text-xs text-gray-400">
-                Vendeur ou acheteur pro · <span className="text-[#c29a6b]">vous choisissez votre profil après inscription</span>
+                Vendeur ou acheteur pro · <span className="text-[#c29a6b]">sélectionnez votre profil pour démarrer</span>
               </span>
             </div>
 

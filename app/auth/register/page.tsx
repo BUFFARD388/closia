@@ -18,6 +18,7 @@ function RegisterForm() {
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [company, setCompany] = useState('')
+  const [siret, setSiret] = useState('')
   const [profil, setProfil] = useState('')
   const [statut, setStatut] = useState('')
   const [password, setPassword] = useState('')
@@ -39,6 +40,7 @@ function RegisterForm() {
           lastName,
           phone,
           company,
+          siret,
           profil,
           statut,
           role
@@ -72,9 +74,9 @@ function RegisterForm() {
           {step === 1 && (
             <div>
               <h2 className="font-semibold text-center mb-6">Vous êtes…</h2>
-              <div className="grid grid-cols-2 gap-4 mb-8">
+              <div className="grid grid-cols-2 gap-4">
                 <button
-                  onClick={() => setRole('vendeur')}
+                  onClick={() => { setRole('vendeur'); setStep(2) }}
                   className={`p-5 rounded-xl border-2 transition-all text-center ${
                     role === 'vendeur'
                       ? 'border-gold-500 bg-gold-500/10'
@@ -85,7 +87,7 @@ function RegisterForm() {
                   <div className="font-semibold">Apporteur</div>
                 </button>
                 <button
-                  onClick={() => setRole('acheteur')}
+                  onClick={() => { setRole('acheteur'); setStep(2) }}
                   className={`p-5 rounded-xl border-2 transition-all text-center ${
                     role === 'acheteur'
                       ? 'border-gold-500 bg-gold-500/10'
@@ -96,13 +98,6 @@ function RegisterForm() {
                   <div className="font-semibold">Acheteur pro</div>
                 </button>
               </div>
-              <button
-                disabled={!role}
-                onClick={() => setStep(2)}
-                className="btn-primary w-full justify-center disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                Continuer
-              </button>
             </div>
           )}
 
@@ -127,17 +122,18 @@ function RegisterForm() {
                 </div>
                 <input type="email" className="input" placeholder="Email professionnel" value={email} onChange={e => setEmail(e.target.value)} required />
                 <input type="tel" className="input" placeholder="Téléphone" value={phone} onChange={e => setPhone(e.target.value)} required />
+                <div className="grid grid-cols-2 gap-4">
+                  <input className="input" placeholder="Nom de la société" value={company} onChange={e => setCompany(e.target.value)} required />
+                  <input className="input" placeholder="SIRET" value={siret} onChange={e => setSiret(e.target.value)} required />
+                </div>
                 {role === 'acheteur' && (
-                  <>
-                    <input className="input" placeholder="Société" value={company} onChange={e => setCompany(e.target.value)} />
-                    <select className="input" value={profil} onChange={e => setProfil(e.target.value)}>
-                      <option value="">Profil…</option>
-                      <option>Marchand de biens</option>
-                      <option>Promoteur immobilier</option>
-                      <option>Foncière</option>
-                      <option>Investisseur privé</option>
-                    </select>
-                  </>
+                  <select className="input" value={profil} onChange={e => setProfil(e.target.value)}>
+                    <option value="">Profil…</option>
+                    <option>Marchand de biens</option>
+                    <option>Promoteur immobilier</option>
+                    <option>Foncière</option>
+                    <option>Investisseur privé</option>
+                  </select>
                 )}
                 {role === 'vendeur' && (
                   <select className="input" value={statut} onChange={e => setStatut(e.target.value)}>
