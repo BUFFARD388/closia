@@ -204,7 +204,7 @@ export default function LandingPage() {
                   <p>→ Un accès filtré par type, zone ou prix</p>
                   <p>→ Des opportunités fraîches, jamais diffusées</p>
                 </div>
-                <Link href="/auth/register/acheteur" className="inline-flex items-center text-xs tracking-widest uppercase bg-[#c29a6b] text-black font-semibold px-6 py-3 hover:bg-[#b8911f] transition-all duration-300 rounded-lg">
+                <Link href="/auth/register?role=acheteur" className="inline-flex items-center text-xs tracking-widest uppercase bg-[#c29a6b] text-black font-semibold px-6 py-3 hover:bg-[#b8911f] transition-all duration-300 rounded-lg">
                   Rejoindre — Inscription gratuite
                 </Link>
               </div>
@@ -258,7 +258,7 @@ export default function LandingPage() {
                 <div className="bg-white/5 border border-white/10 rounded-lg p-4 text-xs text-gray-400 leading-relaxed">
                   <span className="text-white font-medium">Un support, pas un concurrent.</span> Closia renforce votre position auprès du vendeur. Le mandat exclusif reste le vôtre. Aucun frais, aucune commission.
                 </div>
-                <Link href="/auth/register/vendeur" className="inline-flex items-center text-xs tracking-widest uppercase bg-white text-black font-semibold px-6 py-3 hover:bg-gray-100 transition-all duration-300 rounded-lg">
+                <Link href="/auth/register?role=vendeur" className="inline-flex items-center text-xs tracking-widest uppercase bg-white text-black font-semibold px-6 py-3 hover:bg-gray-100 transition-all duration-300 rounded-lg">
                   Soumettre un dossier gratuitement
                 </Link>
                 <a href="#analyse" className="inline-flex items-center text-xs tracking-widest uppercase border border-[#c29a6b]/40 text-[#c29a6b] font-semibold px-6 py-3 hover:bg-[#c29a6b]/10 transition-all duration-300 rounded-lg">
@@ -650,7 +650,7 @@ export default function LandingPage() {
                 ))}
               </ul>
               <Link
-                href="/auth/register/vendeur"
+                href="/auth/register?role=vendeur"
                 className="inline-flex items-center text-xs tracking-widest uppercase bg-white text-black font-semibold px-6 py-3 hover:bg-gray-100 transition-colors rounded-lg"
               >
                 Soumettre un dossier
@@ -681,7 +681,7 @@ export default function LandingPage() {
               </ul>
               <div className="flex flex-col gap-2">
                 <Link
-                  href="/auth/register/acheteur"
+                  href="/auth/register?role=acheteur"
                   className="inline-flex items-center text-xs tracking-widest uppercase bg-[#c29a6b] text-black font-semibold px-6 py-3 hover:bg-[#b8911f] transition-colors rounded-lg"
                 >
                   Rejoindre le cercle pro

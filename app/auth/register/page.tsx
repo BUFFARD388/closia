@@ -10,7 +10,8 @@ function RegisterForm() {
   const router = useRouter()
   const defaultRole = params.get('role') || ''
   const [role, setRole] = useState<'vendeur' | 'acheteur' | ''>(defaultRole as any)
-  const [step, setStep] = useState(1)
+  // Si le profil est déjà connu via l'URL (ex: ?role=vendeur), on saute directement à l'étape du formulaire
+  const [step, setStep] = useState(defaultRole === 'vendeur' || defaultRole === 'acheteur' ? 2 : 1)
 
   // Champs du formulaire
   const [firstName, setFirstName] = useState('')
