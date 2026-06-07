@@ -77,10 +77,10 @@ export default function LandingPage() {
           </div>
 
           <Link
-            href="/auth/register/acheteur"
+            href="/auth/register"
             className="hidden md:inline-flex items-center text-xs tracking-widest uppercase bg-white text-black font-semibold px-5 py-2.5 hover:bg-gray-100 transition-colors rounded-lg"
           >
-            Accéder aux opportunités
+            Rejoindre Closia — gratuit
           </Link>
 
           {/* Hamburger mobile */}
@@ -100,12 +100,9 @@ export default function LandingPage() {
             <a href="#confidentialite" onClick={() => setMenuOpen(false)} className="block text-sm text-gray-300 hover:text-white py-2 border-b border-white/5 tracking-widest uppercase">Confidentialité</a>
             <Link href="/faq" onClick={() => setMenuOpen(false)} className="block text-sm text-gray-300 hover:text-white py-2 border-b border-white/5 tracking-widest uppercase">FAQ</Link>
             <Link href="/auth/login" onClick={() => setMenuOpen(false)} className="block text-sm text-gray-300 hover:text-white py-2 border-b border-white/5 tracking-widest uppercase">Connexion</Link>
-            <div className="pt-2 space-y-3">
-              <Link href="/auth/register/acheteur" onClick={() => setMenuOpen(false)} className="block text-center text-xs tracking-widest uppercase bg-[#c29a6b] text-black font-semibold px-6 py-3 rounded-lg">
-                Accéder aux opportunités — Gratuit
-              </Link>
-              <Link href="/auth/register/vendeur" onClick={() => setMenuOpen(false)} className="block text-center text-xs tracking-widest uppercase border border-white/20 text-white px-6 py-3 rounded-lg">
-                Soumettre un bien
+            <div className="pt-2">
+              <Link href="/auth/register" onClick={() => setMenuOpen(false)} className="block text-center text-xs tracking-widest uppercase bg-[#c29a6b] text-black font-semibold px-6 py-3 rounded-lg">
+                Rejoindre Closia — gratuit
               </Link>
             </div>
           </div>
@@ -129,14 +126,23 @@ export default function LandingPage() {
             </p>
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <Link
-                href="/auth/register/acheteur"
+                href="/auth/register"
                 className="inline-flex items-center text-xs tracking-widest uppercase bg-white text-black font-semibold px-5 py-2 hover:bg-gray-100 transition-colors rounded-lg"
               >
-                Accéder aux opportunités
+                Rejoindre Closia — gratuit
               </Link>
               <span className="text-xs text-gray-400">
-                Réservé aux acheteurs professionnels · <span className="text-[#c29a6b]">Inscription gratuite</span>
+                Vendeur ou acheteur pro · <span className="text-[#c29a6b]">vous choisissez votre profil après inscription</span>
               </span>
+            </div>
+
+            {/* Preuve chiffrée */}
+            <div className="mt-8 inline-flex items-start gap-4 px-5 py-4 rounded-xl border border-[#c29a6b]/30 bg-[#c29a6b]/5 max-w-md">
+              <span className="text-3xl font-serif text-[#c29a6b]/40 leading-none">"</span>
+              <div>
+                <p className="text-base font-bold text-white leading-snug">Vendu en 54h · +112 000 € de marge</p>
+                <p className="text-xs text-gray-500 mt-1">Immeuble à diviser cédé via Closia — marchand de biens, région bordelaise</p>
+              </div>
             </div>
           </div>
 
