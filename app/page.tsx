@@ -575,7 +575,7 @@ export default function LandingPage() {
               { val: '< 48h', label: 'Délai de réponse', sub: 'après soumission' },
               { val: '72h', label: 'Diffusion max', sub: 'off-market strict' },
               { val: '3 max', label: 'Acheteurs / lead', sub: 'concurrence maîtrisée' },
-              { val: '0 €', label: 'Pour l\'apporteur', sub: 'aucune commission' },
+              { val: 'Gratuit', label: 'Pour l\'apporteur', sub: 'aucune commission' },
             ].map((s, i) => (
               <div key={i} className="text-center p-6 rounded-xl border border-white/10 bg-[#0b1220] hover:border-[#c29a6b]/30 transition-all">
                 <div className="text-2xl font-bold text-[#c29a6b] mb-1">{s.val}</div>
