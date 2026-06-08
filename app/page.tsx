@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { Menu, X as XIcon, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Menu, X as XIcon, ChevronLeft, ChevronRight, Building2, TrendingUp } from 'lucide-react'
 
 export default function LandingPage() {
   const [activeSection, setActiveSection] = useState<'vendeurs' | 'acheteurs' | null>(null)
@@ -191,9 +191,15 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-2 gap-6">
 
             {/* Côté acheteur */}
-            <div className="relative border border-[#c29a6b]/20 rounded-2xl p-10 overflow-hidden group hover:border-[#c29a6b]/50 transition-all duration-500 bg-[#c29a6b]/[0.03]">
+            <div className="relative border border-[#c29a6b]/30 rounded-2xl p-10 overflow-hidden group hover:border-[#c29a6b]/60 transition-all duration-500 bg-[#c29a6b]/[0.05]">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#c29a6b] to-[#c29a6b]/20" />
               <div className="absolute top-0 left-0 w-px h-24 bg-gradient-to-b from-[#c29a6b] to-transparent" />
-              <p className="text-xs tracking-[0.3em] uppercase text-[#c29a6b] mb-10">Marchands · Promoteurs · Foncières</p>
+              <div className="flex items-center gap-3 mb-10">
+                <span className="flex items-center justify-center w-10 h-10 rounded-full bg-[#c29a6b]/15 border border-[#c29a6b]/40 flex-shrink-0">
+                  <TrendingUp className="w-5 h-5 text-[#c29a6b]" />
+                </span>
+                <p className="text-xs tracking-[0.3em] uppercase text-[#c29a6b] font-semibold">Marchands · Promoteurs · Foncières</p>
+              </div>
               <h2 className="text-2xl font-bold leading-snug mb-6">Seuls les dossiers qui méritent<br />votre attention arrivent jusqu'à vous.</h2>
               <p className="text-sm text-gray-400 leading-relaxed mb-6">Les professionnels de la valorisation immobilière passent un temps considérable à écarter des dossiers qui n'auraient jamais dû leur parvenir. Chaque heure perdue sur un bien sans potentiel est une opportunité manquée ailleurs.</p>
               <p className="text-sm text-gray-300 leading-relaxed mb-10">Sur Closia, chaque bien a été lu, analysé et validé par un expert avant d'être diffusé. Vous ne recevez que des dossiers à potentiel, en off-market strict, disponibles <strong className="text-white">72h</strong> — jamais vus sur le marché ouvert.</p>
@@ -211,11 +217,17 @@ export default function LandingPage() {
             </div>
 
             {/* Côté apporteur */}
-            <div className="relative border border-white/10 rounded-2xl p-10 overflow-hidden group hover:border-white/20 transition-all duration-500">
-              {/* Accent discret */}
+            <div className="relative border border-white/15 rounded-2xl p-10 overflow-hidden group hover:border-white/30 transition-all duration-500 bg-white/[0.02]">
+              {/* Accents */}
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-white/50 to-white/10" />
               <div className="absolute top-0 left-0 w-px h-24 bg-gradient-to-b from-white/40 to-transparent" />
 
-              <p className="text-xs tracking-[0.3em] uppercase text-gray-500 mb-8">Agents · Mandataires · Notaires</p>
+              <div className="flex items-center gap-3 mb-8">
+                <span className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 border border-white/20 flex-shrink-0">
+                  <Building2 className="w-5 h-5 text-white" />
+                </span>
+                <p className="text-xs tracking-[0.3em] uppercase text-gray-300 font-semibold">Agents · Mandataires · Notaires</p>
+              </div>
 
               {/* Accroche principale */}
               <h2 className="text-2xl font-bold leading-snug mb-3">
@@ -628,12 +640,18 @@ export default function LandingPage() {
           {/* CTA blocs vendeur / acheteur */}
           <div className="grid md:grid-cols-2 gap-6">
             {/* Vendeurs */}
-            <div id="vendeurs" className={`border p-8 rounded-xl transition-all duration-500 ${
+            <div id="vendeurs" className={`relative overflow-hidden border p-8 rounded-xl transition-all duration-500 ${
               activeSection === 'vendeurs'
-                ? 'border-white bg-white/5 shadow-lg shadow-white/5 scale-[1.02]'
-                : 'border-white/10'
+                ? 'border-white bg-white/[0.07] shadow-lg shadow-white/5 scale-[1.02]'
+                : 'border-white/15 bg-white/[0.02]'
             }`}>
-              <p className="text-xs tracking-[0.2em] uppercase text-gray-500 mb-4">Vendeurs pro.</p>
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-white/60 to-white/10" />
+              <div className="flex items-center gap-3 mb-4">
+                <span className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 border border-white/20">
+                  <Building2 className="w-5 h-5 text-white" />
+                </span>
+                <p className="text-xs tracking-[0.2em] uppercase text-gray-300 font-semibold">Vendeurs pro.</p>
+              </div>
               <h3 className="text-2xl font-bold mb-6">Agents, mandataires,<br />notaires.</h3>
               <ul className="space-y-2 text-xs text-gray-400 mb-8">
                 {[
@@ -658,12 +676,18 @@ export default function LandingPage() {
             </div>
 
             {/* Acheteurs */}
-            <div id="acheteurs" className={`border p-8 rounded-xl transition-all duration-500 ${
+            <div id="acheteurs" className={`relative overflow-hidden border p-8 rounded-xl transition-all duration-500 ${
               activeSection === 'acheteurs'
                 ? 'border-[#c29a6b] bg-[#c29a6b]/10 shadow-lg shadow-[#c29a6b]/10 scale-[1.02]'
                 : 'border-[#c29a6b]/40 bg-[#c29a6b]/5'
             }`}>
-              <p className="text-xs tracking-[0.2em] uppercase text-[#c29a6b] mb-4">Acheteurs pro.</p>
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#c29a6b] to-[#c29a6b]/20" />
+              <div className="flex items-center gap-3 mb-4">
+                <span className="flex items-center justify-center w-10 h-10 rounded-full bg-[#c29a6b]/15 border border-[#c29a6b]/40">
+                  <TrendingUp className="w-5 h-5 text-[#c29a6b]" />
+                </span>
+                <p className="text-xs tracking-[0.2em] uppercase text-[#c29a6b] font-semibold">Acheteurs pro.</p>
+              </div>
               <h3 className="text-2xl font-bold mb-6">Marchands, promoteurs,<br />foncières, lotisseurs.</h3>
               <ul className="space-y-2 text-xs text-gray-400 mb-8">
                 {[
