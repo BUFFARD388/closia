@@ -29,7 +29,68 @@ export async function POST(req: NextRequest) {
       }
     } catch { /* continue sans geocodage */ }
 
-    // 2. Données de risques Géorisques
+    // 2. Données PLU via Géoportail Urbanisme (apicarto.ign.fr)
+    let pluTexte = 'Données PLU non disponibles pour cette commune.'
+    if (lat && lon) {
+      try {
+        const geom = encodeURIComponent(JSON.stringify({ type: 'Point', coordinates: [lon, lat] }))
+        const pluRes = await fetch(
+          `https://apicarto.ign.fr/api/gpu/zone-urba?geom=${geom}`,
+          { signal: AbortSignal.timeout(8000) }
+        )
+        if (pluRes.ok) {
+          const pluData = await pluRes.json()
+          if (pluData.features?.length > 0) {
+            const props = pluData.features[0].properties
+            const zone = props.libelle || '?'
+            const typeZone = (props.typezone || '').toUpperCase()
+            const libelong = props.libelong || ''
+            const partition = props.partition || ''
+
+            // Catégorie lisible selon type de zone
+            const categories: Record<string, string> = {
+              U: 'Zone urbaine (constructible)',
+              AU: 'Zone à urbaniser',
+              A: 'Zone agricole (constructibilité limitée)',
+              N: 'Zone naturelle et forestière (constructibilité très limitée)',
+            }
+            const prefix = typeZone.startsWith('AU') ? 'AU'
+              : typeZone.startsWith('U') ? 'U'
+              : typeZone.startsWith('A') ? 'A'
+              : typeZone.startsWith('N') ? 'N'
+              : typeZone
+            const categorie = categories[prefix] || `Zone ${typeZone}`
+
+            pluTexte = `Zone PLU : ${zone} — ${categorie}${libelong ? ` ("${libelong}")` : ''}${partition ? ` · Document de référence : ${partition}` : ''}`
+
+            // Prescriptions surfaciques éventuelles (PPRI, patrimoine, etc.)
+            try {
+              const prescRes = await fetch(
+                `https://apicarto.ign.fr/api/gpu/prescription-surf?geom=${geom}`,
+                { signal: AbortSignal.timeout(5000) }
+              )
+              if (prescRes.ok) {
+                const prescData = await prescRes.json()
+                if (prescData.features?.length > 0) {
+                  const prescriptions = prescData.features
+                    .map((f: any) => f.properties.libelle || f.properties.txt || '')
+                    .filter(Boolean)
+                    .slice(0, 3)
+                    .join(' · ')
+                  if (prescriptions) {
+                    pluTexte += ` | Prescriptions détectées : ${prescriptions}`
+                  }
+                }
+              }
+            } catch { /* continue sans prescriptions */ }
+          } else {
+            pluTexte = 'Bien non couvert par un PLU numérisé sur le Géoportail Urbanisme (commune en POS, carte communale ou règlement national d\'urbanisme). Vérification en mairie recommandée.'
+          }
+        }
+      } catch { /* continue sans PLU */ }
+    }
+
+    // 3. Risques Géorisques
     let risquesTexte = 'Données de risques non disponibles.'
     if (lat && lon) {
       try {
@@ -49,7 +110,7 @@ export async function POST(req: NextRequest) {
       } catch { /* continue */ }
     }
 
-    // 3. Données DVF - transactions comparables
+    // 4. Données DVF - transactions comparables
     let dvfTexte = 'Données DVF non disponibles pour ce secteur.'
     if (lat && lon) {
       try {
@@ -72,7 +133,7 @@ export async function POST(req: NextRequest) {
       } catch { /* continue sans DVF */ }
     }
 
-    // 4. Calculs financiers à partir des données fournies
+    // 5. Calculs financiers à partir des données fournies
     let financierTexte = ''
     if (prix_acquisition) {
       const acq = parseFloat(prix_acquisition)
@@ -101,7 +162,7 @@ ${prixAuM2Revente ? `- Prix de revente au m² : ${prixAuM2Revente.toLocaleString
 `
     }
 
-    // 5. Construction du prompt et appel Claude
+    // 6. Construction du prompt et appel Claude
     const systemPrompt = `Tu es un expert en valorisation immobilière avec 20 ans d'expérience en transaction, marchand de biens et développement foncier. Tu rédiges des rapports d'analyse préalable synthétiques pour des agents immobiliers et mandataires qui souhaitent savoir si un bien de leur portefeuille peut intéresser des investisseurs professionnels (marchands de biens, promoteurs, foncières).
 
 TON ET STYLE :
@@ -128,6 +189,9 @@ ${surface ? `- Surface : ${surface} m²` : ''}
 ${message ? `- Informations complémentaires : ${message}` : ''}
 ${prix_acquisition ? `- Prix vendeur : ${parseFloat(prix_acquisition).toLocaleString('fr-FR')} €` : ''}
 
+ZONAGE PLU (Plan Local d'Urbanisme) :
+${pluTexte}
+
 DONNÉES GÉORISQUES (rayon 500m) :
 ${risquesTexte}
 
@@ -137,13 +201,15 @@ ${dvfTexte}
 STRUCTURE DU RAPPORT (4 sections, respecter impérativement cet ordre et ces titres exacts) :
 
 1. POTENTIEL IDENTIFIÉ
-En 4-5 lignes : pourquoi ce bien peut intéresser des investisseurs professionnels. Quel type de profil (marchand de biens, promoteur, foncière…) et pour quelle opération. Sois concret et positif si le dossier le justifie.
+En 4-5 lignes : pourquoi ce bien peut intéresser des investisseurs professionnels. Quel type de profil (marchand de biens, promoteur, foncière…) et pour quelle opération. Sois concret et positif si le dossier le justifie. Si le zonage PLU est disponible et favorable (zone U ou AU), mentionne-le comme facteur de potentiel.
 
 2. CONTEXTE DE MARCHÉ
 En 3-4 lignes : dynamique du secteur, références de prix au m² (cite les DVF si disponibles comme ordre de grandeur), demande professionnelle sur ce type de bien dans cette zone.
 
 3. POINTS D'ATTENTION
-Lister 2 à 3 points à vérifier avant diffusion (urbanistique, technique, juridique). Format court : une ligne par point. Ton neutre — ce sont des points à anticiper, pas des obstacles.
+Lister 2 à 3 points à vérifier avant diffusion. Format court : une ligne par point. Ton neutre — ce sont des points à anticiper, pas des obstacles.
+- Si le zonage PLU est fourni : inclure une synthèse urbanistique (ex : "Zone UA : usage mixte autorisé, vérifier les règles de hauteur et de CES applicables" ou "Zone N : constructibilité limitée, valider les possibilités d'extension avec le service urbanisme"). Si des prescriptions surfaciques sont détectées (PPRI, patrimoine protégé…), les mentionner.
+- Si le PLU n'est pas disponible : indiquer "Zonage PLU à vérifier en mairie" comme point d'attention.
 
 4. VERDICT ET RECOMMANDATION
 Verdict en une phrase (Favorable / Favorable avec réserves / À approfondir) suivi d'une recommandation claire de diffuser le dossier sur Closia pour obtenir une réponse marché concrète d'acheteurs professionnels qualifiés. Terminer par une phrase de réassurance sur la confidentialité et la gratuité pour l'apporteur.`
