@@ -11,7 +11,7 @@ export default function LandingPage() {
   const [bienIdx, setBienIdx] = useState(0)
   const [analyseModal, setAnalyseModal] = useState(false)
   const [analyseType, setAnalyseType] = useState<'simple' | 'complexe' | null>(null)
-  const [analyseForm, setAnalyseForm] = useState({ nom: '', email: '', tel: '', type_bien: '', adresse: '', cp: '', ville: '', parcelle: '', surface: '', prix_acquisition: '', frais_notaire: 'marchand', budget_travaux: '', prix_revente_cible: '', type_operation: '', description: '', message: '' })
+  const [analyseForm, setAnalyseForm] = useState({ nom: '', email: '', tel: '', type_bien: '', adresse: '', cp: '', ville: '', parcelle: '', surface: '', prix_acquisition: '', type_operation: '', description: '', message: '' })
   const [analyseFiles, setAnalyseFiles] = useState<File[]>([])
   const [analyseSending, setAnalyseSending] = useState(false)
   const [analyseSent, setAnalyseSent] = useState(false)
@@ -1004,27 +1004,11 @@ export default function LandingPage() {
                   </div>
 
                   <div style={{borderTop:'1px solid rgba(255,255,255,0.08)',paddingTop:'16px',marginTop:'4px'}}>
-                    <p className="text-xs text-gray-500 uppercase tracking-widest mb-3">Données financières <span className="normal-case text-gray-600">(facultatif mais recommandé pour un rapport précis)</span></p>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">Prix d'acquisition (€)</label>
-                        <input type="number" className="input" placeholder="Ex : 670000" value={analyseForm.prix_acquisition} onChange={e => setAnalyseForm(f => ({ ...f, prix_acquisition: e.target.value }))} />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">Frais de notaire</label>
-                        <select className="input" value={analyseForm.frais_notaire} onChange={e => setAnalyseForm(f => ({ ...f, frais_notaire: e.target.value }))}>
-                          <option value="marchand">2,5% (marchand de biens)</option>
-                          <option value="standard">8% (standard)</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">Budget travaux estimé (€)</label>
-                        <input type="number" className="input" placeholder="Ex : 550000" value={analyseForm.budget_travaux} onChange={e => setAnalyseForm(f => ({ ...f, budget_travaux: e.target.value }))} />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">Prix de revente cible (€)</label>
-                        <input type="number" className="input" placeholder="Ex : 1950000" value={analyseForm.prix_revente_cible} onChange={e => setAnalyseForm(f => ({ ...f, prix_revente_cible: e.target.value }))} />
-                      </div>
+                    <p className="text-xs text-gray-500 uppercase tracking-widest mb-3">Prix du bien</p>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Prix de vente souhaité par le client (€) <span className="text-gray-500 font-normal">— facultatif</span></label>
+                      <input type="number" className="input" placeholder="Ex : 700 000" value={analyseForm.prix_acquisition} onChange={e => setAnalyseForm(f => ({ ...f, prix_acquisition: e.target.value }))} />
+                      <p className="text-xs text-gray-600 mt-1">L'analyse évaluera si ce prix est cohérent avec le potentiel du bien et les références de marché.</p>
                     </div>
                   </div>
 
@@ -1155,3 +1139,4 @@ export default function LandingPage() {
     </div>
   )
 }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
