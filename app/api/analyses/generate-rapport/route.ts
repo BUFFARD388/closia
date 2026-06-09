@@ -47,7 +47,6 @@ export async function POST(req: NextRequest) {
             const libelong = props.libelong || ''
             const partition = props.partition || ''
 
-            // Catégorie lisible selon type de zone
             const categories: Record<string, string> = {
               U: 'Zone urbaine (constructible)',
               AU: 'Zone à urbaniser',
@@ -63,7 +62,6 @@ export async function POST(req: NextRequest) {
 
             pluTexte = `Zone PLU : ${zone} — ${categorie}${libelong ? ` ("${libelong}")` : ''}${partition ? ` · Document de référence : ${partition}` : ''}`
 
-            // Prescriptions surfaciques éventuelles (PPRI, patrimoine, etc.)
             try {
               const prescRes = await fetch(
                 `https://apicarto.ign.fr/api/gpu/prescription-surf?geom=${geom}`,
@@ -84,7 +82,7 @@ export async function POST(req: NextRequest) {
               }
             } catch { /* continue sans prescriptions */ }
           } else {
-            pluTexte = 'Bien non couvert par un PLU numérisé sur le Géoportail Urbanisme (commune en POS, carte communale ou règlement national d\'urbanisme). Vérification en mairie recommandée.'
+            pluTexte = "Bien non couvert par un PLU numérisé sur le Géoportail Urbanisme (commune en POS, carte communale ou règlement national d'urbanisme). Vérification en mairie recommandée."
           }
         }
       } catch (e: any) {
@@ -164,19 +162,17 @@ export async function POST(req: NextRequest) {
 
         const lignes: string[] = []
 
-        // Stats DVF résumées via Castorus
         if (ventesRes.status === 'fulfilled' && ventesRes.value.ok) {
           const plain = (await ventesRes.value.text()).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')
-          const m = plain.match(/(\d+)\s*ventes.*?Prix moyen\s*:\s*([\d \s]+)\s*€.*?([\d \s]+)\s*€\s*\/\s*m/i)
+          const m = plain.match(/(\d+)\s*ventes.*?Prix moyen\s*:\s*([\d \s]+)\s*€.*?([\d \s]+)\s*€\s*\/\s*m/i)
           if (m) {
             const nbV = m[1]
-            const prixMoy = m[2].replace(/ |\s/g, ' ').trim()
-            const pm2 = m[3].replace(/ |\s/g, ' ').trim()
+            const prixMoy = m[2].replace(/ |\s/g, ' ').trim()
+            const pm2 = m[3].replace(/ |\s/g, ' ').trim()
             lignes.push(`Résumé des ventes passées (commune) : ${nbV} transactions · Prix moyen ${prixMoy} € · ${pm2} €/m²`)
           }
         }
 
-        // Annonces actuelles filtrées par type de bien
         if (rechercheRes.status === 'fulfilled' && rechercheRes.value.ok) {
           const html = await rechercheRes.value.text()
           const plainFull = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')
@@ -187,7 +183,6 @@ export async function POST(req: NextRequest) {
           const annonces: string[] = []
           const seen = new Set<string>()
 
-          // Parcourir les <tr> du tableau de listings
           const trRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi
           let trMatch
           while ((trMatch = trRegex.exec(html)) !== null && annonces.length < 7) {
@@ -199,7 +194,7 @@ export async function POST(req: NextRequest) {
               tds.push(
                 tdMatch[1]
                   .replace(/<[^>]+>/g, ' ')
-                  .replace(/&euro;/gi, '€').replace(/&nbsp;/gi, ' ')
+                  .replace(/&euro;/gi, '€').replace(/&nbsp;/gi, ' ')
                   .replace(/ /g, ' ').replace(/\s+/g, ' ').trim()
               )
             }
@@ -207,7 +202,7 @@ export async function POST(req: NextRequest) {
 
             const prix = tds[0]
             const titre = tds[1]
-            const surface = tds[4] || '-'
+            const surfaceAnn = tds[4] || '-'
             const prixM2 = tds.length > 7 ? tds[7] : '-'
 
             if (!/\d[\d\s]*€/.test(prix)) continue
@@ -226,7 +221,7 @@ export async function POST(req: NextRequest) {
             if (!relevant) continue
 
             const baisseStr = prix.includes('▼') ? ' ↘ en baisse' : ''
-            const surfaceStr = surface && surface !== '-' && surface !== 'voir' && /\d/.test(surface) ? ` ${surface}` : ''
+            const surfaceStr = surfaceAnn && surfaceAnn !== '-' && surfaceAnn !== 'voir' && /\d/.test(surfaceAnn) ? ` ${surfaceAnn}` : ''
             const prixM2Str = prixM2 && prixM2 !== '-' && prixM2 !== 'voir' && /\d/.test(prixM2) ? ` · ${prixM2}/m²` : ''
             const prixClean = prix.replace('▼', '').trim()
             annonces.push(`- ${titre}${surfaceStr} : ${prixClean}${prixM2Str}${baisseStr}`)
@@ -245,7 +240,7 @@ export async function POST(req: NextRequest) {
       } catch { /* continue sans Castorus */ }
     }
 
-    // 6. Prix vendeur (simple — pas de calcul financier)
+    // 6. Prix vendeur
     const prixVendeurTexte = prix_acquisition
       ? `Prix de vente souhaité par le client : ${parseFloat(prix_acquisition).toLocaleString('fr-FR')} €${surface ? ` soit ${Math.round(parseFloat(prix_acquisition) / parseFloat(surface)).toLocaleString('fr-FR')} €/m²` : ''}`
       : 'Prix non communiqué.'
@@ -260,26 +255,84 @@ TON ET STYLE :
 
 STRUCTURE OBLIGATOIRE (respecte cet ordre, utilise ces titres exacts) :
 
-1. SYNTHÈSE DU BIEN
-   Présentation rapide : type, adresse, surface, opération envisagée.
+1. SYNTHESE DU BIEN
+Présentation rapide : type, adresse, surface, opération envisagée.
 
 2. CONTEXTE URBANISTIQUE (PLU)
-   Analyse approfondie de la zone PLU : type de zone (U, AU, A, N), ce que cela implique concrètement en termes de droits à construire, de division parcellaire, de changement de destination. Mentionne les prescriptions détectées (PPRI, EVV, etc.) et leurs incidences opérationnelles. Conclus sur ce que la réglementation permet ou interdit pour ce bien.
+Analyse approfondie de la zone PLU : type de zone (U, AU, A, N), droits à construire, division parcellaire possible, changement de destination. Mentionne les prescriptions détectées (PPRI, EVV, etc.) et leurs incidences opérationnelles. Conclus sur ce que la réglementation permet ou interdit.
 
-3. LOCALISATION ET DYNAMIQUE DE MARCHÉ
-   Analyse de l'emplacement : bassin de vie, attractivité du secteur, accessibilité, tissu économique environnant. Croise avec la demande des investisseurs professionnels : ce secteur est-il recherché par les marchands de biens, promoteurs ou foncières ? Y a-t-il un marché locatif professionnel actif ? Quelle est la liquidité du bien en cas de revente ?
+3. LOCALISATION ET DYNAMIQUE DE MARCHE
+Analyse de l'emplacement : bassin de vie, attractivité du secteur, accessibilité, tissu économique environnant. Ce secteur est-il recherché par les marchands de biens, promoteurs ou foncières ? Quelle est la liquidité du bien en cas de revente ?
 
 4. RISQUES NATURELS ET TECHNOLOGIQUES
-   Synthèse des risques identifiés et incidence sur la valeur ou la faisabilité du projet.
+Synthèse des risques identifiés et incidence sur la valeur ou la faisabilité du projet.
 
-5. RÉFÉRENCES DE MARCHÉ
-   Analyse des transactions DVF récentes et des annonces actuelles : fourchette de prix au m², tendance (hausse/baisse), délai de vente apparent. Compare le bien analysé aux références disponibles.
+5. REFERENCES DE MARCHE
+Analyse des transactions DVF récentes et des annonces actuelles : fourchette de prix au m², tendance (hausse/baisse). Compare le bien analysé aux références disponibles.
 
-6. COHÉRENCE DU PRIX DEMANDÉ
-   Si un prix vendeur est communiqué : évalue précisément son positionnement par rapport aux références de marché (DVF + annonces). Indique l'écart en % et en valeur absolue. Précise si le prix est cohérent, surestimé ou sous-estimé, et dans quelle mesure cela impacte l'intérêt des acheteurs professionnels.
+6. COHERENCE DU PRIX DEMANDE
+Si un prix vendeur est communiqué : évalue son positionnement par rapport aux références de marché. Indique l'écart en % et en valeur absolue. Précise si le prix est cohérent, surestimé ou sous-estimé.
 
 7. POTENTIEL DE VALORISATION
-   Identifie les leviers : division parcellaire, surélévation, changement de destination, réhabilitation, promotion, découpe en lots. Estime la nature de l'opportunité (foncière, patrimoniale, marchande de biens).
+Identifie les leviers : division parcellaire, surélévation, changement de destination, réhabilitation, promotion, découpe en lots. Estime la nature de l'opportunité (foncière, patrimoniale, marchande de biens).
 
 8. CONCLUSION CLOSIA
-   Verdict clair : ce bien est-il susceptible d'intéresser les acheteurs professionne
+Verdict clair : ce bien est-il susceptible d'intéresser les acheteurs professionnels référencés sur Closia ? Quelles typologies d'acheteurs seraient pertinentes (marchand de biens, promoteur, foncière, investisseur locatif) ? Si des points bloquants existent, les mentionner explicitement.`
+
+    const userPrompt = `Voici les données collectées pour l'analyse préalable. Rédige le rapport structuré.
+
+--- BIEN ---
+Type : ${type_bien || 'Non précisé'}
+Adresse : ${adresseNormalisee}
+Surface : ${surface ? surface + ' m²' : 'Non précisée'}
+Type d'opération : ${type_operation || 'Non précisé'}
+Référence cadastrale : ${parcelle || 'Non précisée'}
+
+--- URBANISME (PLU) ---
+${pluTexte}
+
+--- RISQUES NATURELS ET TECHNOLOGIQUES ---
+${risquesTexte}
+
+--- TRANSACTIONS DVF (ventes récentes) ---
+${dvfTexte}
+
+--- MARCHE ACTUEL (Castorus) ---
+${catorusTexte || 'Données Castorus non disponibles.'}
+
+--- PRIX VENDEUR ---
+${prixVendeurTexte}
+
+--- DESCRIPTION DU BIEN (agent) ---
+${description || 'Aucune description fournie.'}
+
+--- MESSAGE COMPLEMENTAIRE ---
+${message || 'Aucun message complémentaire.'}`
+
+    const response = await anthropic.messages.create({
+      model: 'claude-opus-4-5',
+      max_tokens: 1500,
+      messages: [{ role: 'user', content: userPrompt }],
+      system: systemPrompt,
+    })
+
+    const rapport = response.content[0].type === 'text' ? response.content[0].text : ''
+
+    return NextResponse.json({
+      rapport,
+      meta: {
+        adresseNormalisee,
+        lat,
+        lon,
+        plu: pluTexte,
+        risques: risquesTexte,
+        dvf: dvfTexte,
+        castorus: catorusTexte || null,
+      }
+    })
+
+  } catch (error: any) {
+    console.error('Erreur generate-rapport:', error)
+    return NextResponse.json({ error: error?.message || 'Erreur interne' }, { status: 500 })
+  }
+}
