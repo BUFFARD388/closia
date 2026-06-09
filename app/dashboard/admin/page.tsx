@@ -1057,4 +1057,30 @@ ${selectedAnalyse.description ? `
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {!ra
+                    {!rapport.trim() && (
+                      <p className="text-xs text-center text-gray-500 italic">Rédigez le rapport ci-dessus pour pouvoir l’envoyer.</p>
+                    )}
+                    <button
+                      onClick={imprimerRapport}
+                      disabled={!rapport.trim()}
+                      className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed text-white font-semibold text-xs tracking-widest uppercase py-3 rounded-xl transition-colors">
+                      🖨️ Aperçu / Imprimer en PDF
+                    </button>
+                    <button
+                      onClick={envoyerRapport}
+                      disabled={!rapport.trim() || sendingRapport}
+                      className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 disabled:opacity-30 disabled:cursor-not-allowed text-white font-semibold text-xs tracking-widest uppercase py-3.5 rounded-xl transition-colors">
+                      {sendingRapport ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                      {sendingRapport ? 'Envoi en cours…' : `Envoyer à ${selectedAnalyse.email}`}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+    </div>
+  )
+}
