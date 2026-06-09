@@ -286,8 +286,15 @@ Si prix communique : positionnement vs marche, ecart en % et en valeur absolue. 
 7. POTENTIEL DE VALORISATION
 Leviers : division parcellaire, surelevation, changement de destination, rehabilitation, promotion, decoupe en lots.
 
-8. CONCLUSION CLOSIA
-Verdict : ce bien interesse-t-il les acheteurs pros Closia ? Quelles typologies (marchand de biens, promoteur, fonciere) ? Points bloquants eventuels.`
+8. FOURCHETTE DE PRIX ESTIMEE
+A partir des references DVF et des annonces actuelles, estime une fourchette de valeur marche realiste pour ce bien (prix bas / prix haut en EUR, et prix/m2). Precise sur quelles donnees tu t'appuies.
+
+9. CONCLUSION CLOSIA
+Sur la base de la fourchette estimee, compare avec le prix demande (si communique) :
+- Calcule l'ecart : ((prix demande - estimation haute) / estimation haute) x 100
+- Si ecart > +20% : indique que CE BIEN NE PEUT PAS ETRE DIFFUSE sur Closia en l'etat, l'ecart depasse le seuil acceptable pour les acheteurs professionnels. Recommande de retravailler le prix avec le client avant de soumettre a nouveau.
+- Si ecart <= +20% (ou prix dans ou sous la fourchette) : indique que CE BIEN EST ELIGIBLE A LA DIFFUSION sur Closia, precise quelles typologies d'acheteurs pros sont pertinentes (marchand de biens, promoteur, fonciere, investisseur) et invite l'agent a publier l'annonce sur la plateforme.
+- Si aucun prix n'est communique : donne uniquement le verdict d'interet investisseur, sans conclusion sur la diffusion.`
 
     const userPrompt = `Donnees pour l'analyse. Redige le rapport structure.
 
