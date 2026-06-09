@@ -12,6 +12,7 @@ export async function POST(req: NextRequest) {
     let lon: number | null = null
     let villeGeo = ''
     let codePostal = ''
+    let codeInsee = ''
     let adresseNormalisee = adresse
 
     try {
@@ -25,15 +26,59 @@ export async function POST(req: NextRequest) {
         ;[lon, lat] = f.geometry.coordinates
         villeGeo = f.properties.city || ''
         codePostal = f.properties.postcode || ''
+        codeInsee = f.properties.citycode || ''
         adresseNormalisee = f.properties.label || adresse
       }
     } catch { /* continue sans geocodage */ }
 
     // 2. Données PLU via Géoportail Urbanisme (apicarto.ign.fr)
+    // On tente d'abord de récupérer le polygone exact de la parcelle cadastrale
+    // pour détecter les prescriptions (EVV, PPRI, etc.) qui ne couvrent qu'une partie du terrain
     let pluTexte = 'Données PLU non disponibles pour cette commune.'
     if (lat && lon) {
       try {
-        const geom = encodeURIComponent(JSON.stringify({ type: 'Point', coordinates: [lon, lat] }))
+        // Géométrie de requête : polygone cadastral si possible, sinon bbox 150m autour du point
+        let geomObj: object = { type: 'Point', coordinates: [lon, lat] }
+
+        if (codeInsee && parcelle) {
+          try {
+            // Parsing de la référence cadastrale (ex: "AB 0042", "A 12", "000 AB 0042")
+            const parcelleClean = parcelle.trim().toUpperCase().replace(/\s+/g, ' ')
+            const matchParcelle = parcelleClean.match(/([A-Z]{1,2})\s*(\d+)$/) || parcelleClean.match(/(\d+)\s+([A-Z]{1,2})\s+(\d+)/)
+            if (matchParcelle) {
+              const section = matchParcelle[1] || matchParcelle[2]
+              const numero = (matchParcelle[2] || matchParcelle[3]).replace(/^0+/, '').padStart(4, '0')
+              const cadastreRes = await fetch(
+                `https://apicarto.ign.fr/api/cadastre/parcelle?code_insee=${codeInsee}&section=${section}&numero=${numero}`,
+                { signal: AbortSignal.timeout(6000) }
+              )
+              if (cadastreRes.ok) {
+                const cadastreData = await cadastreRes.json()
+                if (cadastreData.features?.length > 0) {
+                  geomObj = cadastreData.features[0].geometry
+                }
+              }
+            }
+          } catch { /* parcelle non résolue, on garde le point */ }
+        }
+
+        // Si on n'a toujours qu'un point, on élargit à une bbox ~150m pour capter les chevauchements partiels
+        if ((geomObj as any).type === 'Point') {
+          const d = 0.0014 // ~150m en degrés
+          geomObj = {
+            type: 'Polygon',
+            coordinates: [[
+              [lon - d, lat - d],
+              [lon + d, lat - d],
+              [lon + d, lat + d],
+              [lon - d, lat + d],
+              [lon - d, lat - d],
+            ]]
+          }
+        }
+
+        const geom = encodeURIComponent(JSON.stringify(geomObj))
+
         const pluRes = await fetch(
           `https://apicarto.ign.fr/api/gpu/zone-urba?geom=${geom}`,
           { signal: AbortSignal.timeout(8000) }
@@ -41,48 +86,68 @@ export async function POST(req: NextRequest) {
         if (pluRes.ok) {
           const pluData = await pluRes.json()
           if (pluData.features?.length > 0) {
-            const props = pluData.features[0].properties
-            const zone = props.libelle || '?'
-            const typeZone = (props.typezone || '').toUpperCase()
-            const libelong = props.libelong || ''
-            const partition = props.partition || ''
-
+            // Toutes les zones PLU intersectant la parcelle (cas de terrain multi-zones)
             const categories: Record<string, string> = {
               U: 'Zone urbaine (constructible)',
               AU: 'Zone à urbaniser',
               A: 'Zone agricole (constructibilité limitée)',
               N: 'Zone naturelle et forestière (constructibilité très limitée)',
             }
-            const prefix = typeZone.startsWith('AU') ? 'AU'
-              : typeZone.startsWith('U') ? 'U'
-              : typeZone.startsWith('A') ? 'A'
-              : typeZone.startsWith('N') ? 'N'
-              : typeZone
-            const categorie = categories[prefix] || `Zone ${typeZone}`
+            const zonesUniques = new Map<string, string>()
+            for (const feat of pluData.features) {
+              const props = feat.properties
+              const zone = props.libelle || '?'
+              const typeZone = (props.typezone || '').toUpperCase()
+              const libelong = props.libelong || ''
+              const prefix = typeZone.startsWith('AU') ? 'AU'
+                : typeZone.startsWith('U') ? 'U'
+                : typeZone.startsWith('A') ? 'A'
+                : typeZone.startsWith('N') ? 'N'
+                : typeZone
+              const categorie = categories[prefix] || `Zone ${typeZone}`
+              const key = zone
+              if (!zonesUniques.has(key)) {
+                zonesUniques.set(key, `${zone} — ${categorie}${libelong ? ` ("${libelong}")` : ''}`)
+              }
+            }
+            const partition = pluData.features[0].properties.partition || ''
+            const zonesStr = Array.from(zonesUniques.values()).join(' + ')
+            pluTexte = `Zone(s) PLU : ${zonesStr}${partition ? ` · Document : ${partition}` : ''}`
 
-            pluTexte = `Zone PLU : ${zone} — ${categorie}${libelong ? ` ("${libelong}")` : ''}${partition ? ` · Document de référence : ${partition}` : ''}`
-
+            // Prescriptions surfaciques (PPRI, EVV, patrimoine, etc.)
             try {
-              const prescRes = await fetch(
-                `https://apicarto.ign.fr/api/gpu/prescription-surf?geom=${geom}`,
-                { signal: AbortSignal.timeout(5000) }
-              )
-              if (prescRes.ok) {
-                const prescData = await prescRes.json()
+              const [prescRes, infoRes] = await Promise.allSettled([
+                fetch(`https://apicarto.ign.fr/api/gpu/prescription-surf?geom=${geom}`, { signal: AbortSignal.timeout(5000) }),
+                fetch(`https://apicarto.ign.fr/api/gpu/info-surf?geom=${geom}`, { signal: AbortSignal.timeout(5000) }),
+              ])
+
+              const prescLabels: string[] = []
+
+              if (prescRes.status === 'fulfilled' && prescRes.value.ok) {
+                const prescData = await prescRes.value.json()
                 if (prescData.features?.length > 0) {
-                  const prescriptions = prescData.features
-                    .map((f: any) => f.properties.libelle || f.properties.txt || '')
-                    .filter(Boolean)
-                    .slice(0, 3)
-                    .join(' · ')
-                  if (prescriptions) {
-                    pluTexte += ` | Prescriptions détectées : ${prescriptions}`
-                  }
+                  prescData.features.forEach((f: any) => {
+                    const label = f.properties.libelle || f.properties.txt || f.properties.libelletech || ''
+                    if (label && !prescLabels.includes(label)) prescLabels.push(label)
+                  })
                 }
+              }
+              if (infoRes.status === 'fulfilled' && infoRes.value.ok) {
+                const infoData = await infoRes.value.json()
+                if (infoData.features?.length > 0) {
+                  infoData.features.forEach((f: any) => {
+                    const label = f.properties.libelle || f.properties.txt || f.properties.libelletech || ''
+                    if (label && !prescLabels.includes(label)) prescLabels.push(label)
+                  })
+                }
+              }
+
+              if (prescLabels.length > 0) {
+                pluTexte += ` | Prescriptions/servitudes détectées : ${prescLabels.slice(0, 5).join(' · ')}`
               }
             } catch { /* continue sans prescriptions */ }
           } else {
-            pluTexte = "Bien non couvert par un PLU numérisé sur le Géoportail Urbanisme (commune en POS, carte communale ou règlement national d'urbanisme). Vérification en mairie recommandée."
+            pluTexte = "Bien non couvert par un PLU numérisé sur le Géoportail Urbanisme. Vérification en mairie recommandée."
           }
         }
       } catch (e: any) {
@@ -258,81 +323,4 @@ STRUCTURE OBLIGATOIRE (respecte cet ordre, utilise ces titres exacts) :
 1. SYNTHESE DU BIEN
 Présentation rapide : type, adresse, surface, opération envisagée.
 
-2. CONTEXTE URBANISTIQUE (PLU)
-Analyse approfondie de la zone PLU : type de zone (U, AU, A, N), droits à construire, division parcellaire possible, changement de destination. Mentionne les prescriptions détectées (PPRI, EVV, etc.) et leurs incidences opérationnelles. Conclus sur ce que la réglementation permet ou interdit.
-
-3. LOCALISATION ET DYNAMIQUE DE MARCHE
-Analyse de l'emplacement : bassin de vie, attractivité du secteur, accessibilité, tissu économique environnant. Ce secteur est-il recherché par les marchands de biens, promoteurs ou foncières ? Quelle est la liquidité du bien en cas de revente ?
-
-4. RISQUES NATURELS ET TECHNOLOGIQUES
-Synthèse des risques identifiés et incidence sur la valeur ou la faisabilité du projet.
-
-5. REFERENCES DE MARCHE
-Analyse des transactions DVF récentes et des annonces actuelles : fourchette de prix au m², tendance (hausse/baisse). Compare le bien analysé aux références disponibles.
-
-6. COHERENCE DU PRIX DEMANDE
-Si un prix vendeur est communiqué : évalue son positionnement par rapport aux références de marché. Indique l'écart en % et en valeur absolue. Précise si le prix est cohérent, surestimé ou sous-estimé.
-
-7. POTENTIEL DE VALORISATION
-Identifie les leviers : division parcellaire, surélévation, changement de destination, réhabilitation, promotion, découpe en lots. Estime la nature de l'opportunité (foncière, patrimoniale, marchande de biens).
-
-8. CONCLUSION CLOSIA
-Verdict clair : ce bien est-il susceptible d'intéresser les acheteurs professionnels référencés sur Closia ? Quelles typologies d'acheteurs seraient pertinentes (marchand de biens, promoteur, foncière, investisseur locatif) ? Si des points bloquants existent, les mentionner explicitement.`
-
-    const userPrompt = `Voici les données collectées pour l'analyse préalable. Rédige le rapport structuré.
-
---- BIEN ---
-Type : ${type_bien || 'Non précisé'}
-Adresse : ${adresseNormalisee}
-Surface : ${surface ? surface + ' m²' : 'Non précisée'}
-Type d'opération : ${type_operation || 'Non précisé'}
-Référence cadastrale : ${parcelle || 'Non précisée'}
-
---- URBANISME (PLU) ---
-${pluTexte}
-
---- RISQUES NATURELS ET TECHNOLOGIQUES ---
-${risquesTexte}
-
---- TRANSACTIONS DVF (ventes récentes) ---
-${dvfTexte}
-
---- MARCHE ACTUEL (Castorus) ---
-${catorusTexte || 'Données Castorus non disponibles.'}
-
---- PRIX VENDEUR ---
-${prixVendeurTexte}
-
---- DESCRIPTION DU BIEN (agent) ---
-${description || 'Aucune description fournie.'}
-
---- MESSAGE COMPLEMENTAIRE ---
-${message || 'Aucun message complémentaire.'}`
-
-    const response = await anthropic.messages.create({
-      model: 'claude-opus-4-5',
-      max_tokens: 1500,
-      messages: [{ role: 'user', content: userPrompt }],
-      system: systemPrompt,
-    })
-
-    const rapport = response.content[0].type === 'text' ? response.content[0].text : ''
-
-    return NextResponse.json({
-      rapport,
-      meta: {
-        adresseNormalisee,
-        lat,
-        lon,
-        plu: pluTexte,
-        risques: risquesTexte,
-        dvf: dvfTexte,
-        castorus: catorusTexte || null,
-      }
-    })
-
-  } catch (error: any) {
-    console.error('Erreur generate-rapport:', error)
-    return NextResponse.json({ error: error?.message || 'Erreur interne' }, { status: 500 })
-  }
-}
+2. CONTEXTE URB
