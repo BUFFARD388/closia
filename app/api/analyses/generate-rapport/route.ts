@@ -254,67 +254,32 @@ export async function POST(req: NextRequest) {
     const systemPrompt = `Tu es un expert en valorisation immobilière avec 20 ans d'expérience en transaction, marchand de biens et développement foncier. Tu rédiges des rapports d'analyse préalable synthétiques pour des agents immobiliers et mandataires qui souhaitent savoir si un bien de leur portefeuille peut intéresser des investisseurs professionnels (marchands de biens, promoteurs, foncières).
 
 TON ET STYLE :
-- Rapport professionnel, structuré, synthétique (600-900 mots)
+- Rapport professionnel, structuré, synthétique (700-1000 mots)
 - Langage direct, orienté décision
 - Titre : "Analyse Préalable Closia — [type de bien], [ville]"
-- Sections : Synthèse du bien | Contexte urbanistique (PLU) | Risques | Marché local (DVF + annonces) | Cohérence du prix | Potentiel de valorisation | Conclusion Closia
 
-CONCLUSION CLOSIA : Indique clairement si ce bien est susceptible d'intéresser les acheteurs professionnels référencés sur Closia (marchands de biens, promoteurs, investisseurs fonciers), et pourquoi. Si le prix vendeur est communiqué, précise s'il est cohérent avec le marché ou s'il présente un écart significatif.`
+STRUCTURE OBLIGATOIRE (respecte cet ordre, utilise ces titres exacts) :
 
-    const userPrompt = `Voici les données collectées pour l'analyse préalable. Rédige le rapport structuré.
+1. SYNTHÈSE DU BIEN
+   Présentation rapide : type, adresse, surface, opération envisagée.
 
---- BIEN ---
-Type : ${type_bien || 'Non précisé'}
-Adresse : ${adresseNormalisee}
-Surface : ${surface ? surface + ' m²' : 'Non précisée'}
-Type d'opération : ${type_operation || 'Non précisé'}
-Référence cadastrale : ${parcelle || 'Non précisée'}
+2. CONTEXTE URBANISTIQUE (PLU)
+   Analyse approfondie de la zone PLU : type de zone (U, AU, A, N), ce que cela implique concrètement en termes de droits à construire, de division parcellaire, de changement de destination. Mentionne les prescriptions détectées (PPRI, EVV, etc.) et leurs incidences opérationnelles. Conclus sur ce que la réglementation permet ou interdit pour ce bien.
 
---- URBANISME (PLU) ---
-${pluTexte}
+3. LOCALISATION ET DYNAMIQUE DE MARCHÉ
+   Analyse de l'emplacement : bassin de vie, attractivité du secteur, accessibilité, tissu économique environnant. Croise avec la demande des investisseurs professionnels : ce secteur est-il recherché par les marchands de biens, promoteurs ou foncières ? Y a-t-il un marché locatif professionnel actif ? Quelle est la liquidité du bien en cas de revente ?
 
---- RISQUES NATURELS ET TECHNOLOGIQUES ---
-${risquesTexte}
+4. RISQUES NATURELS ET TECHNOLOGIQUES
+   Synthèse des risques identifiés et incidence sur la valeur ou la faisabilité du projet.
 
---- TRANSACTIONS DVF (ventes récentes) ---
-${dvfTexte}
+5. RÉFÉRENCES DE MARCHÉ
+   Analyse des transactions DVF récentes et des annonces actuelles : fourchette de prix au m², tendance (hausse/baisse), délai de vente apparent. Compare le bien analysé aux références disponibles.
 
---- MARCHÉ ACTUEL (Castorus) ---
-${catorusTexte || 'Données Castorus non disponibles.'}
+6. COHÉRENCE DU PRIX DEMANDÉ
+   Si un prix vendeur est communiqué : évalue précisément son positionnement par rapport aux références de marché (DVF + annonces). Indique l'écart en % et en valeur absolue. Précise si le prix est cohérent, surestimé ou sous-estimé, et dans quelle mesure cela impacte l'intérêt des acheteurs professionnels.
 
---- PRIX VENDEUR ---
-${prixVendeurTexte}
+7. POTENTIEL DE VALORISATION
+   Identifie les leviers : division parcellaire, surélévation, changement de destination, réhabilitation, promotion, découpe en lots. Estime la nature de l'opportunité (foncière, patrimoniale, marchande de biens).
 
---- DESCRIPTION DU BIEN (agent) ---
-${description || 'Aucune description fournie.'}
-
---- MESSAGE COMPLÉMENTAIRE ---
-${message || 'Aucun message complémentaire.'}`
-
-    const response = await anthropic.messages.create({
-      model: 'claude-opus-4-5',
-      max_tokens: 1500,
-      messages: [{ role: 'user', content: userPrompt }],
-      system: systemPrompt,
-    })
-
-    const rapport = response.content[0].type === 'text' ? response.content[0].text : ''
-
-    return NextResponse.json({
-      rapport,
-      meta: {
-        adresseNormalisee,
-        lat,
-        lon,
-        plu: pluTexte,
-        risques: risquesTexte,
-        dvf: dvfTexte,
-        castorus: catorusTexte || null,
-      }
-    })
-
-  } catch (error: any) {
-    console.error('Erreur generate-rapport:', error)
-    return NextResponse.json({ error: error?.message || 'Erreur interne' }, { status: 500 })
-  }
-}
+8. CONCLUSION CLOSIA
+   Verdict clair : ce bien est-il susceptible d'intéresser les acheteurs professionne
