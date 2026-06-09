@@ -43,7 +43,7 @@ export default function DashboardAcheteur() {
   const [userProfile, setUserProfile] = useState<any | null>(null)
   const [selectedLead, setSelectedLead] = useState<any | null>(null)
   const [buyMode, setBuyMode] = useState<'exclu' | 'partage' | null>(null)
-  const [payStep, setPayStep] = useState<'choose' | 'pay' | 'confirm'>('choose')
+  const [payStep, setPayStep] = useState<'choose' | 'pay' | 'confirm' | 'exemple'>('choose')
 
   useEffect(() => { init() }, [])
 
