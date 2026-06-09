@@ -9,7 +9,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-// ── Formatage du rapport en HTML email ─────────────────────
+// ── Formatage du rapport en HTML email ───────────────────────────
 function renderInline(text: string): string {
   return text
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -144,8 +144,57 @@ export async function POST(req: Request) {
 
             ${filesHtml}
 
-            <!-- Lien PDF -->
-            <div style="background:rgba(194,154,107,0.06);border:1px solid rgba(194,154,107,0.2);border-radius:10px;padding:18px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;">
+            <!-- CTA Closia -->
+            <div style="background:linear-gradient(135deg,rgba(194,154,107,0.08) 0%,rgba(194,154,107,0.03) 100%);border:1px solid rgba(194,154,107,0.25);border-radius:12px;padding:24px;margin-bottom:28px;text-align:center;">
+              <p style="color:#c29a6b;font-size:13px;font-weight:700;margin:0 0 8px;text-transform:uppercase;letter-spacing:1px;">Prochaine étape</p>
+              <p style="color:#d1d5db;font-size:14px;line-height:1.7;margin:0 0 18px;">
+                Si cette analyse confirme votre intérêt, vous pouvez soumettre ce bien sur Closia.<br/>
+                Diffusion confidentielle · Réponse marché sous 72h · Aucune commission pour l'apporteur.
+              </p>
+              <a href="https://closia.net/auth/register?role=vendeur"
+                style="display:inline-block;background:#c29a6b;color:#000;font-weight:700;padding:12px 28px;border-radius:8px;text-decoration:none;font-size:13px;text-transform:uppercase;letter-spacing:1px;">
+                Soumettre ce bien sur Closia
+              </a>
+            </div>
+
+            <!-- Lien PDF bas de mail -->
+            <div style="background:rgba(194,154,107,0.06);border:1px solid rgba(194,154,107,0.2);border-radius:10px;padding:18px 20px;margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;gap:16px;">
               <div>
                 <p style="color:#fff;font-size:13px;font-weight:600;margin:0 0 4px;">📄 Télécharger le rapport en PDF</p>
-                <p style="color:#9ca3af;font-size:12px;margin:0
+                <p style="color:#9ca3af;font-size:12px;margin:0;">Imprimez ou enregistrez ce rapport pour le transmettre à votre client.</p>
+              </div>
+              <a href="${rapportUrl}" style="display:inline-block;background:transparent;color:#c29a6b;font-weight:700;padding:10px 20px;border-radius:8px;text-decoration:none;font-size:12px;text-transform:uppercase;letter-spacing:1px;border:1px solid rgba(194,154,107,0.4);white-space:nowrap;flex-shrink:0;">
+                Ouvrir le rapport
+              </a>
+            </div>
+
+            <!-- Confidentialité -->
+            <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px 16px;margin-bottom:32px;">
+              <span style="color:#6b7280;font-size:16px;flex-shrink:0;">🔒</span>
+              <p style="color:#6b7280;font-size:12px;margin:0;line-height:1.6;">Ce rapport est confidentiel et établi à votre usage exclusif. Il ne constitue pas un avis juridique ou financier et ne peut être transmis à des tiers sans autorisation.</p>
+            </div>
+
+          </div>
+
+          <!-- Pied de page -->
+          <div style="background:#080e1a;padding:20px 40px;text-align:center;border-top:1px solid rgba(255,255,255,0.05);">
+            <p style="color:#4b5563;font-size:12px;margin:0 0 4px;">Laurent Buffard · Fondateur Closia</p>
+            <p style="color:#4b5563;font-size:12px;margin:0 0 4px;">contact@closia.net · 06 87 76 33 40</p>
+            <a href="https://closia.net" style="color:#c29a6b;font-size:12px;text-decoration:none;">closia.net</a>
+          </div>
+
+        </div>
+      `,
+    })
+
+    // Marquer comme livrée en base
+    await supabase
+      .from('analyses')
+      .update({ statut: 'livree', rapport })
+      .eq('id', analyseId)
+
+    return NextResponse.json({ success: true })
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 })
+  }
+}
