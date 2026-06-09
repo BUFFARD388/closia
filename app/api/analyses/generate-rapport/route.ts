@@ -287,7 +287,7 @@ Si prix communique : positionnement vs marche, ecart en % et en valeur absolue. 
 Leviers : division parcellaire, surelevation, changement de destination, rehabilitation, promotion, decoupe en lots.
 
 8. FOURCHETTE DE PRIX ESTIMEE
-A partir des references DVF et des annonces actuelles, estime une fourchette de valeur marche realiste pour ce bien (prix bas / prix haut en EUR, et prix/m2). Precise sur quelles donnees tu t'appuies.
+A partir des references DVF et des annonces actuelles, estime une fourchette de valeur marche realiste pour ce bien (prix bas / prix haut en EUR, et prix/m2). Precise sur quelles donnees tu t'appuies. Sois bref sur les sections 1-7 si necessaire pour toujours inclure les sections 8 et 9 en entier.
 
 9. CONCLUSION CLOSIA
 Sur la base de la fourchette estimee, compare avec le prix demande (si communique) :
@@ -328,7 +328,7 @@ ${message || 'Aucun.'}`
 
     const response = await anthropic.messages.create({
       model: 'claude-opus-4-5',
-      max_tokens: 3000,
+      max_tokens: 4000,
       messages: [{ role: 'user', content: userPrompt }],
       system: systemPrompt,
     })
