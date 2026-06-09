@@ -253,4 +253,68 @@ export async function POST(req: NextRequest) {
     // 7. Construction du prompt et appel Claude
     const systemPrompt = `Tu es un expert en valorisation immobilière avec 20 ans d'expérience en transaction, marchand de biens et développement foncier. Tu rédiges des rapports d'analyse préalable synthétiques pour des agents immobiliers et mandataires qui souhaitent savoir si un bien de leur portefeuille peut intéresser des investisseurs professionnels (marchands de biens, promoteurs, foncières).
 
-TON ET ST
+TON ET STYLE :
+- Rapport professionnel, structuré, synthétique (600-900 mots)
+- Langage direct, orienté décision
+- Titre : "Analyse Préalable Closia — [type de bien], [ville]"
+- Sections : Synthèse du bien | Contexte urbanistique (PLU) | Risques | Marché local (DVF + annonces) | Cohérence du prix | Potentiel de valorisation | Conclusion Closia
+
+CONCLUSION CLOSIA : Indique clairement si ce bien est susceptible d'intéresser les acheteurs professionnels référencés sur Closia (marchands de biens, promoteurs, investisseurs fonciers), et pourquoi. Si le prix vendeur est communiqué, précise s'il est cohérent avec le marché ou s'il présente un écart significatif.`
+
+    const userPrompt = `Voici les données collectées pour l'analyse préalable. Rédige le rapport structuré.
+
+--- BIEN ---
+Type : ${type_bien || 'Non précisé'}
+Adresse : ${adresseNormalisee}
+Surface : ${surface ? surface + ' m²' : 'Non précisée'}
+Type d'opération : ${type_operation || 'Non précisé'}
+Référence cadastrale : ${parcelle || 'Non précisée'}
+
+--- URBANISME (PLU) ---
+${pluTexte}
+
+--- RISQUES NATURELS ET TECHNOLOGIQUES ---
+${risquesTexte}
+
+--- TRANSACTIONS DVF (ventes récentes) ---
+${dvfTexte}
+
+--- MARCHÉ ACTUEL (Castorus) ---
+${catorusTexte || 'Données Castorus non disponibles.'}
+
+--- PRIX VENDEUR ---
+${prixVendeurTexte}
+
+--- DESCRIPTION DU BIEN (agent) ---
+${description || 'Aucune description fournie.'}
+
+--- MESSAGE COMPLÉMENTAIRE ---
+${message || 'Aucun message complémentaire.'}`
+
+    const response = await anthropic.messages.create({
+      model: 'claude-opus-4-5',
+      max_tokens: 1500,
+      messages: [{ role: 'user', content: userPrompt }],
+      system: systemPrompt,
+    })
+
+    const rapport = response.content[0].type === 'text' ? response.content[0].text : ''
+
+    return NextResponse.json({
+      rapport,
+      meta: {
+        adresseNormalisee,
+        lat,
+        lon,
+        plu: pluTexte,
+        risques: risquesTexte,
+        dvf: dvfTexte,
+        castorus: catorusTexte || null,
+      }
+    })
+
+  } catch (error: any) {
+    console.error('Erreur generate-rapport:', error)
+    return NextResponse.json({ error: error?.message || 'Erreur interne' }, { status: 500 })
+  }
+}
