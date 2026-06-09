@@ -10,7 +10,7 @@ const supabase = createClient(
 export default async function RapportPage({ params }: { params: { id: string } }) {
   const { data: analyse } = await supabase
     .from('analyses')
-    .select('nom, email, adresse, description, message, type_bien, surface, parcelle, rapport, created_at')
+    .select('nom, email, adresse, description, message, type_bien, surface, parcelle, rapport, fichiers, created_at')
     .eq('id', params.id)
     .single()
 

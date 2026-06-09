@@ -76,6 +76,10 @@ export default function RapportView({ analyse }: { analyse: any }) {
   const sections = parseRapport(analyse.rapport)
   const date = new Date(analyse.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
 
+  // Première photo transmise par le demandeur
+  const photos: { name: string; url: string }[] = Array.isArray(analyse.fichiers) ? analyse.fichiers : []
+  const coverPhoto = photos.find(f => /\.(jpe?g|png|webp|gif|heic|avif)$/i.test(f.name)) || photos[0]
+
   return (
     <>
       <style>{`
@@ -88,6 +92,7 @@ export default function RapportView({ analyse }: { analyse: any }) {
         .cover-badge { background: rgba(194,154,107,.12); border: 1px solid rgba(194,154,107,.35); border-radius: 6px; padding: 12px 20px; text-align: center }
         .cover-badge-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,.5); margin-bottom: 4px }
         .cover-badge-date { font-size: 14px; font-weight: 600; color: #c29a6b }
+        .cover-photo { width: 100%; height: 260px; object-fit: cover; object-position: center; display: block }
         .info-strip { background: #f7f5f0; border-bottom: 1px solid #e8e2d5; padding: 24px 56px }
         .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px }
         .info-item { background: #fff; border: 1px solid #e8e2d5; border-radius: 8px; padding: 12px 14px }
@@ -122,6 +127,7 @@ export default function RapportView({ analyse }: { analyse: any }) {
           body { -webkit-print-color-adjust: exact; print-color-adjust: exact }
           .print-btn { display: none }
           .section-block { page-break-inside: avoid }
+          .cover-photo { height: 220px }
         }
       `}</style>
 
@@ -136,6 +142,11 @@ export default function RapportView({ analyse }: { analyse: any }) {
           <div className="cover-badge-date">{date}</div>
         </div>
       </div>
+
+      {coverPhoto && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={coverPhoto.url} alt="Photo du bien" className="cover-photo" />
+      )}
 
       <div className="info-strip">
         <div className="info-grid">
@@ -173,7 +184,7 @@ export default function RapportView({ analyse }: { analyse: any }) {
       </div>
 
       <button className="print-btn" onClick={() => window.print()}>
-        🖨️ Imprimer / Télécharger en PDF
+        \U0001f5a8️ Imprimer / Télécharger en PDF
       </button>
     </>
   )
