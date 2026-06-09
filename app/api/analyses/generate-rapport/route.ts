@@ -87,7 +87,9 @@ export async function POST(req: NextRequest) {
             pluTexte = 'Bien non couvert par un PLU numérisé sur le Géoportail Urbanisme (commune en POS, carte communale ou règlement national d\'urbanisme). Vérification en mairie recommandée.'
           }
         }
-      } catch { /* continue sans PLU */ }
+      } catch (e: any) {
+        pluTexte = `Données PLU non disponibles (erreur : ${e?.message || 'inconnue'}).`
+      }
     }
 
     // 3. Risques Géorisques
