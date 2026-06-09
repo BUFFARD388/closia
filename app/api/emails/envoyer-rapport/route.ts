@@ -118,9 +118,17 @@ export async function POST(req: Request) {
           <div style="padding:36px 40px;">
 
             <p style="color:#d1d5db;font-size:15px;margin:0 0 6px;">Bonjour <strong style="color:#fff;">${nom}</strong>,</p>
-            <p style="color:#9ca3af;font-size:14px;line-height:1.7;margin:0 0 28px;">
+            <p style="color:#9ca3af;font-size:14px;line-height:1.7;margin:0 0 20px;">
               Voici l'analyse du bien que vous m'avez soumis. Elle a pour objectif de vous donner une lecture rapide du potentiel de valorisation et de vous aider à décider de la suite à donner à ce dossier.
             </p>
+
+            <!-- Lien PDF — en haut pour visibilité immédiate -->
+            <div style="background:rgba(194,154,107,0.08);border:1px solid rgba(194,154,107,0.3);border-radius:10px;padding:14px 18px;margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;gap:16px;">
+              <p style="color:#d1d5db;font-size:13px;margin:0;">📄 <strong style="color:#fff;">Imprimer ou télécharger ce rapport en PDF</strong></p>
+              <a href="${rapportUrl}" style="display:inline-block;background:#c29a6b;color:#000;font-weight:700;padding:10px 20px;border-radius:8px;text-decoration:none;font-size:12px;text-transform:uppercase;letter-spacing:1px;white-space:nowrap;flex-shrink:0;">
+                Télécharger PDF
+              </a>
+            </div>
 
             <!-- Fiche du bien -->
             <div style="background:#111720;border:1px solid rgba(255,255,255,0.07);border-left:3px solid #c29a6b;border-radius:8px;padding:18px 20px;margin-bottom:32px;">
@@ -140,13 +148,4 @@ export async function POST(req: Request) {
             <div style="background:rgba(194,154,107,0.06);border:1px solid rgba(194,154,107,0.2);border-radius:10px;padding:18px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;">
               <div>
                 <p style="color:#fff;font-size:13px;font-weight:600;margin:0 0 4px;">📄 Télécharger le rapport en PDF</p>
-                <p style="color:#9ca3af;font-size:12px;margin:0;line-height:1.5;">Ouvrez ce lien dans votre navigateur pour consulter, imprimer ou enregistrer ce rapport en PDF.</p>
-              </div>
-              <a href="${rapportUrl}" style="display:inline-block;background:#c29a6b;color:#000;font-weight:700;padding:10px 20px;border-radius:8px;text-decoration:none;font-size:12px;text-transform:uppercase;letter-spacing:1px;white-space:nowrap;flex-shrink:0;">
-                Voir le rapport
-              </a>
-            </div>
-
-            <!-- CTA Closia -->
-            <div style="background:linear-gradient(135deg,rgba(194,154,107,0.08) 0%,rgba(194,154,107,0.03) 100%);border:1px solid rgba(194,154,107,0.25);border-radius:12px;padding:24px;margin-bottom:28px;text-align:center;">
-              <p style="color:#c29a6b;font-size:13px;fon
+                <p style="color:#9ca3af;font-size:12px;margin:0
