@@ -142,6 +142,13 @@ export default function DashboardAcheteur() {
 
   const handleBuy = async () => {
     if (!selectedLead || !buyMode || !userId) return
+
+    // Bloquer l'achat pour les biens exemples
+    if (selectedLead.type?.includes('Exemple')) {
+      setPayStep('exemple')
+      return
+    }
+
     const grille = getPrix(selectedLead.prix)
     const montant = buyMode === 'exclu' ? grille.exclu : grille.trois
 
@@ -291,16 +298,23 @@ export default function DashboardAcheteur() {
                   const grille = getPrix(lead.prix)
                   const dejaPositionne = acheteurs.some((a: any) => a.acheteur_id === userId)
 
+                  const isExemple = lead.type?.includes('Exemple')
+
                   return (
-                    <div key={lead.id} className="card hover:border-gold-500/40 transition-all flex flex-col">
+                    <div key={lead.id} className={`card hover:border-gold-500/40 transition-all flex flex-col ${isExemple ? 'border-dashed border-white/20' : ''}`}>
                       <div className="flex items-center justify-between mb-4">
-                        <span className="tag-live"><Timer className="w-3 h-3" /> En ligne</span>
+                        <div className="flex items-center gap-2">
+                          <span className="tag-live"><Timer className="w-3 h-3" /> En ligne</span>
+                          {isExemple && (
+                            <span className="text-xs px-2 py-0.5 rounded-full border border-white/20 text-gray-400 tracking-widest uppercase">Exemple</span>
+                          )}
+                        </div>
                         <span className={`text-xs flex items-center gap-1 font-medium ${timerColor(h)}`}>
                           <Clock className="w-3 h-3" /> {Math.floor(h)}h {Math.floor((h % 1) * 60)}min
                         </span>
                       </div>
 
-                      <h3 className="font-semibold text-lg mb-3">{lead.type}</h3>
+                      <h3 className="font-semibold text-lg mb-3">{lead.type.replace(' — Exemple', '')}</h3>
 
                       <div className="space-y-1.5 mb-4 text-sm text-gray-400">
                         <div className="flex items-center gap-2"><MapPin className="w-3.5 h-3.5 text-gold-500" />{lead.cp} – {lead.ville}</div>
@@ -602,6 +616,23 @@ export default function DashboardAcheteur() {
                   </>
                 )
               })()}
+
+              {payStep === 'exemple' && (
+                <div className="py-4 text-center">
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-white/10 border border-white/20">
+                    <Lock className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-xl font-bold mb-2">Bien exemple</h3>
+                  <p className="text-gray-400 text-sm mb-6 leading-relaxed">
+                    Ce dossier est un exemple de démonstration.<br />
+                    Les vrais leads seront disponibles très prochainement — vous serez notifié par email dès la première diffusion.
+                  </p>
+                  <button onClick={() => setSelectedLead(null)}
+                    className="w-full justify-center inline-flex items-center text-xs tracking-widest uppercase bg-[#c29a6b] text-black font-semibold px-6 py-3.5 rounded-xl hover:bg-[#b8911f] transition-colors">
+                    Compris
+                  </button>
+                </div>
+              )}
 
               {payStep === 'confirm' && (
                 <div className="py-4 text-center">
