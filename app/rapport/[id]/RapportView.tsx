@@ -92,6 +92,7 @@ export default function RapportView({ analyse }: { analyse: any }) {
         .cover-badge { background: rgba(194,154,107,.12); border: 1px solid rgba(194,154,107,.35); border-radius: 6px; padding: 12px 20px; text-align: center }
         .cover-badge-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,.5); margin-bottom: 4px }
         .cover-badge-date { font-size: 14px; font-weight: 600; color: #c29a6b }
+        .cover-logo-img { height: 48px; width: auto; display: block; margin-bottom: 16px; object-fit: contain }
         .cover-photo { width: 100%; height: 260px; object-fit: cover; object-position: center; display: block }
         .info-strip { background: #f7f5f0; border-bottom: 1px solid #e8e2d5; padding: 24px 56px }
         .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px }
@@ -133,7 +134,7 @@ export default function RapportView({ analyse }: { analyse: any }) {
 
       <div className="cover">
         <div>
-          <div className="cover-logo">CLOSIA</div>
+          <img src="/logo.png" alt="Closia" className="cover-logo-img" />
           <div className="cover-title">Rapport d&apos;analyse préalable</div>
           <div className="cover-sub">Document confidentiel — Usage exclusif du destinataire</div>
         </div>
