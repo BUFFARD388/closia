@@ -56,6 +56,13 @@ function RegisterForm() {
       return
     }
 
+    // Envoyer l'email de bienvenue via Resend
+    await fetch('/api/emails/bienvenue', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, prenom: firstName, role }),
+    })
+
     setStep(3)
   }
 
