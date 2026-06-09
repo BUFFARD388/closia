@@ -21,8 +21,31 @@ function renderInline(text: string): string {
 function renderLines(lines: string[]): string {
   let html = ''
   let inList = false
+  let inTable = false
+  let tableRows: string[][] = []
+
+  function flushTable() {
+    if (!tableRows.length) return
+    const header = tableRows[0]
+    const body = tableRows.slice(2)
+    html += '<table style="width:100%;border-collapse:collapse;margin:12px 0;font-size:12px;">'
+    html += '<thead><tr>' + header.map(c => `<th style="background:#1e293b;color:#c29a6b;text-align:left;padding:7px 10px;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;">${renderInline(c)}</th>`).join('') + '</tr></thead>'
+    html += '<tbody>' + body.map((row, i) => '<tr>' + row.map(c => `<td style="padding:6px 10px;border-bottom:1px solid rgba(255,255,255,0.06);color:#d1d5db;background:${i%2===0?'rgba(255,255,255,0.02)':'transparent'};vertical-align:top;">${renderInline(c)}</td>`).join('') + '</tr>').join('') + '</tbody>'
+    html += '</table>'
+    tableRows = []
+    inTable = false
+  }
+
   for (const line of lines) {
     const t = line.trim()
+    if (t.startsWith('|') && t.endsWith('|')) {
+      if (inList) { html += '</ul>'; inList = false }
+      inTable = true
+      const cells = t.slice(1, -1).split('|').map(c => c.trim())
+      if (!cells.every(c => /^[-: ]+$/.test(c))) tableRows.push(cells)
+      continue
+    }
+    if (inTable) flushTable()
     if (!t) { if (inList) { html += '</ul>'; inList = false } continue }
     if (/^[-•·]\s+/.test(t)) {
       if (!inList) { html += '<ul style="padding-left:18px;margin:8px 0;">'; inList = true }
@@ -32,6 +55,7 @@ function renderLines(lines: string[]): string {
       html += `<p style="margin:0 0 9px;color:#d1d5db;">${renderInline(t)}</p>`
     }
   }
+  if (inTable) flushTable()
   if (inList) html += '</ul>'
   return html
 }
@@ -125,32 +149,4 @@ export async function POST(req: Request) {
             </div>
 
             <!-- Confidentialité -->
-            <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px 16px;margin-bottom:32px;">
-              <span style="color:#6b7280;font-size:16px;flex-shrink:0;">🔒</span>
-              <p style="color:#6b7280;font-size:12px;margin:0;line-height:1.6;">Ce rapport est confidentiel et établi à votre usage exclusif. Il ne constitue pas un avis juridique ou financier et ne peut être transmis à des tiers sans autorisation.</p>
-            </div>
-
-          </div>
-
-          <!-- Pied de page -->
-          <div style="background:#080e1a;padding:20px 40px;text-align:center;border-top:1px solid rgba(255,255,255,0.05);">
-            <p style="color:#4b5563;font-size:12px;margin:0 0 4px;">Laurent Buffard · Fondateur Closia</p>
-            <p style="color:#4b5563;font-size:12px;margin:0 0 4px;">contact@closia.net · 06 87 76 33 40</p>
-            <a href="https://closia.net" style="color:#c29a6b;font-size:12px;text-decoration:none;">closia.net</a>
-          </div>
-
-        </div>
-      `,
-    })
-
-    // Marquer comme livrée en base
-    await supabase
-      .from('analyses')
-      .update({ statut: 'livree', rapport })
-      .eq('id', analyseId)
-
-    return NextResponse.json({ success: true })
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
-  }
-}
+            <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px 16px;margin-bo

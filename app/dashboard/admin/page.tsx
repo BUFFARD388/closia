@@ -189,8 +189,32 @@ export default function DashboardAdmin() {
     function renderLines(lines: string[]): string {
       let html = ''
       let inList = false
+      let inTable = false
+      let tableRows: string[][] = []
+
+      function flushTable() {
+        if (!tableRows.length) return
+        const header = tableRows[0]
+        const body = tableRows.slice(2) // skip separator row
+        html += '<table><thead><tr>' + header.map(c => `<th>${renderInline(c)}</th>`).join('') + '</tr></thead><tbody>'
+        body.forEach(row => { html += '<tr>' + row.map(c => `<td>${renderInline(c)}</td>`).join('') + '</tr>' })
+        html += '</tbody></table>'
+        tableRows = []
+        inTable = false
+      }
+
       for (const line of lines) {
         const t = line.trim()
+        // Détection ligne de tableau markdown
+        if (t.startsWith('|') && t.endsWith('|')) {
+          if (inList) { html += '</ul>'; inList = false }
+          inTable = true
+          const cells = t.slice(1, -1).split('|').map(c => c.trim())
+          // Ignorer la ligne séparateur (---|---)
+          if (!cells.every(c => /^[-: ]+$/.test(c))) tableRows.push(cells)
+          continue
+        }
+        if (inTable) flushTable()
         if (!t) { if (inList) { html += '</ul>'; inList = false } continue }
         if (/^[-•·]\s+/.test(t)) {
           if (!inList) { html += '<ul>'; inList = true }
@@ -200,6 +224,7 @@ export default function DashboardAdmin() {
           html += `<p>${renderInline(t)}</p>`
         }
       }
+      if (inTable) flushTable()
       if (inList) html += '</ul>'
       return html
     }
@@ -273,6 +298,10 @@ export default function DashboardAdmin() {
     .section-body ul{padding-left:18px;margin-bottom:9px}
     .section-body li{margin-bottom:5px}
     .section-body strong{color:#1a1a2e;font-weight:600}
+    .section-body table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
+    .section-body th{background:#1a1a2e;color:#fff;text-align:left;padding:8px 12px;font-size:11px;text-transform:uppercase;letter-spacing:0.5px}
+    .section-body td{padding:7px 12px;border-bottom:1px solid #e8e2d5;color:#374151;vertical-align:top}
+    .section-body tr:nth-child(even) td{background:#f7f5f0}
     /* FOOTER */
     .footer{padding:16px 56px;background:#f7f5f0;border-top:1px solid #e8e2d5;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#9ca3af}
     .footer-brand{font-weight:600;color:#c29a6b;letter-spacing:2px;font-size:12px}
@@ -1028,31 +1057,4 @@ ${selectedAnalyse.description ? `
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {!rapport.trim() && (
-                      <p className="text-xs text-center text-gray-500 italic">Rédigez le rapport ci-dessus pour pouvoir l'envoyer.</p>
-                    )}
-                    <button
-                      onClick={imprimerRapport}
-                      disabled={!rapport.trim()}
-                      className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed text-white font-semibold text-xs tracking-widest uppercase py-3 rounded-xl transition-colors">
-                      🖨️ Aperçu / Imprimer en PDF
-                    </button>
-                    <button
-                      onClick={envoyerRapport}
-                      disabled={!rapport.trim() || sendingRapport}
-                      className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 disabled:opacity-30 disabled:cursor-not-allowed text-white font-semibold text-xs tracking-widest uppercase py-3.5 rounded-xl transition-colors">
-                      {sendingRapport ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                      {sendingRapport ? 'Envoi en cours…' : `Envoyer à ${selectedAnalyse.email}`}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-    </div>
-  )
-}
-
+                    {!ra
