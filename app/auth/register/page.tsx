@@ -37,13 +37,13 @@ function RegisterForm() {
       password,
       options: {
         data: {
-          firstName,
-          lastName,
-          phone,
-          company,
+          prenom: firstName,
+          nom: lastName,
+          tel: phone,
+          societe: company,
           siret,
-          profil,
-          statut,
+          profil_type: profil,
+          statut_pro: statut,
           role
         }
       }
@@ -54,6 +54,19 @@ function RegisterForm() {
     if (error) {
       setErrorMessage(error.message)
       return
+    }
+
+    // Mettre à jour la table profiles avec tous les champs
+    if (data.user) {
+      await supabase.from('profiles').update({
+        prenom: firstName,
+        nom: lastName,
+        tel: phone,
+        societe: company,
+        siret,
+        profil_type: profil,
+        statut_pro: statut,
+      }).eq('id', data.user.id)
     }
 
     // Envoyer l'email de bienvenue via Resend
