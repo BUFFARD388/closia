@@ -112,30 +112,140 @@ export async function POST(req: NextRequest) {
       } catch { /* continue */ }
     }
 
-    // 4. Données DVF - transactions comparables
+    // 4. Données DVF - transactions comparables (rayon progressif : 2 → 5 → 10 → 20 km)
     let dvfTexte = 'Données DVF non disponibles pour ce secteur.'
     if (lat && lon) {
-      try {
-        const dvfRes = await fetch(
-          `https://api.priximmobilier.gouv.fr/transactions?lat=${lat}&lon=${lon}&distance=2000&nb=10`,
-          { signal: AbortSignal.timeout(5000) }
-        )
-        if (dvfRes.ok) {
-          const dvfData = await dvfRes.json()
-          if (dvfData.length > 0) {
-            const transactions = dvfData
-              .slice(0, 5)
-              .map((t: any) =>
-                `- ${t.type_local || 'Bien'} · ${t.surface_reelle_bati || t.surface_terrain || '?'} m² · ${Number(t.valeur_fonciere).toLocaleString('fr-FR')} € (${t.date_mutation?.substring(0, 7) || '?'})`
-              )
-              .join('\n')
-            dvfTexte = `Transactions récentes dans un rayon de 2 km :\n${transactions}`
+      for (const distance of [2000, 5000, 10000, 20000]) {
+        try {
+          const dvfRes = await fetch(
+            `https://api.priximmobilier.gouv.fr/transactions?lat=${lat}&lon=${lon}&distance=${distance}&nb=10`,
+            { signal: AbortSignal.timeout(5000) }
+          )
+          if (dvfRes.ok) {
+            const dvfData = await dvfRes.json()
+            if (dvfData.length > 0) {
+              const transactions = dvfData
+                .slice(0, 5)
+                .map((t: any) =>
+                  `- ${t.type_local || 'Bien'} · ${t.surface_reelle_bati || t.surface_terrain || '?'} m² · ${Number(t.valeur_fonciere).toLocaleString('fr-FR')} € (${t.date_mutation?.substring(0, 7) || '?'})`
+                )
+                .join('\n')
+              dvfTexte = `Transactions récentes (rayon ${distance / 1000} km) :\n${transactions}`
+              break
+            }
           }
-        }
-      } catch { /* continue sans DVF */ }
+        } catch { /* continuer avec rayon supérieur */ }
+      }
     }
 
-    // 5. Calculs financiers à partir des données fournies
+    // 5. Castorus — annonces actuelles + résumé marché local
+    let catorusTexte = ''
+    const communeVille = villeGeo || ville || ''
+    const communeCP = codePostal || cp || ''
+    if (communeVille && communeCP) {
+      try {
+        const slugVille = communeVille
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[̀-ͯ]/g, '')
+          .replace(/[^a-z0-9-]/g, '-')
+          .replace(/-+/g, '-')
+          .replace(/^-|-$/g, '')
+
+        const headers = {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+          'Accept-Language': 'fr-FR,fr;q=0.9',
+        }
+
+        const [ventesRes, rechercheRes] = await Promise.allSettled([
+          fetch(`https://www.castorus.com/ventes-immobilieres/${slugVille}-${communeCP}`, { headers, signal: AbortSignal.timeout(7000) }),
+          fetch(`https://www.castorus.com/recherche/${slugVille}-${communeCP}`, { headers, signal: AbortSignal.timeout(7000) }),
+        ])
+
+        const lignes: string[] = []
+
+        // Stats DVF résumées via Castorus
+        if (ventesRes.status === 'fulfilled' && ventesRes.value.ok) {
+          const plain = (await ventesRes.value.text()).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')
+          const m = plain.match(/(\d+)\s*ventes.*?Prix moyen\s*:\s*([\d \s]+)\s*€.*?([\d \s]+)\s*€\s*\/\s*m/i)
+          if (m) {
+            const nbV = m[1]
+            const prixMoy = m[2].replace(/ |\s/g, ' ').trim()
+            const pm2 = m[3].replace(/ |\s/g, ' ').trim()
+            lignes.push(`Résumé des ventes passées (commune) : ${nbV} transactions · Prix moyen ${prixMoy} € · ${pm2} €/m²`)
+          }
+        }
+
+        // Annonces actuelles filtrées par type de bien
+        if (rechercheRes.status === 'fulfilled' && rechercheRes.value.ok) {
+          const html = await rechercheRes.value.text()
+          const plainFull = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')
+          const countM = plainFull.match(/(\d+)\s*annonces?\s/i)
+          const nbTotal = countM?.[1]
+
+          const typeBienLow = (type_bien || '').toLowerCase()
+          const annonces: string[] = []
+          const seen = new Set<string>()
+
+          // Parcourir les <tr> du tableau de listings
+          const trRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi
+          let trMatch
+          while ((trMatch = trRegex.exec(html)) !== null && annonces.length < 7) {
+            const tr = trMatch[1]
+            const tds: string[] = []
+            const tdRegex = /<td[^>]*>([\s\S]*?)<\/td>/gi
+            let tdMatch
+            while ((tdMatch = tdRegex.exec(tr)) !== null) {
+              tds.push(
+                tdMatch[1]
+                  .replace(/<[^>]+>/g, ' ')
+                  .replace(/&euro;/gi, '€').replace(/&nbsp;/gi, ' ')
+                  .replace(/ /g, ' ').replace(/\s+/g, ' ').trim()
+              )
+            }
+            if (tds.length < 5) continue
+
+            const prix = tds[0]
+            const titre = tds[1]
+            const surface = tds[4] || '-'
+            const prixM2 = tds.length > 7 ? tds[7] : '-'
+
+            if (!/\d[\d\s]*€/.test(prix)) continue
+            if (!titre || titre.length < 3 || titre === 'voir') continue
+
+            const key = `${prix.replace(/\s/g, '')}-${titre.substring(0, 15)}`
+            if (seen.has(key)) { continue } else { seen.add(key) }
+
+            const titreLow = titre.toLowerCase()
+            const relevant =
+              (typeBienLow.includes('terrain') && titreLow.includes('terrain')) ||
+              (typeBienLow.includes('immeuble') && titreLow.includes('immeuble')) ||
+              (typeBienLow.includes('local') && (titreLow.includes('local') || titreLow.includes('commerce'))) ||
+              ((typeBienLow.includes('maison') || typeBienLow.includes('villa') || typeBienLow.includes('pavillon')) && titreLow.includes('maison')) ||
+              (typeBienLow.includes('appartement') && titreLow.includes('appartement'))
+            if (!relevant) continue
+
+            const baisseStr = prix.includes('▼') ? ' ↘ en baisse' : ''
+            const surfaceStr = surface && surface !== '-' && surface !== 'voir' && /\d/.test(surface) ? ` ${surface}` : ''
+            const prixM2Str = prixM2 && prixM2 !== '-' && prixM2 !== 'voir' && /\d/.test(prixM2) ? ` · ${prixM2}/m²` : ''
+            const prixClean = prix.replace('▼', '').trim()
+            annonces.push(`- ${titre}${surfaceStr} : ${prixClean}${prixM2Str}${baisseStr}`)
+          }
+
+          if (annonces.length > 0) {
+            const header = nbTotal
+              ? `Annonces similaires actuellement sur le marché (${nbTotal} biens à vendre sur ${communeVille}) :`
+              : `Annonces similaires sur ${communeVille} :`
+            lignes.push(header)
+            lignes.push(...annonces)
+          }
+        }
+
+        if (lignes.length > 0) catorusTexte = lignes.join('\n')
+      } catch { /* continue sans Castorus */ }
+    }
+
+    // 6. Calculs financiers à partir des données fournies
     let financierTexte = ''
     if (prix_acquisition) {
       const acq = parseFloat(prix_acquisition)
@@ -164,7 +274,7 @@ ${prixAuM2Revente ? `- Prix de revente au m² : ${prixAuM2Revente.toLocaleString
 `
     }
 
-    // 6. Construction du prompt et appel Claude
+    // 7. Construction du prompt et appel Claude
     const systemPrompt = `Tu es un expert en valorisation immobilière avec 20 ans d'expérience en transaction, marchand de biens et développement foncier. Tu rédiges des rapports d'analyse préalable synthétiques pour des agents immobiliers et mandataires qui souhaitent savoir si un bien de leur portefeuille peut intéresser des investisseurs professionnels (marchands de biens, promoteurs, foncières).
 
 TON ET STYLE :
@@ -197,8 +307,11 @@ ${pluTexte}
 DONNÉES GÉORISQUES (rayon 500m) :
 ${risquesTexte}
 
-RÉFÉRENCES DE MARCHÉ DVF (transactions récentes dans un rayon de 2 km) :
+RÉFÉRENCES DE MARCHÉ DVF (transactions passées) :
 ${dvfTexte}
+
+ANNONCES ACTUELLEMENT SUR LE MARCHÉ (Castorus — SeLoger, LeBonCoin) :
+${catorusTexte || 'Données non disponibles pour cette commune.'}
 
 STRUCTURE DU RAPPORT (4 sections, respecter impérativement cet ordre et ces titres exacts) :
 
@@ -206,7 +319,7 @@ STRUCTURE DU RAPPORT (4 sections, respecter impérativement cet ordre et ces tit
 En 4-5 lignes : pourquoi ce bien peut intéresser des investisseurs professionnels. Quel type de profil (marchand de biens, promoteur, foncière…) et pour quelle opération. Sois concret et positif si le dossier le justifie. Si le zonage PLU est disponible et favorable (zone U ou AU), mentionne-le comme facteur de potentiel.
 
 2. CONTEXTE DE MARCHÉ
-En 3-4 lignes : dynamique du secteur, références de prix au m² (cite les DVF si disponibles comme ordre de grandeur), demande professionnelle sur ce type de bien dans cette zone.
+En 3-4 lignes : dynamique du secteur. Cite les DVF comme références de transactions passées. Si des annonces Castorus sont disponibles, mentionne les biens similaires actuellement en vente et leur fourchette de prix — c'est la concurrence directe. Demande professionnelle sur ce type de bien dans cette zone.
 
 3. POINTS D'ATTENTION
 Lister 2 à 3 points à vérifier avant diffusion. Format court : une ligne par point. Ton neutre — ce sont des points à anticiper, pas des obstacles.
