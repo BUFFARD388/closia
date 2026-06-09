@@ -29,6 +29,9 @@ Contenu prêt à publier, organisé par cible (vendeurs pro / acheteurs pro), av
 | 4 | Jeudi | Acheteurs pro | Preuve chiffrée / cas concret | A4 |
 | 5 | Mardi | Vendeurs pro | Appel à l'action direct | V5 |
 | 5 | Jeudi | Acheteurs pro | Appel à l'action direct (inscription) | A5 |
+| 6 | Mardi | Vendeurs pro | L'analyse préalable — l'argument pour signer | V6 |
+| 6 | Jeudi | Vendeurs pro | L'analyse préalable — comment ça marche | V7 |
+| 5 | Jeudi | Acheteurs pro | Appel à l'action direct (inscription) | A5 |
 
 > Au bout de 5 semaines, vous aurez couvert les grands axes pour les deux audiences. Vous pourrez ensuite relancer un second cycle avec de nouveaux cas concrets (au fur et à mesure que des dossiers se concluent sur la plateforme), des témoignages d'utilisateurs, ou des contenus plus "coulisses" (comment un dossier est analysé, etc.).
 
@@ -110,6 +113,44 @@ Ce sont exactement les dossiers que Closia sait valoriser auprès d'acheteurs pr
 L'inscription est gratuite, sans engagement, et l'analyse de votre premier dossier ne prend que quelques minutes à déposer.
 
 Lien en commentaire pour vous inscrire 👇
+
+---
+
+### V6 — L'analyse préalable : l'argument pour signer le mandat exclusif
+
+Vous êtes face à un vendeur hésitant. Il a un bien atypique, pas facile à vendre. Il ne sait pas trop quoi en faire. Et il hésite à vous confier le mandat.
+
+Voici un argument que peu d'agents peuvent sortir :
+
+"Je peux vous obtenir une réponse marché en 72h. Mais avant ça, un expert va analyser votre bien gratuitement — potentiel de valorisation, faisabilité, axes de création de valeur — pour qu'on sache exactement à qui le proposer et à quel prix."
+
+C'est ce que permet l'analyse préalable de Closia.
+
+Vous déposez une demande d'analyse. L'expert étudie le dossier. Vous repartez avec des éléments concrets pour convaincre votre vendeur — et signer votre mandat exclusif sur des bases solides.
+
+Aucun frais. Aucun engagement.
+
+Lien en commentaire 👇
+
+---
+
+### V7 — L'analyse préalable : comment ça fonctionne concrètement
+
+Vous avez un bien entre les mains. Potentiel évident — mais vous n'avez pas les outils pour le chiffrer.
+
+Closia propose une analyse préalable gratuite avant toute diffusion.
+
+Concrètement :
+
+→ Vous soumettez le dossier en quelques minutes (type de bien, localisation, situation, prix souhaité)
+→ Un expert l'analyse : lecture PLU, potentiel de valorisation, faisabilité, risques, axes de création de valeur
+→ Vous recevez les conclusions sous 48h
+
+Ce n'est pas une simple estimation. C'est une lecture métier — celle qu'un marchand de biens ou un promoteur ferait avant d'acheter.
+
+Résultat : vous savez exactement si le dossier vaut la peine d'être diffusé, à qui, et pourquoi. Et vous pouvez l'expliquer à votre vendeur avec des arguments solides.
+
+Lien en commentaire pour demander une analyse 👇
 
 ---
 

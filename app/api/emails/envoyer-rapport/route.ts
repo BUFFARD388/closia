@@ -81,39 +81,64 @@ export async function POST(req: Request) {
       to: email,
       subject: `📋 Votre rapport d'analyse — ${adresse}`,
       html: `
-        <div style="font-family:Georgia,serif;max-width:680px;margin:0 auto;background:#0b1220;color:#ffffff;padding:48px;border-radius:12px;">
-          <div style="border-bottom:1px solid rgba(194,154,107,0.3);padding-bottom:28px;margin-bottom:32px;">
-            <p style="font-size:22px;font-weight:bold;color:#c29a6b;letter-spacing:4px;margin:0 0 4px;">CLOSIA</p>
-            <p style="color:#6b7280;font-size:13px;margin:0;">Rapport d'analyse préalable — Confidentiel</p>
+        <div style="font-family:Arial,sans-serif;max-width:640px;margin:0 auto;background:#0b1220;color:#ffffff;border-radius:16px;overflow:hidden;">
+
+          <!-- En-tête -->
+          <div style="background:linear-gradient(135deg,#111720 0%,#0b1220 100%);padding:36px 40px 28px;border-bottom:1px solid rgba(194,154,107,0.25);">
+            <p style="font-size:20px;font-weight:800;color:#c29a6b;letter-spacing:5px;margin:0 0 4px;font-family:Georgia,serif;">CLOSIA</p>
+            <p style="color:#6b7280;font-size:12px;margin:0;letter-spacing:2px;text-transform:uppercase;">Analyse préalable · Confidentiel</p>
           </div>
 
-          <p style="color:#9ca3af;font-size:14px;">Bonjour ${nom},</p>
-          <p style="color:#d1d5db;font-size:14px;line-height:1.7;margin-bottom:28px;">
-            Veuillez trouver ci-dessous mon analyse experte du bien situé au <strong style="color:#fff;">${adresse}</strong>.
-          </p>
+          <!-- Corps -->
+          <div style="padding:36px 40px;">
 
-          <div style="background:#111720;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:20px;margin-bottom:28px;">
-            <p style="color:#9ca3af;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px;">Bien analysé</p>
-            <p style="color:#ffffff;font-size:14px;margin:0 0 8px;">${adresse}</p>
-            <p style="color:#9ca3af;font-size:13px;margin:0;line-height:1.6;">${description}</p>
+            <p style="color:#d1d5db;font-size:15px;margin:0 0 6px;">Bonjour <strong style="color:#fff;">${nom}</strong>,</p>
+            <p style="color:#9ca3af;font-size:14px;line-height:1.7;margin:0 0 28px;">
+              Voici l'analyse du bien que vous m'avez soumis. Elle a pour objectif de vous donner une lecture rapide du potentiel de valorisation et de vous aider à décider de la suite à donner à ce dossier.
+            </p>
+
+            <!-- Fiche du bien -->
+            <div style="background:#111720;border:1px solid rgba(255,255,255,0.07);border-left:3px solid #c29a6b;border-radius:8px;padding:18px 20px;margin-bottom:32px;">
+              <p style="color:#c29a6b;font-size:10px;text-transform:uppercase;letter-spacing:2px;margin:0 0 10px;font-weight:700;">Bien analysé</p>
+              <p style="color:#ffffff;font-size:15px;font-weight:600;margin:0 0 4px;">${adresse}</p>
+              <p style="color:#9ca3af;font-size:13px;margin:0;line-height:1.6;">${description}</p>
+            </div>
+
+            <!-- Rapport -->
+            <div style="margin-bottom:32px;">
+              ${formatRapportHtml(rapport)}
+            </div>
+
+            ${filesHtml}
+
+            <!-- CTA Closia -->
+            <div style="background:linear-gradient(135deg,rgba(194,154,107,0.08) 0%,rgba(194,154,107,0.03) 100%);border:1px solid rgba(194,154,107,0.25);border-radius:12px;padding:24px;margin-bottom:28px;text-align:center;">
+              <p style="color:#c29a6b;font-size:13px;font-weight:700;margin:0 0 8px;text-transform:uppercase;letter-spacing:1px;">Prochaine étape</p>
+              <p style="color:#d1d5db;font-size:14px;line-height:1.7;margin:0 0 18px;">
+                Si cette analyse confirme votre intérêt, vous pouvez soumettre ce bien sur Closia.<br/>
+                Diffusion confidentielle · Réponse marché sous 72h · Aucune commission pour l'apporteur.
+              </p>
+              <a href="https://closia.net/auth/register?role=vendeur"
+                style="display:inline-block;background:#c29a6b;color:#000;font-weight:700;padding:12px 28px;border-radius:8px;text-decoration:none;font-size:13px;text-transform:uppercase;letter-spacing:1px;">
+                Soumettre ce bien sur Closia
+              </a>
+            </div>
+
+            <!-- Confidentialité -->
+            <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px 16px;margin-bottom:32px;">
+              <span style="color:#6b7280;font-size:16px;flex-shrink:0;">🔒</span>
+              <p style="color:#6b7280;font-size:12px;margin:0;line-height:1.6;">Ce rapport est confidentiel et établi à votre usage exclusif. Il ne constitue pas un avis juridique ou financier et ne peut être transmis à des tiers sans autorisation.</p>
+            </div>
+
           </div>
 
-          <div style="margin-bottom:32px;">
-            <p style="color:#c29a6b;font-size:11px;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 20px;font-weight:700;">Rapport d'analyse expert</p>
-            ${formatRapportHtml(rapport)}
+          <!-- Pied de page -->
+          <div style="background:#080e1a;padding:20px 40px;text-align:center;border-top:1px solid rgba(255,255,255,0.05);">
+            <p style="color:#4b5563;font-size:12px;margin:0 0 4px;">Laurent Buffard · Fondateur Closia</p>
+            <p style="color:#4b5563;font-size:12px;margin:0 0 4px;">contact@closia.net · 06 87 76 33 40</p>
+            <a href="https://closia.net" style="color:#c29a6b;font-size:12px;text-decoration:none;">closia.net</a>
           </div>
 
-          ${filesHtml}
-
-          <div style="background:rgba(194,154,107,0.05);border:1px solid rgba(194,154,107,0.2);border-radius:8px;padding:16px;margin-bottom:32px;">
-            <p style="color:#c29a6b;font-size:13px;margin:0;">🔒 Ce rapport est strictement confidentiel et établi à votre usage exclusif. Il ne peut être transmis à des tiers sans autorisation préalable.</p>
-          </div>
-
-          <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:24px;text-align:center;">
-            <p style="color:#6b7280;font-size:12px;margin:0;">Laurent Buffard · Fondateur Closia</p>
-            <p style="color:#6b7280;font-size:12px;margin:4px 0;">contact@closia.net · 06 87 76 33 40</p>
-            <a href="https://closia.net" style="color:#c29a6b;font-size:12px;">closia.net</a>
-          </div>
         </div>
       `,
     })

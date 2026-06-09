@@ -102,56 +102,51 @@ ${prixAuM2Revente ? `- Prix de revente au m² : ${prixAuM2Revente.toLocaleString
     }
 
     // 5. Construction du prompt et appel Claude
-    const systemPrompt = `Tu es un expert en valorisation immobilière avec 20 ans d'expérience en transaction, marchand de biens, développement foncier et analyse PLU. Tu rédiges des rapports d'analyse préalable professionnels pour des acheteurs professionnels (marchands de biens, promoteurs, foncières).
+    const systemPrompt = `Tu es un expert en valorisation immobilière avec 20 ans d'expérience en transaction, marchand de biens et développement foncier. Tu rédiges des rapports d'analyse préalable synthétiques pour des agents immobiliers et mandataires qui souhaitent savoir si un bien de leur portefeuille peut intéresser des investisseurs professionnels (marchands de biens, promoteurs, foncières).
 
-RÈGLES ABSOLUES :
-1. Si des données financières sont fournies (prix acquisition, travaux, revente), tu les utilises EXACTEMENT telles quelles sans les modifier ni les recalculer différemment. Tu présentes le tableau financier en section 4 avec ces chiffres précis.
-2. Tu ne génères des chiffres financiers de ton propre chef QUE pour les éléments non fournis, en les marquant systématiquement [ESTIMATION] et en précisant ta source ou hypothèse.
-3. Pour les marchés de petites villes ou villes moyennes (< 50 000 hab.), tu appliques des prix au m² réalistes et prudents (souvent 800-1800 €/m² pour des logements rénovés en centre-ville de villes moyennes).
-4. Tu distingues clairement : données fournies / données issues des API (DVF, géorisques) / estimations.
-5. Ton style est factuel, professionnel, sans suroptimisme. Tu identifies les risques réels.`
+TON ET STYLE :
+- Ton professionnel mais accessible, direct et encourageant (sans être commercial à outrance)
+- Phrases courtes, vocabulaire clair — ton interlocuteur est un professionnel de l'immobilier, pas un investisseur
+- Synthétique : 350 à 500 mots maximum pour l'ensemble du rapport
+- Jamais alarmiste : les points d'attention sont présentés comme des points à vérifier, pas des blocages
 
-    const userPrompt = `Génère un rapport d'analyse préalable complet pour le bien suivant.
+RÈGLES :
+1. Si un prix est fourni, tu l'utilises tel quel sans le recalculer
+2. Pour les références de marché (DVF), tu les cites comme ordre de grandeur, pas comme vérité absolue
+3. Tu conclus toujours en recommandant de diffuser le bien sur Closia, de façon naturelle et non forcée
+4. Tu restes factuel — pas de promesses de résultat chiffré que tu ne peux garantir`
+
+    const userPrompt = `Rédige un rapport d'analyse préalable synthétique pour le bien suivant.
 
 INFORMATIONS DU BIEN :
 - Type : ${type_bien || 'Non précisé'}
 - Adresse : ${adresseNormalisee}
 - Ville : ${ville || villeGeo || 'Non précisée'} (${cp || codePostal || '—'})
-${surface ? `- Surface totale : ${surface} m²` : ''}
-${parcelle ? `- Parcelle cadastrale : ${parcelle}` : ''}
-- Opération envisagée : ${type_operation || 'Non précisée'}
+${surface ? `- Surface : ${surface} m²` : ''}
+- Situation / opération envisagée : ${type_operation || description || 'Non précisée'}
 - Description : ${description}
-${message ? `- Précisions : ${message}` : ''}
-${financierTexte}
-DONNÉES GÉORISQUES :
+${message ? `- Informations complémentaires : ${message}` : ''}
+${prix_acquisition ? `- Prix vendeur : ${parseFloat(prix_acquisition).toLocaleString('fr-FR')} €` : ''}
+
+DONNÉES GÉORISQUES (rayon 500m) :
 ${risquesTexte}
 
-TRANSACTIONS DVF COMPARABLES (données officielles) :
+RÉFÉRENCES DE MARCHÉ DVF (transactions récentes dans un rayon de 2 km) :
 ${dvfTexte}
 
-STRUCTURE DU RAPPORT (respecter impérativement cet ordre et ces titres) :
+STRUCTURE DU RAPPORT (4 sections, respecter impérativement cet ordre et ces titres exacts) :
 
-1. SYNTHÈSE EXÉCUTIVE
-Résumé de l'opération en 4-5 lignes. Avis global : favorable / favorable avec réserves / défavorable, et pourquoi en une phrase.
+1. POTENTIEL IDENTIFIÉ
+En 4-5 lignes : pourquoi ce bien peut intéresser des investisseurs professionnels. Quel type de profil (marchand de biens, promoteur, foncière…) et pour quelle opération. Sois concret et positif si le dossier le justifie.
 
-2. ANALYSE URBANISTIQUE
-Zonage PLU probable, règles applicables (CES, gabarit, destinations autorisées), points de vigilance pour l'opération envisagée. Indiquer [À VÉRIFIER en mairie] pour tout élément incertain.
+2. CONTEXTE DE MARCHÉ
+En 3-4 lignes : dynamique du secteur, références de prix au m² (cite les DVF si disponibles comme ordre de grandeur), demande professionnelle sur ce type de bien dans cette zone.
 
-3. ANALYSE DU MARCHÉ LOCAL
-Contexte socio-économique de la commune, dynamique du marché, prix au m² constatés (références DVF si disponibles), absorption du marché pour le type de produit envisagé.
+3. POINTS D'ATTENTION
+Lister 2 à 3 points à vérifier avant diffusion (urbanistique, technique, juridique). Format court : une ligne par point. Ton neutre — ce sont des points à anticiper, pas des obstacles.
 
-4. ANALYSE FINANCIÈRE DE L'OPÉRATION
-${prix_acquisition ? `Utiliser EXACTEMENT les chiffres fournis. Présenter : total investi, prix de revente, marge brute, marge en %, ROI. Comparer le prix au m² d'acquisition et de revente aux références de marché.` : `Construire un bilan financier prévisionnel basé sur les données de marché. Marquer chaque hypothèse [ESTIMATION].`}
-Identifier les postes de risque budgétaire (travaux, délais, fiscalité marchand de biens).
-
-5. RISQUES ET POINTS DE VIGILANCE
-Lister les risques par ordre de criticité : urbanistique, technique, commercial, financier, juridique. Pour chacun : nature du risque + niveau (Faible / Modéré / Élevé) + action recommandée.
-
-6. RECOMMANDATIONS ET VERDICT
-- Verdict clair : l'opération est-elle pertinente aux conditions présentées ?
-- Prix maximum d'acquisition acceptable si différent du prix demandé
-- Actions prioritaires avant signature (due diligence, vérifications)
-- Profil acheteur idéal pour cette opération`
+4. VERDICT ET RECOMMANDATION
+Verdict en une phrase (Favorable / Favorable avec réserves / À approfondir) suivi d'une recommandation claire de diffuser le dossier sur Closia pour obtenir une réponse marché concrète d'acheteurs professionnels qualifiés. Terminer par une phrase de réassurance sur la confidentialité et la gratuité pour l'apporteur.`
 
     const response = await anthropic.messages.create({
       model: 'claude-opus-4-5',
