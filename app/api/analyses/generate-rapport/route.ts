@@ -328,7 +328,7 @@ ${message || 'Aucun.'}`
 
     const response = await anthropic.messages.create({
       model: 'claude-opus-4-5',
-      max_tokens: 1500,
+      max_tokens: 3000,
       messages: [{ role: 'user', content: userPrompt }],
       system: systemPrompt,
     })
