@@ -270,6 +270,7 @@ Presentation : type, adresse, surface, operation envisagee.
 
 2. CONTEXTE URBANISTIQUE (PLU)
 Analyse approfondie : type de zone (U/AU/A/N), droits a construire, division parcellaire possible, changement de destination. Prescriptions detectees (PPRI, EVV, etc.) et incidences operationnelles. Conclus sur ce que la reglementation permet ou interdit pour ce bien.
+REGLE ABSOLUE SUR LE PLU : Si les donnees PLU indiquent "non numerise", "non disponible" ou ne precisent pas clairement le zonage, tu NE DOIS PAS speculer sur la constructibilite ni suggerer qu'une division est probable ou plausible. Au contraire, tu dois alerter explicitement que la parcelle pourrait etre classee en zone A (agricole) ou N (naturelle/forestiere), auquel cas toute construction nouvelle et toute division seraient interdites. Indique que la verification en mairie ou sur le geoportail de l'urbanisme de la commune est indispensable AVANT tout engagement, et que sans confirmation du zonage, l'operation doit etre consideree comme non faisable.
 
 3. LOCALISATION ET DYNAMIQUE DE MARCHE
 Bassin de vie, attractivite, accessibilite, tissu economique. Ce secteur est-il recherche par les investisseurs pros ? Liquidite du bien en cas de revente ?
