@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { CheckCircle, AlertCircle, Loader2, FileText, ArrowRight, X } from 'lucide-react'
 
@@ -14,7 +14,7 @@ const TYPE_PROJETS = [
   'Autre',
 ]
 
-export default function CubPage() {
+function CubContent() {
   const searchParams = useSearchParams()
   const statut = searchParams.get('statut')
 
@@ -237,5 +237,17 @@ export default function CubPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function CubPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#0b1220] flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-[#c29a6b]" />
+      </div>
+    }>
+      <CubContent />
+    </Suspense>
   )
 }
