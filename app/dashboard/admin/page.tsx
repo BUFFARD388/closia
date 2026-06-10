@@ -70,6 +70,8 @@ export default function DashboardAdmin() {
   const [sendingRapport, setSendingRapport] = useState(false)
   const [rapportEnvoye, setRapportEnvoye] = useState(false)
   const [generatingRapport, setGeneratingRapport] = useState(false)
+  const [corrections, setCorrections] = useState('')
+  const [correctingRapport, setCorrectingRapport] = useState(false)
 
   useEffect(() => { checkAdmin(); loadBiens(); loadAnalyses() }, [])
   useEffect(() => { if (section === 'live') loadLeadsLive() }, [section])
@@ -161,6 +163,26 @@ export default function DashboardAdmin() {
       alert('Erreur génération IA : ' + err.message)
     } finally {
       setGeneratingRapport(false)
+    }
+  }
+
+  async function corrigerRapportIA() {
+    if (!selectedAnalyse || !corrections.trim() || !rapport.trim()) return
+    setCorrectingRapport(true)
+    try {
+      const res = await fetch('/api/analyses/corriger-rapport', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: selectedAnalyse.id, corrections, rapport }),
+      })
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      setRapport(data.rapport)
+      setCorrections('')
+    } catch (err: any) {
+      alert('Erreur correction IA : ' + err.message)
+    } finally {
+      setCorrectingRapport(false)
     }
   }
 
@@ -1034,6 +1056,26 @@ ${selectedAnalyse.description ? `
                   className="input min-h-[280px] resize-y rounded-xl text-sm leading-relaxed w-full"
                 />
               </div>
+
+              {/* Corrections expert */}
+              {rapport.trim() && (
+                <div className="mb-6 bg-[#c29a6b]/5 border border-[#c29a6b]/20 rounded-xl p-4">
+                  <p className="text-xs text-[#c29a6b] uppercase tracking-widest mb-2 font-semibold">✏️ Corrections expert</p>
+                  <p className="text-xs text-gray-500 mb-3">Indiquez vos remarques (ex : "Zone PLU = A agricole, supprimer la division"). Claude corrigera le rapport.</p>
+                  <textarea
+                    value={corrections}
+                    onChange={e => setCorrections(e.target.value)}
+                    placeholder={"Ex : Section 2 : zone A agricole, pas constructible. Supprimer toute mention de division foncière.\nSection 9 : bien non éligible à la diffusion."}
+                    className="input min-h-[100px] resize-y rounded-xl text-sm leading-relaxed w-full mb-3"
+                  />
+                  <button
+                    onClick={corrigerRapportIA}
+                    disabled={!corrections.trim() || correctingRapport}
+                    className="text-xs px-4 py-2 rounded-lg bg-[#c29a6b] hover:bg-[#b8911f] text-black font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5">
+                    {correctingRapport ? <><Loader2 className="w-3 h-3 animate-spin" /> Correction en cours…</> : '🔄 Générer le rapport corrigé'}
+                  </button>
+                </div>
+              )}
 
               {/* Statut & action */}
               <div className="border-t border-white/10 pt-6">
