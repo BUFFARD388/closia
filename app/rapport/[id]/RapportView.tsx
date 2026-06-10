@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 
 function renderInline(text: string): string {
   return text
@@ -83,41 +83,9 @@ function parseRapport(texte: string): { preamble: string; sections: { num: strin
   }
 }
 
-export default function RapportView({ analyse, id }: { analyse: any; id?: string }) {
-  const [rapportTexte, setRapportTexte] = useState(analyse.rapport)
-  const [expertOpen, setExpertOpen] = useState(false)
-  const [corrections, setCorrections] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState('')
-
-  const { preamble, sections } = parseRapport(rapportTexte)
+export default function RapportView({ analyse }: { analyse: any }) {
+  const { preamble, sections } = parseRapport(analyse.rapport)
   const date = new Date(analyse.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
-
-  async function regenerer() {
-    if (!corrections.trim() || !id) return
-    setLoading(true)
-    setMessage('')
-    try {
-      const res = await fetch('/api/analyses/corriger-rapport', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, corrections, rapport: rapportTexte }),
-      })
-      const data = await res.json()
-      if (data.rapport) {
-        setRapportTexte(data.rapport)
-        setExpertOpen(false)
-        setCorrections('')
-        setMessage('✅ Rapport mis à jour avec succès.')
-      } else {
-        setMessage('❌ Erreur : ' + (data.error || 'réponse invalide'))
-      }
-    } catch {
-      setMessage('❌ Erreur réseau.')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   // Première photo transmise par le demandeur
   const photos: { name: string; url: string }[] = Array.isArray(analyse.fichiers) ? analyse.fichiers : []
@@ -167,18 +135,6 @@ export default function RapportView({ analyse, id }: { analyse: any; id?: string
         .confidential { background: #fff8ed; border: 1px solid rgba(194,154,107,.4); border-radius: 4px; padding: 3px 10px; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #c29a6b; font-weight: 700 }
         .print-btn { position: fixed; bottom: 28px; right: 28px; background: #c29a6b; color: #fff; border: none; border-radius: 50px; padding: 14px 28px; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 20px rgba(194,154,107,.4); display: flex; align-items: center; gap: 8px; z-index: 999 }
         .print-btn:hover { background: #a8835a }
-        .expert-btn { position: fixed; bottom: 28px; left: 28px; background: #1a1a2e; color: #c29a6b; border: 1.5px solid #c29a6b; border-radius: 50px; padding: 14px 24px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; z-index: 999 }
-        .expert-btn:hover { background: #252545 }
-        .expert-panel { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 3px solid #c29a6b; box-shadow: 0 -8px 40px rgba(0,0,0,.15); padding: 24px 32px; z-index: 1000; max-height: 55vh; overflow-y: auto }
-        .expert-panel h4 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #1a1a2e; margin-bottom: 6px }
-        .expert-panel p { font-size: 12px; color: #6b7280; margin-bottom: 12px }
-        .expert-panel textarea { width: 100%; border: 1.5px solid #e8e2d5; border-radius: 8px; padding: 12px; font-size: 13px; font-family: Arial, sans-serif; line-height: 1.6; color: #374151; resize: vertical; min-height: 120px; outline: none }
-        .expert-panel textarea:focus { border-color: #c29a6b }
-        .expert-actions { display: flex; gap: 12px; margin-top: 12px; align-items: center; flex-wrap: wrap }
-        .btn-regenerer { background: #c29a6b; color: #fff; border: none; border-radius: 8px; padding: 10px 24px; font-size: 13px; font-weight: 700; cursor: pointer }
-        .btn-regenerer:disabled { opacity: .5; cursor: not-allowed }
-        .btn-fermer { background: none; border: 1.5px solid #e8e2d5; border-radius: 8px; padding: 10px 20px; font-size: 13px; color: #6b7280; cursor: pointer }
-        .expert-msg { font-size: 12px; font-weight: 600; color: #374151 }
         @page { margin: 1.2cm 1.5cm }
         @media print {
           body { -webkit-print-color-adjust: exact; print-color-adjust: exact }
@@ -248,33 +204,6 @@ export default function RapportView({ analyse, id }: { analyse: any; id?: string
       <button className="print-btn" onClick={() => window.print()}>
         🖨️ Imprimer / Télécharger en PDF
       </button>
-
-      {id && (
-        <>
-          <button className="expert-btn" onClick={() => { setExpertOpen(o => !o); setMessage('') }}>
-            ✏️ Mode expert
-          </button>
-
-          {expertOpen && (
-            <div className="expert-panel">
-              <h4>Corrections expert</h4>
-              <p>Indiquez vos remarques librement. Claude corrigera le rapport en tenant compte de vos instructions et générera la version définitive.</p>
-              <textarea
-                value={corrections}
-                onChange={e => setCorrections(e.target.value)}
-                placeholder={"Exemples :\n- Section 2 : le terrain est classé zone A (agricole), pas constructible. Supprimer toute mention de division foncière.\n- Section 7 : retirer le levier division parcellaire.\n- Section 9 : le bien ne peut pas être diffusé sur Closia en l'état."}
-              />
-              <div className="expert-actions">
-                <button className="btn-regenerer" onClick={regenerer} disabled={loading || !corrections.trim()}>
-                  {loading ? 'Génération en cours…' : '🔄 Générer le rapport définitif'}
-                </button>
-                <button className="btn-fermer" onClick={() => setExpertOpen(false)}>Fermer</button>
-                {message && <span className="expert-msg">{message}</span>}
-              </div>
-            </div>
-          )}
-        </>
-      )}
     </>
   )
 }

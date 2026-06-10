@@ -16,5 +16,5 @@ export default async function RapportPage({ params }: { params: { id: string } }
 
   if (!analyse || !analyse.rapport) notFound()
 
-  return <RapportView analyse={analyse} id={params.id} />
+  return <RapportView analyse={analyse} />
 }
