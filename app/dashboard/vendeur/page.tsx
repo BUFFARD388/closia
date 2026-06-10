@@ -143,7 +143,8 @@ export default function DashboardVendeur() {
       .select('*')
       .eq('apporteur_id', uid)
       .order('created_at', { ascending: false })
-    if (!error) setBiens(data || [])
+    if (error) console.error('loadBiens error:', error.message, error.details)
+    setBiens(data || [])
 
     // Biens achetés avec infos acheteurs
     const { data: achatsData } = await supabase
