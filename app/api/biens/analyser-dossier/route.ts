@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const {
       type, prix, surface, ville, cp, adresse,
-      situation, description, potentiel, apporteur,
+      situation, description, potentiel, apporteur, complements,
     } = body
 
     const prompt = `
@@ -31,6 +31,7 @@ Tu dois analyser le dossier d'un bien soumis par un apporteur et aider Laurent �
 - Description de l'apporteur : ${description || '—'}
 - Potentiel identifié par l'apporteur : ${potentiel || 'Non renseigné'}
 - Apporteur : ${apporteur || '—'}
+${complements ? `\n**Compléments apportés par Laurent après vérification (PLU, marché, terrain…) — ces éléments ont priorité sur les informations du vendeur :**\n${complements}` : ''}
 
 **Ta réponse doit comporter deux parties distinctes, dans cet ordre exact :**
 

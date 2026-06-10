@@ -73,6 +73,7 @@ export default function DashboardAdmin() {
   const [corrections, setCorrections] = useState('')
   const [correctingRapport, setCorrectingRapport] = useState(false)
   const [analysantBien, setAnalysantBien] = useState(false)
+  const [complementsBien, setComplementsBien] = useState('')
   const [screeningBien, setScreeningBien] = useState('')
   const [brouillonValidation, setBrouillonValidation] = useState('')
   const [brouillonRefus, setBrouillonRefus] = useState('')
@@ -410,6 +411,7 @@ ${selectedAnalyse.description ? `
     setScreeningBien('')
     setBrouillonValidation('')
     setBrouillonRefus('')
+    setComplementsBien('')
   }
 
   async function analyserBienIA() {
@@ -430,6 +432,7 @@ ${selectedAnalyse.description ? `
           description: selected.description,
           potentiel: selected.potentiel,
           apporteur: apporteur ? `${apporteur.prenom} ${apporteur.nom}` : '',
+          complements: complementsBien,
         }),
       })
       const data = await res.json()
@@ -953,14 +956,27 @@ ${selectedAnalyse.description ? `
                 <div className="border border-[#c29a6b]/30 bg-[#c29a6b]/5 rounded-xl p-5 mb-6">
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-xs text-[#c29a6b] uppercase tracking-widest font-semibold">Analyse IA du dossier</p>
-                    <button
-                      onClick={analyserBienIA}
-                      disabled={analysantBien}
-                      className="flex items-center gap-2 text-xs px-4 py-2 rounded-lg bg-[#c29a6b] text-black font-semibold hover:bg-[#b8895a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {analysantBien ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Analyse en cours…</> : <><Zap className="w-3.5 h-3.5" /> Analyser avec l'IA</>}
-                    </button>
                   </div>
+
+                  <div className="mb-3">
+                    <label className="text-xs text-gray-400 mb-1.5 block">
+                      Compléments d'information <span className="text-gray-600">(PLU, marché local, vérifications terrain…)</span>
+                    </label>
+                    <textarea
+                      className="input min-h-[90px] resize-none rounded-xl text-sm w-full"
+                      placeholder="Ex : PLU consulté — zone UB, COS 0.4, division possible sous conditions. Marché tendu sur le secteur, prix au m² ~3 200 €. Bien en limite de PPRI à vérifier…"
+                      value={complementsBien}
+                      onChange={e => setComplementsBien(e.target.value)}
+                    />
+                  </div>
+
+                  <button
+                    onClick={analyserBienIA}
+                    disabled={analysantBien}
+                    className="flex items-center gap-2 text-xs px-4 py-2 rounded-lg bg-[#c29a6b] text-black font-semibold hover:bg-[#b8895a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-3"
+                  >
+                    {analysantBien ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Analyse en cours…</> : <><Zap className="w-3.5 h-3.5" /> Analyser avec l'IA</>}
+                  </button>
 
                   {screeningBien && (
                     <div className="space-y-4">
