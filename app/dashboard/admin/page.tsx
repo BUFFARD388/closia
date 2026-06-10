@@ -72,6 +72,10 @@ export default function DashboardAdmin() {
   const [generatingRapport, setGeneratingRapport] = useState(false)
   const [corrections, setCorrections] = useState('')
   const [correctingRapport, setCorrectingRapport] = useState(false)
+  const [analysantBien, setAnalysantBien] = useState(false)
+  const [screeningBien, setScreeningBien] = useState('')
+  const [brouillonValidation, setBrouillonValidation] = useState('')
+  const [brouillonRefus, setBrouillonRefus] = useState('')
 
   useEffect(() => { checkAdmin(); loadBiens(); loadAnalyses() }, [])
   useEffect(() => { if (section === 'live') loadLeadsLive() }, [section])
@@ -403,6 +407,41 @@ ${selectedAnalyse.description ? `
     setDecision(null)
     setReponse('')
     setSent(false)
+    setScreeningBien('')
+    setBrouillonValidation('')
+    setBrouillonRefus('')
+  }
+
+  async function analyserBienIA() {
+    if (!selected) return
+    setAnalysantBien(true)
+    try {
+      const res = await fetch('/api/biens/analyser-dossier', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: selected.type,
+          prix: selected.prix,
+          surface: selected.surface,
+          ville: selected.ville,
+          cp: selected.cp,
+          adresse: selected.adresse,
+          situation: selected.situation,
+          description: selected.description,
+          potentiel: selected.potentiel,
+          apporteur: apporteur ? `${apporteur.prenom} ${apporteur.nom}` : '',
+        }),
+      })
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      setScreeningBien(data.screening)
+      setBrouillonValidation(data.brouillon_validation)
+      setBrouillonRefus(data.brouillon_refus)
+    } catch (err: any) {
+      alert('Erreur analyse IA : ' + err.message)
+    } finally {
+      setAnalysantBien(false)
+    }
   }
 
   const handleDecision = async () => {
@@ -906,6 +945,49 @@ ${selectedAnalyse.description ? `
                   <div className={`p-4 rounded-xl border text-sm leading-relaxed ${selected.statut === 'diffuse' ? 'border-green-500/20 bg-green-500/5 text-green-300' : 'border-red-500/20 bg-red-500/5 text-red-300'}`}>
                     {selected.reponse_admin}
                   </div>
+                </div>
+              )}
+
+              {/* ── ANALYSE IA ── */}
+              {selected.statut === 'pending' && (
+                <div className="border border-[#c29a6b]/30 bg-[#c29a6b]/5 rounded-xl p-5 mb-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs text-[#c29a6b] uppercase tracking-widest font-semibold">Analyse IA du dossier</p>
+                    <button
+                      onClick={analyserBienIA}
+                      disabled={analysantBien}
+                      className="flex items-center gap-2 text-xs px-4 py-2 rounded-lg bg-[#c29a6b] text-black font-semibold hover:bg-[#b8895a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {analysantBien ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Analyse en cours…</> : <><Zap className="w-3.5 h-3.5" /> Analyser avec l'IA</>}
+                    </button>
+                  </div>
+
+                  {screeningBien && (
+                    <div className="space-y-4">
+                      {/* Note de screening */}
+                      <div className="bg-[#0b1220] rounded-lg p-4 text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">
+                        {screeningBien}
+                      </div>
+
+                      {/* Brouillons */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          onClick={() => { setDecision('validate'); setReponse(brouillonValidation) }}
+                          className="text-xs p-3 rounded-lg border border-green-500/30 bg-green-500/5 text-green-400 hover:bg-green-500/10 transition-colors text-left"
+                        >
+                          <CheckCircle className="w-3.5 h-3.5 mb-1" />
+                          Utiliser le brouillon de validation
+                        </button>
+                        <button
+                          onClick={() => { setDecision('reject'); setReponse(brouillonRefus) }}
+                          className="text-xs p-3 rounded-lg border border-red-500/30 bg-red-500/5 text-red-400 hover:bg-red-500/10 transition-colors text-left"
+                        >
+                          <XCircle className="w-3.5 h-3.5 mb-1" />
+                          Utiliser le brouillon de refus
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
