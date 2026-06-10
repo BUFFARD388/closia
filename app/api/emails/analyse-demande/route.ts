@@ -7,7 +7,10 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 export async function POST(req: Request) {
   const formData = await req.formData()
 
-  const nom = formData.get('nom') as string
+  const prenom = formData.get('prenom') as string || ''
+  const nomRaw = formData.get('nom') as string || ''
+  const nom = [prenom, nomRaw].filter(Boolean).join(' ')
+  const societe = formData.get('societe') as string || ''
   const email = formData.get('email') as string
   const tel = formData.get('tel') as string
   const adresse = formData.get('adresse') as string
@@ -54,6 +57,7 @@ export async function POST(req: Request) {
           <h2 style="color: #c29a6b;">${isSimple ? '📋 Nouvelle demande d\'analyse simple (150€)' : '📋 Nouvelle demande de devis — analyse complexe'}</h2>
           <div style="background: #111720; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 16px; margin: 24px 0;">
             <p style="color: #fff; margin: 0 0 4px;"><strong>Nom :</strong> ${nom}</p>
+            ${societe ? `<p style="color: #fff; margin: 0 0 4px;"><strong>Société :</strong> ${societe}</p>` : ''}
             <p style="color: #fff; margin: 0 0 4px;"><strong>Email :</strong> ${email}</p>
             <p style="color: #fff; margin: 0;"><strong>Tél :</strong> ${tel}</p>
           </div>

@@ -11,7 +11,7 @@ export default function LandingPage() {
   const [bienIdx, setBienIdx] = useState(0)
   const [analyseModal, setAnalyseModal] = useState(false)
   const [analyseType, setAnalyseType] = useState<'simple' | 'complexe' | null>(null)
-  const [analyseForm, setAnalyseForm] = useState({ nom: '', email: '', tel: '', type_bien: '', adresse: '', cp: '', ville: '', surface_bati: '', prix_acquisition: '', type_operation: '', description: '', message: '' })
+  const [analyseForm, setAnalyseForm] = useState({ prenom: '', nom: '', societe: '', email: '', tel: '', type_bien: '', adresse: '', cp: '', ville: '', surface_bati: '', prix_acquisition: '', type_operation: '', description: '', message: '' })
   const [parcelles, setParcelles] = useState([{ numero: '', surface: '' }])
   const [analyseFiles, setAnalyseFiles] = useState<File[]>([])
   const [analyseSending, setAnalyseSending] = useState(false)
@@ -822,7 +822,7 @@ export default function LandingPage() {
                   <h3 className="text-xl font-bold text-white">Avis expert standard</h3>
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-black text-[#c29a6b]">150 €</p>
+                  <p className="text-3xl font-black text-[#c29a6b]">390 €</p>
                   <p className="text-xs text-gray-500">HT · paiement sécurisé</p>
                 </div>
               </div>
@@ -892,7 +892,7 @@ export default function LandingPage() {
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-xl font-bold">{analyseType === 'simple' ? 'Analyse simple — 150 €' : 'Demande de devis'}</h2>
+                  <h2 className="text-xl font-bold">{analyseType === 'simple' ? 'Analyse simple — 390 €' : 'Demande de devis'}</h2>
                   <p className="text-xs text-gray-500 mt-1">{analyseType === 'simple' ? 'Rapport expert sous 48h' : 'Réponse sous 24h'}</p>
                 </div>
                 <button onClick={() => { setAnalyseModal(false); setAnalyseSent(false); setAnalyseType(null) }} className="text-gray-400 hover:text-white">
@@ -949,8 +949,18 @@ export default function LandingPage() {
                 }} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Nom complet *</label>
-                      <input className="input" required value={analyseForm.nom} onChange={e => setAnalyseForm(f => ({ ...f, nom: e.target.value }))} />
+                      <div className="grid grid-cols-2 gap-3 mb-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">Prénom *</label>
+                          <input className="input" required value={analyseForm.prenom} onChange={e => setAnalyseForm(f => ({ ...f, prenom: e.target.value }))} />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">Nom *</label>
+                          <input className="input" required value={analyseForm.nom} onChange={e => setAnalyseForm(f => ({ ...f, nom: e.target.value }))} />
+                        </div>
+                      </div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Société <span className="text-gray-500 font-normal">(facultatif)</span></label>
+                      <input className="input" value={analyseForm.societe} onChange={e => setAnalyseForm(f => ({ ...f, societe: e.target.value }))} placeholder="Cabinet, agence, société…" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-2">Téléphone *</label>

@@ -18,7 +18,10 @@ export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData()
 
-    const nom = formData.get('nom') as string
+    const prenom = formData.get('prenom') as string || ''
+    const nomRaw = formData.get('nom') as string || ''
+    const nom = [prenom, nomRaw].filter(Boolean).join(' ')
+    const societe = formData.get('societe') as string || ''
     const email = formData.get('email') as string
     const tel = formData.get('tel') as string
     const type_bien = formData.get('type_bien') as string || ''
@@ -59,7 +62,7 @@ export async function POST(req: NextRequest) {
     const { data: analyse, error: dbError } = await supabase
       .from('analyses')
       .insert({
-        nom, email, tel,
+        nom, email, tel, societe,
         type_bien, surface, type_operation,
         adresse: adresseComplete,
         cp, ville, parcelle,
@@ -88,6 +91,7 @@ export async function POST(req: NextRequest) {
           <p style="color:#c29a6b;font-size:11px;text-transform:uppercase;letter-spacing:2px;margin:0 0 16px;">Nouvelle demande d'analyse préalable</p>
           <h2 style="margin:0 0 24px;color:#fff;">${nom}</h2>
           <div style="background:#111720;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:16px;margin-bottom:16px;">
+            ${societe ? `<p style="margin:0 0 4px;"><strong>Société :</strong> ${societe}</p>` : ''}
             <p style="margin:0 0 4px;"><strong>Email :</strong> ${email}</p>
             <p style="margin:0 0 4px;"><strong>Tél :</strong> ${tel}</p>
             <p style="margin:0;"><strong>Adresse :</strong> ${adresse}</p>

@@ -970,6 +970,7 @@ ${selectedAnalyse.description ? `
                 <p className="text-xs text-[#c29a6b] uppercase tracking-widest mb-3">Client</p>
                 <div className="space-y-1 text-sm text-gray-300">
                   <p>👤 {selectedAnalyse.nom}</p>
+                  {selectedAnalyse.societe && <p>🏢 {selectedAnalyse.societe}</p>}
                   <p>✉️ {selectedAnalyse.email}</p>
                   <p>📞 {selectedAnalyse.tel}</p>
                 </div>
