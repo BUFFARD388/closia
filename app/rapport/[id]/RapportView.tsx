@@ -135,11 +135,16 @@ export default function RapportView({ analyse }: { analyse: any }) {
         .confidential { background: #fff8ed; border: 1px solid rgba(194,154,107,.4); border-radius: 4px; padding: 3px 10px; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #c29a6b; font-weight: 700 }
         .print-btn { position: fixed; bottom: 28px; right: 28px; background: #c29a6b; color: #fff; border: none; border-radius: 50px; padding: 14px 28px; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 20px rgba(194,154,107,.4); display: flex; align-items: center; gap: 8px; z-index: 999 }
         .print-btn:hover { background: #a8835a }
+        @page { margin: 1.2cm 1.5cm }
         @media print {
           body { -webkit-print-color-adjust: exact; print-color-adjust: exact }
           .print-btn { display: none }
-          .section-block { page-break-inside: avoid }
+          .section-block { page-break-inside: auto; break-inside: auto }
+          .section-header { page-break-after: avoid; break-after: avoid; page-break-inside: avoid; break-inside: avoid }
+          .section-body table { page-break-inside: auto; break-inside: auto }
+          .section-body tr { page-break-inside: avoid; break-inside: avoid }
           .cover-photo { height: 220px }
+          .footer { position: relative; margin-top: 24px }
         }
       `}</style>
 
