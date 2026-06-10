@@ -36,6 +36,7 @@ function heuresRestantes(dateExpiration: string) {
 const SECTIONS = [
   { key: 'dossiers', label: 'Dossiers', icon: <FileText className="w-4 h-4" />, alert: true },
   { key: 'analyses', label: 'Analyses préalables', icon: <Eye className="w-4 h-4" />, alert: true },
+  { key: 'cub', label: 'Dossiers CUb', icon: <FileText className="w-4 h-4" />, alert: true },
   { key: 'live', label: 'En diffusion', icon: <Zap className="w-4 h-4" /> },
   { key: 'achetes', label: 'Leads achetés', icon: <ShoppingCart className="w-4 h-4" /> },
   { key: 'expires', label: 'Sans acquéreur', icon: <Ban className="w-4 h-4" /> },
@@ -72,13 +73,19 @@ export default function DashboardAdmin() {
   const [generatingRapport, setGeneratingRapport] = useState(false)
   const [corrections, setCorrections] = useState('')
   const [correctingRapport, setCorrectingRapport] = useState(false)
+  const [cubs, setCubs] = useState<any[]>([])
+  const [selectedCub, setSelectedCub] = useState<any | null>(null)
+  const [generatingCub, setGeneratingCub] = useState(false)
+  const [sendingCub, setSendingCub] = useState(false)
+  const [cubEnvoye, setCubEnvoye] = useState(false)
+  const [cubDossier, setCubDossier] = useState<{ note_descriptive: string; checklist: string; guide_depot: string } | null>(null)
   const [analysantBien, setAnalysantBien] = useState(false)
   const [complementsBien, setComplementsBien] = useState('')
   const [screeningBien, setScreeningBien] = useState('')
   const [brouillonValidation, setBrouillonValidation] = useState('')
   const [brouillonRefus, setBrouillonRefus] = useState('')
 
-  useEffect(() => { checkAdmin(); loadBiens(); loadAnalyses() }, [])
+  useEffect(() => { checkAdmin(); loadBiens(); loadAnalyses(); loadCubs() }, [])
   useEffect(() => { if (section === 'live') loadLeadsLive() }, [section])
 
   async function checkAdmin() {
@@ -106,8 +113,75 @@ export default function DashboardAdmin() {
     const { data } = await supabase
       .from('analyses')
       .select('*')
+      .neq('type', 'cub')
       .order('created_at', { ascending: false })
     setAnalyses(data || [])
+  }
+
+  async function loadCubs() {
+    const { data } = await supabase
+      .from('analyses')
+      .select('*')
+      .eq('type', 'cub')
+      .order('created_at', { ascending: false })
+    setCubs(data || [])
+  }
+
+  async function genererDossierCub() {
+    if (!selectedCub) return
+    setGeneratingCub(true)
+    try {
+      const res = await fetch('/api/cub/generate-dossier', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: selectedCub.id,
+          nom: selectedCub.nom,
+          adresse: selectedCub.adresse,
+          cp: selectedCub.cp,
+          ville: selectedCub.ville,
+          parcelle: selectedCub.parcelle,
+          type_projet: selectedCub.type_bien,
+          surface: selectedCub.surface,
+          description: selectedCub.description,
+          plu_info: selectedCub.message,
+        }),
+      })
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      setCubDossier({ note_descriptive: data.note_descriptive, checklist: data.checklist, guide_depot: data.guide_depot })
+      await loadCubs()
+    } catch (err: any) {
+      alert('Erreur génération CUb : ' + err.message)
+    } finally {
+      setGeneratingCub(false)
+    }
+  }
+
+  async function envoyerCub() {
+    if (!selectedCub || !cubDossier) return
+    setSendingCub(true)
+    try {
+      const res = await fetch('/api/emails/envoyer-cub', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          analyseId: selectedCub.id,
+          nom: selectedCub.nom,
+          email: selectedCub.email,
+          adresse: selectedCub.adresse,
+          ...cubDossier,
+        }),
+      })
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      setCubEnvoye(true)
+      await loadCubs()
+    } catch (err: any) {
+      alert('Erreur envoi CUb : ' + err.message)
+    } finally {
+      setSendingCub(false)
+    }
   }
 
   async function envoyerRapport() {
@@ -520,6 +594,7 @@ ${selectedAnalyse.description ? `
   const pendingCount = biens.filter(b => b.statut === 'pending').length
   const liveCount = biens.filter(b => b.statut === 'diffuse').length
   const analysesPendingCount = analyses.filter(a => a.statut !== 'livree').length
+  const cubsPendingCount = cubs.filter(c => c.statut !== 'livree').length
 
   if (!authChecked) {
     return (
@@ -548,6 +623,9 @@ ${selectedAnalyse.description ? `
               )}
               {s.key === 'analyses' && analysesPendingCount > 0 && (
                 <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-[#c29a6b]/20 text-[#c29a6b]">{analysesPendingCount}</span>
+              )}
+              {s.key === 'cub' && cubsPendingCount > 0 && (
+                <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400">{cubsPendingCount}</span>
               )}
               {s.key === 'live' && liveCount > 0 && (
                 <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-400">{liveCount}</span>
@@ -639,6 +717,46 @@ ${selectedAnalyse.description ? `
                 )}
               </div>
             )}
+          </>
+        )}
+
+        {/* ════ DOSSIERS CUb ════ */}
+        {section === 'cub' && (
+          <>
+            <div className="mb-8">
+              <h1 className="text-2xl font-bold">Dossiers CUb</h1>
+              <p className="text-gray-400 text-sm mt-1">{cubsPendingCount} en attente · {cubs.filter(c => c.statut === 'livree').length} livrés</p>
+            </div>
+            <div className="space-y-3">
+              {cubs.length === 0 && (
+                <div className="text-center py-16 text-gray-500"><FileText className="w-8 h-8 mx-auto mb-3" />Aucune demande CUb.</div>
+              )}
+              {cubs.map(c => (
+                <div key={c.id} className="bg-[#111720] border border-white/10 rounded-xl p-5 hover:border-white/20 transition-all">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        {c.statut === 'payee' && <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/20">✦ Payée — À traiter</span>}
+                        {c.statut === 'livree' && <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-green-500/15 text-green-400 border border-green-500/20"><CheckCircle className="w-3 h-3" /> Livré</span>}
+                        {c.statut === 'pending' && <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-gray-500/15 text-gray-400 border border-gray-500/20">En attente paiement</span>}
+                        <span className="text-xs text-gray-500 flex items-center gap-1"><Clock className="w-3 h-3" />{formatDate(c.created_at)}</span>
+                      </div>
+                      <h3 className="font-semibold">{c.nom}</h3>
+                      <div className="flex flex-wrap gap-x-4 mt-1 text-sm text-gray-400">
+                        <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-[#c29a6b]" />{c.adresse}</span>
+                        {c.type_bien && <span className="text-blue-400 text-xs">{c.type_bien}</span>}
+                        <span>{c.email}</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => { setSelectedCub(c); setCubDossier(c.rapport ? { note_descriptive: '', checklist: '', guide_depot: '' } : null); setCubEnvoye(false) }}
+                      className="btn-primary text-xs !py-2 !px-4 flex-shrink-0">
+                      Voir <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </>
         )}
 
@@ -848,6 +966,102 @@ ${selectedAnalyse.description ? `
           </div>
         )}
       </main>
+
+      {/* PANEL DÉTAIL CUb */}
+      {selectedCub && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex justify-end">
+          <div className="bg-[#111720] border-l border-white/10 w-full max-w-2xl h-full overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-start justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-bold">Dossier CUb — {selectedCub.nom}</h2>
+                  <p className="text-sm text-gray-400 mt-1">{selectedCub.adresse}</p>
+                </div>
+                <button onClick={() => setSelectedCub(null)} className="text-gray-400 hover:text-white"><X className="w-5 h-5" /></button>
+              </div>
+
+              {/* Infos client */}
+              <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-6">
+                <p className="text-xs text-[#c29a6b] uppercase tracking-widest mb-3">Client</p>
+                <div className="space-y-1 text-sm text-gray-300">
+                  <p>👤 {selectedCub.nom}</p>
+                  {selectedCub.societe && <p>🏢 {selectedCub.societe}</p>}
+                  <p>✉️ {selectedCub.email}</p>
+                  <p>📞 {selectedCub.tel}</p>
+                </div>
+              </div>
+
+              {/* Infos projet */}
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                {selectedCub.type_bien && <div className="bg-white/5 rounded-lg p-3"><div className="text-xs text-gray-500 mb-1">Type de projet</div><div className="text-sm font-medium">{selectedCub.type_bien}</div></div>}
+                {selectedCub.surface && <div className="bg-white/5 rounded-lg p-3"><div className="text-xs text-gray-500 mb-1">Surface envisagée</div><div className="text-sm font-medium">{selectedCub.surface} m²</div></div>}
+                {selectedCub.parcelle && <div className="bg-white/5 rounded-lg p-3 col-span-2"><div className="text-xs text-gray-500 mb-1">Référence cadastrale</div><div className="text-sm font-medium">{selectedCub.parcelle}</div></div>}
+              </div>
+
+              {selectedCub.description && (
+                <div className="mb-4">
+                  <p className="text-xs text-gray-500 uppercase tracking-widest mb-2">Description du projet</p>
+                  <p className="text-sm text-gray-300 leading-relaxed">{selectedCub.description}</p>
+                </div>
+              )}
+              {selectedCub.message && (
+                <div className="mb-6">
+                  <p className="text-xs text-gray-500 uppercase tracking-widest mb-2">Infos PLU transmises</p>
+                  <p className="text-sm text-gray-400 italic">{selectedCub.message}</p>
+                </div>
+              )}
+
+              {/* Génération IA */}
+              <div className="border-t border-white/10 pt-6">
+                {cubEnvoye ? (
+                  <div className="text-center py-6">
+                    <CheckCircle className="w-10 h-10 text-blue-400 mx-auto mb-3" />
+                    <p className="font-semibold mb-1">Dossier CUb envoyé !</p>
+                    <p className="text-sm text-gray-400">Le client a reçu ses 3 documents par email.</p>
+                    <button onClick={() => setSelectedCub(null)} className="btn-primary mt-6 justify-center">Fermer</button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {!cubDossier ? (
+                      <button onClick={genererDossierCub} disabled={generatingCub}
+                        className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors disabled:opacity-50">
+                        {generatingCub ? <><Loader2 className="w-4 h-4 animate-spin" /> Génération en cours…</> : <><Zap className="w-4 h-4" /> Générer le dossier CUb avec l'IA</>}
+                      </button>
+                    ) : (
+                      <>
+                        {[
+                          { label: '1. Note descriptive', key: 'note_descriptive', color: 'border-[#c29a6b]/30' },
+                          { label: '2. Check-list des pièces', key: 'checklist', color: 'border-blue-500/30' },
+                          { label: '3. Guide de dépôt', key: 'guide_depot', color: 'border-green-500/30' },
+                        ].map(({ label, key, color }) => (
+                          <div key={key} className={`border ${color} rounded-xl p-4`}>
+                            <p className="text-xs text-gray-400 uppercase tracking-widest mb-2">{label}</p>
+                            <textarea
+                              className="input min-h-[120px] resize-none text-sm w-full"
+                              value={(cubDossier as any)[key]}
+                              onChange={e => setCubDossier(d => d ? { ...d, [key]: e.target.value } : d)}
+                            />
+                          </div>
+                        ))}
+                        <div className="flex gap-3 pt-2">
+                          <button onClick={genererDossierCub} disabled={generatingCub}
+                            className="flex items-center gap-2 px-4 py-2.5 border border-white/10 rounded-xl text-sm text-gray-400 hover:text-white transition-colors">
+                            {generatingCub ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />} Regénérer
+                          </button>
+                          <button onClick={envoyerCub} disabled={sendingCub}
+                            className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#c29a6b] hover:bg-[#b8895a] text-black font-semibold rounded-xl transition-colors disabled:opacity-50">
+                            {sendingCub ? <><Loader2 className="w-4 h-4 animate-spin" /> Envoi…</> : <><Send className="w-4 h-4" /> Envoyer au client</>}
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* PANEL ANALYSE */}
       {selected && (

@@ -169,9 +169,19 @@ export async function POST(req: Request) {
             </div>
 
             <!-- Confidentialité -->
-            <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px 16px;margin-bottom:32px;">
+            <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px 16px;margin-bottom:24px;">
               <span style="color:#6b7280;font-size:16px;flex-shrink:0;">🔒</span>
               <p style="color:#6b7280;font-size:12px;margin:0;line-height:1.6;">Ce rapport est confidentiel et établi à votre usage exclusif. Il ne constitue pas un avis juridique ou financier et ne peut être transmis à des tiers sans autorisation.</p>
+            </div>
+
+            <!-- Upsell CUb -->
+            <div style="background:linear-gradient(135deg,rgba(194,154,107,0.08) 0%,rgba(27,42,74,0.4) 100%);border:1px solid rgba(194,154,107,0.25);border-radius:12px;padding:20px 24px;margin-bottom:32px;">
+              <p style="color:#c29a6b;font-size:10px;text-transform:uppercase;letter-spacing:2px;margin:0 0 8px;font-weight:700;">Aller plus loin</p>
+              <p style="color:#fff;font-size:15px;font-weight:600;margin:0 0 6px;">Préparez votre dossier de Certificat d'Urbanisme Opérationnel</p>
+              <p style="color:#9ca3af;font-size:12px;line-height:1.6;margin:0 0 16px;">Note descriptive rédigée, check-list des pièces et guide de dépôt en mairie — un dossier complet prêt à soumettre, livré sous 72h.</p>
+              <a href="https://closia.net/cub" style="display:inline-block;background:#c29a6b;color:#000;font-weight:700;padding:10px 20px;border-radius:8px;text-decoration:none;font-size:12px;text-transform:uppercase;letter-spacing:1px;">
+                Demander mon dossier CUb — 290 € HT
+              </a>
             </div>
 
           </div>
