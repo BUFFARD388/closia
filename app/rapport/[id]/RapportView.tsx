@@ -44,6 +44,9 @@ function renderLines(lines: string[]): string {
     } else if (/^[-•·]\s+/.test(t)) {
       if (!inList) { html += '<ul>'; inList = true }
       html += `<li>${renderInline(t.replace(/^[-•·]\s+/, ''))}</li>`
+    } else if (/^\d+\.\s+/.test(t)) {
+      if (inList) { html += '</ul>'; inList = false }
+      html += `<p style="margin:0 0 6px;padding-left:4px;">${renderInline(t)}</p>`
     } else {
       if (inList) { html += '</ul>'; inList = false }
       html += `<p>${renderInline(t)}</p>`
@@ -54,9 +57,10 @@ function renderLines(lines: string[]): string {
   return html
 }
 
-function parseRapport(texte: string): { num: string; title: string; body: string }[] {
+function parseRapport(texte: string): { preamble: string; sections: { num: string; title: string; body: string }[] } {
   const allLines = texte.split('\n')
   const sections: { num: string; title: string; lines: string[] }[] = []
+  const preambleLines: string[] = []
   let cur: { num: string; title: string; lines: string[] } | null = null
 
   for (const line of allLines) {
@@ -66,14 +70,21 @@ function parseRapport(texte: string): { num: string; title: string; body: string
       cur = { num: m[1], title: m[2].replace(/\*\*/g, '').trim(), lines: [] }
     } else if (cur) {
       cur.lines.push(line)
+    } else {
+      // Preamble: content before the first numbered section
+      const t = line.trim()
+      if (t && !t.startsWith('---') && !/^#+\s/.test(t)) preambleLines.push(line)
     }
   }
   if (cur) sections.push(cur)
-  return sections.map(s => ({ num: s.num, title: s.title, body: renderLines(s.lines) }))
+  return {
+    preamble: renderLines(preambleLines),
+    sections: sections.map(s => ({ num: s.num, title: s.title, body: renderLines(s.lines) }))
+  }
 }
 
 export default function RapportView({ analyse }: { analyse: any }) {
-  const sections = parseRapport(analyse.rapport)
+  const { preamble, sections } = parseRapport(analyse.rapport)
   const date = new Date(analyse.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
 
   // Première photo transmise par le demandeur
@@ -104,8 +115,8 @@ export default function RapportView({ analyse }: { analyse: any }) {
         .desc-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: #c29a6b; margin-bottom: 6px; font-weight: 700 }
         .desc-text { font-size: 13px; color: #4b5563; line-height: 1.7 }
         .content { padding: 36px 56px 48px }
-        .section-block { margin-bottom: 32px; page-break-inside: avoid }
-        .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 2px solid #f0ebe0 }
+        .section-block { margin-bottom: 32px }
+        .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 2px solid #f0ebe0; page-break-after: avoid }
         .section-num { background: #c29a6b; color: #fff; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0 }
         .section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #1a1a2e }
         .section-body { color: #374151; font-size: 13.5px; line-height: 1.8 }
@@ -167,6 +178,7 @@ export default function RapportView({ analyse }: { analyse: any }) {
       )}
 
       <div className="content">
+        {preamble && <div className="section-body" style={{marginBottom:'24px',paddingBottom:'20px',borderBottom:'1px solid #f0ebe0'}} dangerouslySetInnerHTML={{ __html: preamble }} />}
         {sections.map(s => (
           <div key={s.num} className="section-block">
             <div className="section-header">
