@@ -11,7 +11,8 @@ export default function LandingPage() {
   const [bienIdx, setBienIdx] = useState(0)
   const [analyseModal, setAnalyseModal] = useState(false)
   const [analyseType, setAnalyseType] = useState<'simple' | 'complexe' | null>(null)
-  const [analyseForm, setAnalyseForm] = useState({ nom: '', email: '', tel: '', type_bien: '', adresse: '', cp: '', ville: '', parcelle: '', surface: '', prix_acquisition: '', type_operation: '', description: '', message: '' })
+  const [analyseForm, setAnalyseForm] = useState({ nom: '', email: '', tel: '', type_bien: '', adresse: '', cp: '', ville: '', surface_bati: '', prix_acquisition: '', type_operation: '', description: '', message: '' })
+  const [parcelles, setParcelles] = useState([{ numero: '', surface: '' }])
   const [analyseFiles, setAnalyseFiles] = useState<File[]>([])
   const [analyseSending, setAnalyseSending] = useState(false)
   const [analyseSent, setAnalyseSent] = useState(false)
@@ -919,6 +920,13 @@ export default function LandingPage() {
                   setAnalyseSending(true)
                   const fd = new FormData()
                   Object.entries(analyseForm).forEach(([k, v]) => fd.append(k, v))
+                  // Sérialisation des parcelles
+                  const parcellesStr = parcelles
+                    .filter(p => p.numero.trim())
+                    .map(p => p.surface ? `${p.numero.trim()} (${p.surface} m²)` : p.numero.trim())
+                    .join(' ; ')
+                  fd.append('parcelle', parcellesStr)
+                  fd.append('surface', analyseForm.surface_bati)
                   fd.append('type', analyseType || '')
                   analyseFiles.forEach(f => fd.append('files', f))
 
@@ -980,14 +988,11 @@ export default function LandingPage() {
                       <input className="input" placeholder="Ex : Saint-Claude" required value={analyseForm.ville} onChange={e => setAnalyseForm(f => ({ ...f, ville: e.target.value }))} />
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Numéro de parcelle <span className="text-gray-500 font-normal">(facultatif)</span></label>
-                    <input className="input" placeholder="Ex : 39391000AA0045" value={analyseForm.parcelle} onChange={e => setAnalyseForm(f => ({ ...f, parcelle: e.target.value }))} />
-                  </div>
+                  {/* Surfaces */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Surface totale (m²) *</label>
-                      <input type="number" className="input" placeholder="Ex : 750" required value={analyseForm.surface} onChange={e => setAnalyseForm(f => ({ ...f, surface: e.target.value }))} />
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Surface du bâti (m²) <span className="text-gray-500 font-normal">(facultatif)</span></label>
+                      <input type="number" className="input" placeholder="Ex : 150" value={analyseForm.surface_bati} onChange={e => setAnalyseForm(f => ({ ...f, surface_bati: e.target.value }))} />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-2">Type d'opération *</label>
@@ -1001,6 +1006,43 @@ export default function LandingPage() {
                         <option value="Autre">Autre / À définir</option>
                       </select>
                     </div>
+                  </div>
+
+                  {/* Parcelles cadastrales */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-sm font-medium text-gray-300">Parcelles cadastrales <span className="text-gray-500 font-normal">(facultatif)</span></label>
+                    </div>
+                    <div className="space-y-2">
+                      {parcelles.map((p, i) => (
+                        <div key={i} className="grid grid-cols-[1fr_120px_32px] gap-2 items-center">
+                          <input
+                            className="input text-sm"
+                            placeholder="Ex : AA0045 ou 39391000AA0045"
+                            value={p.numero}
+                            onChange={e => setParcelles(prev => prev.map((x, idx) => idx === i ? { ...x, numero: e.target.value } : x))}
+                          />
+                          <input
+                            type="number"
+                            className="input text-sm"
+                            placeholder="Surface m²"
+                            value={p.surface}
+                            onChange={e => setParcelles(prev => prev.map((x, idx) => idx === i ? { ...x, surface: e.target.value } : x))}
+                          />
+                          {parcelles.length > 1 ? (
+                            <button type="button" onClick={() => setParcelles(prev => prev.filter((_, idx) => idx !== i))}
+                              className="flex items-center justify-center text-gray-500 hover:text-red-400 transition-colors">
+                              <XIcon className="w-4 h-4" />
+                            </button>
+                          ) : <div />}
+                        </div>
+                      ))}
+                    </div>
+                    <button type="button"
+                      onClick={() => setParcelles(prev => [...prev, { numero: '', surface: '' }])}
+                      className="mt-2 text-xs text-[#c29a6b] hover:text-[#b8911f] transition-colors flex items-center gap-1">
+                      + Ajouter une parcelle
+                    </button>
                   </div>
 
                   <div style={{borderTop:'1px solid rgba(255,255,255,0.08)',paddingTop:'16px',marginTop:'4px'}}>
