@@ -155,7 +155,7 @@ export async function POST(req: NextRequest) {
       mode: 'payment',
       line_items: [
         {
-          price: 'price_1TeJE4LHXjRRnPppbCgi1ybp',
+          price: 'price_1TgoDMLHXjRRnPppM5R0imMv',
           quantity: 1,
         },
       ],
