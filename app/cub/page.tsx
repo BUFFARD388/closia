@@ -32,6 +32,29 @@ function CubContent() {
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm(f => ({ ...f, [k]: e.target.value }))
 
+  async function compressPhoto(file: File, maxPx = 1600, quality = 0.75): Promise<File> {
+    return new Promise((resolve) => {
+      const img = new Image()
+      const url = URL.createObjectURL(file)
+      img.onload = () => {
+        URL.revokeObjectURL(url)
+        let { width, height } = img
+        if (width > maxPx || height > maxPx) {
+          if (width > height) { height = Math.round(height * maxPx / width); width = maxPx }
+          else { width = Math.round(width * maxPx / height); height = maxPx }
+        }
+        const canvas = document.createElement('canvas')
+        canvas.width = width; canvas.height = height
+        canvas.getContext('2d')!.drawImage(img, 0, 0, width, height)
+        canvas.toBlob(blob => {
+          resolve(blob ? new File([blob], file.name, { type: 'image/jpeg' }) : file)
+        }, 'image/jpeg', quality)
+      }
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(file) }
+      img.src = url
+    })
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (photos.length === 0) {
@@ -41,10 +64,23 @@ function CubContent() {
     setLoading(true)
     setError('')
     try {
+      // Compression des photos avant envoi (max 1600px, qualité 75%)
+      const compressed = await Promise.all(photos.map(f => compressPhoto(f)))
+
       const fd = new FormData()
       Object.entries(form).forEach(([k, v]) => fd.append(k, v))
-      photos.forEach(f => fd.append('photos', f))
+      compressed.forEach(f => fd.append('photos', f))
+
       const res = await fetch('/api/stripe/cub-checkout', { method: 'POST', body: fd })
+
+      if (!res.ok) {
+        const text = await res.text()
+        if (text.includes('Entity Too Large') || res.status === 413) {
+          throw new Error('Photos trop volumineuses. Réduisez leur taille ou le nombre de photos.')
+        }
+        throw new Error(`Erreur serveur (${res.status})`)
+      }
+
       const data = await res.json()
       if (data.error) throw new Error(data.error)
       window.location.href = data.url
