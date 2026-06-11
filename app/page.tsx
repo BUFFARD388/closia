@@ -813,7 +813,7 @@ export default function LandingPage() {
             <p className="text-sm text-[#c29a6b] font-medium">Tous les éléments transmis sont strictement confidentiels et ne seront jamais communiqués à un tiers.</p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6 mb-10">
+          <div className="grid md:grid-cols-3 gap-6 mb-10">
             {/* Analyse simple */}
             <div className="relative border border-[#c29a6b]/30 rounded-2xl p-8 bg-[#c29a6b]/5 hover:border-[#c29a6b]/60 transition-all group">
               <div className="flex items-start justify-between mb-6">
@@ -880,6 +880,45 @@ export default function LandingPage() {
                 className="w-full inline-flex items-center justify-center text-xs tracking-widest uppercase border border-white/20 text-white font-semibold px-6 py-3.5 rounded-xl hover:border-white/40 hover:bg-white/5 transition-colors">
                 Demander un devis
               </button>
+            </div>
+
+            {/* CUb — Certificat d'Urbanisme opérationnel */}
+            <div className="relative border border-[#c29a6b]/20 rounded-2xl p-8 bg-[#111720] hover:border-[#c29a6b]/50 transition-all group flex flex-col">
+              <div className="flex items-start justify-between mb-6">
+                <div>
+                  <p className="text-xs tracking-widest uppercase text-[#c29a6b] mb-2">Nouveau</p>
+                  <h3 className="text-xl font-bold text-white">Certificat d'Urbanisme<br />Opérationnel (CUb)</h3>
+                </div>
+                <div className="text-right flex-shrink-0 ml-4">
+                  <p className="text-3xl font-black text-[#c29a6b]">290 €</p>
+                  <p className="text-xs text-gray-500">HT · sous 72h</p>
+                </div>
+              </div>
+              <p className="text-xs text-gray-400 leading-relaxed mb-6">
+                Vous avez un terrain ou un bien à potentiel ? Avant tout engagement, obtenez un dossier complet pour connaître la constructibilité réelle et sécuriser votre projet.
+              </p>
+              <div className="space-y-3 text-sm text-gray-400 mb-8 flex-1">
+                {[
+                  { label: 'Note descriptive', detail: 'Rédigée et prête à insérer dans le CERFA 13410', color: 'text-[#c29a6b]' },
+                  { label: 'Check-list des pièces', detail: 'Personnalisée selon votre projet et votre commune', color: 'text-blue-400' },
+                  { label: 'Guide de dépôt', detail: 'Délais, interlocuteurs, conseils pratiques', color: 'text-green-400' },
+                ].map(item => (
+                  <div key={item.label} className="flex items-start gap-3 p-3 rounded-lg bg-white/[0.03] border border-white/5">
+                    <span className={`flex-shrink-0 mt-0.5 ${item.color}`}>→</span>
+                    <div>
+                      <span className="text-white font-medium text-xs">{item.label}</span>
+                      <p className="text-xs text-gray-600 mt-0.5">{item.detail}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-lg p-3 mb-6">
+                <p className="text-xs text-gray-400 leading-relaxed">🏗️ Idéal pour les terrains, divisions parcellaires, constructions neuves ou changements de destination.</p>
+              </div>
+              <Link href="/cub"
+                className="w-full inline-flex items-center justify-center text-xs tracking-widest uppercase bg-[#c29a6b]/10 border border-[#c29a6b]/40 text-[#c29a6b] font-semibold px-6 py-3.5 rounded-xl hover:bg-[#c29a6b]/20 hover:border-[#c29a6b]/70 transition-colors">
+                Préparer mon dossier CUb
+              </Link>
             </div>
           </div>
         </div>
@@ -1146,6 +1185,7 @@ export default function LandingPage() {
                 <a href="#vendeurs" className="block hover:text-white transition-colors">Apporteurs de biens</a>
                 <a href="#acheteurs" className="block hover:text-white transition-colors">Acheteurs professionnels</a>
                 <a href="#analyse" className="block hover:text-white transition-colors">Analyse préalable</a>
+                <Link href="/cub" className="block hover:text-white transition-colors">Certificat d'Urbanisme (CUb)</Link>
                 <a href="#confidentialite" className="block hover:text-white transition-colors">Confidentialité</a>
                 <Link href="/faq" className="block hover:text-white transition-colors">FAQ</Link>
               </div>

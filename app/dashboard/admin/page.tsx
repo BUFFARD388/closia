@@ -170,7 +170,6 @@ export default function DashboardAdmin() {
           nom: selectedCub.nom,
           email: selectedCub.email,
           adresse: selectedCub.adresse,
-          ...cubDossier,
         }),
       })
       const data = await res.json()
