@@ -1169,9 +1169,7 @@ ${selectedAnalyse.description ? `
                   </div>
                   <button
                     onClick={async () => {
-                      const { createClient } = await import('@supabase/supabase-js')
-                      const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-                      await sb.from('analyses').update({ statut: 'livree' }).eq('id', selectedCub.id)
+                      await supabase.from('analyses').update({ statut: 'livree' }).eq('id', selectedCub.id)
                       await loadCubs()
                       setSelectedCub((prev: any) => prev ? { ...prev, statut: 'livree' } : prev)
                     }}
