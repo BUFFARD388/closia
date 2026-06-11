@@ -1169,9 +1169,15 @@ ${selectedAnalyse.description ? `
                   </div>
                   <button
                     onClick={async () => {
-                      await supabase.from('analyses').update({ statut: 'livree' }).eq('id', selectedCub.id)
-                      await loadCubs()
-                      setSelectedCub((prev: any) => prev ? { ...prev, statut: 'livree' } : prev)
+                      const res = await fetch('/api/cub/marquer-depose', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ analyseId: selectedCub.id }),
+                      })
+                      if (res.ok) {
+                        await loadCubs()
+                        setSelectedCub((prev: any) => prev ? { ...prev, statut: 'livree' } : prev)
+                      }
                     }}
                     className="text-xs px-3 py-1.5 bg-green-500/20 hover:bg-green-500/30 text-green-300 rounded-lg border border-green-500/30 transition-colors flex-shrink-0"
                   >
