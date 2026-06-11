@@ -884,27 +884,28 @@ export default function LandingPage() {
 
             {/* CUb — Certificat d'Urbanisme opérationnel */}
             <div className="relative border border-[#c29a6b]/20 rounded-2xl p-8 bg-[#111720] hover:border-[#c29a6b]/50 transition-all group flex flex-col">
-              <div className="flex items-start justify-between mb-6">
+              <div className="flex items-start justify-between mb-4">
                 <div>
-                  <p className="text-xs tracking-widest uppercase text-[#c29a6b] mb-2">Nouveau</p>
+                  <p className="text-xs tracking-widest uppercase text-[#c29a6b] mb-2">Clé en main</p>
                   <h3 className="text-xl font-bold text-white">Certificat d'Urbanisme<br />Opérationnel (CUb)</h3>
                 </div>
                 <div className="text-right flex-shrink-0 ml-4">
-                  <p className="text-3xl font-black text-[#c29a6b]">290 €</p>
-                  <p className="text-xs text-gray-500">HT · sous 72h</p>
+                  <p className="text-3xl font-black text-[#c29a6b]">490 €</p>
+                  <p className="text-xs text-gray-500">HT · service complet</p>
                 </div>
               </div>
-              <p className="text-xs text-gray-400 leading-relaxed mb-6">
-                Vous avez un terrain ou un bien à potentiel ? Avant tout engagement, obtenez un dossier complet pour connaître la constructibilité réelle et sécuriser votre projet.
+              <p className="text-xs text-gray-400 leading-relaxed mb-5">
+                Votre client veut savoir si un terrain ou un bien est constructible ou valorisable avant de s'engager ? Nous préparons et déposons le dossier complet, avec validation avant envoi.
               </p>
-              <div className="space-y-3 text-sm text-gray-400 mb-8 flex-1">
+              <div className="space-y-2 text-sm text-gray-400 mb-6 flex-1">
                 {[
-                  { label: 'Note descriptive', detail: 'Rédigée et prête à insérer dans le CERFA 13410', color: 'text-[#c29a6b]' },
-                  { label: 'Check-list des pièces', detail: 'Personnalisée selon votre projet et votre commune', color: 'text-blue-400' },
-                  { label: 'Guide de dépôt', detail: 'Délais, interlocuteurs, conseils pratiques', color: 'text-green-400' },
+                  { n: '01', label: 'CERFA 13410 complété', detail: 'Formulaire réglementaire intégralement rempli' },
+                  { n: '02', label: 'Plans + insertion cadastrale', detail: 'Plans de situation et de masse réalisés' },
+                  { n: '03', label: 'Validation avant dépôt', detail: 'Échange avec vous et votre client pour valider' },
+                  { n: '04', label: 'Dépôt officiel en mairie', detail: 'Délai d\'instruction : 2 mois' },
                 ].map(item => (
-                  <div key={item.label} className="flex items-start gap-3 p-3 rounded-lg bg-white/[0.03] border border-white/5">
-                    <span className={`flex-shrink-0 mt-0.5 ${item.color}`}>→</span>
+                  <div key={item.n} className="flex items-start gap-3 p-2.5 rounded-lg bg-white/[0.03] border border-white/5">
+                    <span className="text-[#c29a6b]/50 text-xs font-bold flex-shrink-0 pt-0.5">{item.n}</span>
                     <div>
                       <span className="text-white font-medium text-xs">{item.label}</span>
                       <p className="text-xs text-gray-600 mt-0.5">{item.detail}</p>
@@ -912,12 +913,12 @@ export default function LandingPage() {
                   </div>
                 ))}
               </div>
-              <div className="bg-white/5 border border-white/10 rounded-lg p-3 mb-6">
-                <p className="text-xs text-gray-400 leading-relaxed">🏗️ Idéal pour les terrains, divisions parcellaires, constructions neuves ou changements de destination.</p>
+              <div className="bg-white/5 border border-white/10 rounded-lg p-3 mb-5">
+                <p className="text-xs text-gray-400 leading-relaxed">🏗️ Idéal pour valider une vente, une division, une construction neuve ou un changement de destination.</p>
               </div>
               <Link href="/cub"
                 className="w-full inline-flex items-center justify-center text-xs tracking-widest uppercase bg-[#c29a6b]/10 border border-[#c29a6b]/40 text-[#c29a6b] font-semibold px-6 py-3.5 rounded-xl hover:bg-[#c29a6b]/20 hover:border-[#c29a6b]/70 transition-colors">
-                Préparer mon dossier CUb
+                Déposer mon dossier CUb
               </Link>
             </div>
           </div>
