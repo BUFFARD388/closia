@@ -94,14 +94,16 @@ export async function POST(req: NextRequest) {
           <div style="padding:36px 48px;">
             <p style="color:#9ca3af;margin:0 0 16px;">Bonjour ${nom},</p>
             <p style="color:#d1d5db;line-height:1.75;margin:0 0 28px;">
-              Votre demande a bien été enregistrée. Dès réception de votre paiement, nous préparons votre dossier et vous le transmettrons
-              <strong style="color:#fff;">sous 72h</strong>.
+              Votre demande a bien été enregistrée. Nous vous recontactons
+              <strong style="color:#fff;">sous 48h</strong> pour valider les plans et le CERFA avant dépôt officiel en mairie.
             </p>
             <div style="background:#111720;border:1px solid rgba(194,154,107,0.25);border-radius:10px;padding:18px 20px;margin-bottom:28px;">
-              <p style="color:#c29a6b;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 10px;font-weight:700;">Votre dossier comprendra</p>
-              <p style="color:#d1d5db;font-size:13px;margin:0 0 6px;">✓ Note descriptive du projet (prête pour le CERFA 13410)</p>
-              <p style="color:#d1d5db;font-size:13px;margin:0 0 6px;">✓ Check-list personnalisée des pièces à joindre</p>
-              <p style="color:#d1d5db;font-size:13px;margin:0;">✓ Guide de dépôt en mairie</p>
+              <p style="color:#c29a6b;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 10px;font-weight:700;">Ce que nous prenons en charge</p>
+              <p style="color:#d1d5db;font-size:13px;margin:0 0 6px;">✓ CERFA 13410 intégralement complété</p>
+              <p style="color:#d1d5db;font-size:13px;margin:0 0 6px;">✓ Plans avec insertion cadastrale réalisés</p>
+              <p style="color:#d1d5db;font-size:13px;margin:0 0 6px;">✓ Échange de validation avec vous avant envoi</p>
+              <p style="color:#d1d5db;font-size:13px;margin:0 0 6px;">✓ Dépôt officiel en mairie</p>
+              <p style="color:#9ca3af;font-size:12px;margin:10px 0 0;font-style:italic;">Délai d'instruction mairie : 2 mois à compter du dépôt.</p>
             </div>
             <div style="background:rgba(194,154,107,0.06);border:1px solid rgba(194,154,107,0.2);border-radius:8px;padding:14px 18px;">
               <p style="color:#c29a6b;font-size:13px;margin:0;">🔒 Vos informations sont strictement confidentielles.</p>
@@ -120,7 +122,7 @@ export async function POST(req: NextRequest) {
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
-      line_items: [{ price: 'price_1TgqNgLHXjRRnPppSwYDwvx1', quantity: 1 }],
+      line_items: [{ price: 'price_1Th3rdLHXjRRnPppFlfmocGj', quantity: 1 }],
       metadata: { analyseId: analyse.id, type: 'cub' },
       allow_promotion_codes: true,
       customer_email: email,
