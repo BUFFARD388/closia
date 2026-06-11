@@ -707,7 +707,8 @@ ${selectedAnalyse.description ? `
   const pendingCount = biens.filter(b => b.statut === 'pending').length
   const liveCount = biens.filter(b => b.statut === 'diffuse').length
   const analysesPendingCount = analyses.filter(a => a.statut !== 'livree').length
-  const cubsPendingCount = cubs.filter(c => c.statut !== 'livree').length
+  const cubsPendingCount = cubs.filter(c => !['livree'].includes(c.statut)).length
+  const cubsValidesCount = cubs.filter(c => c.statut === 'validee').length
 
   if (!authChecked) {
     return (
@@ -737,7 +738,10 @@ ${selectedAnalyse.description ? `
               {s.key === 'analyses' && analysesPendingCount > 0 && (
                 <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-[#c29a6b]/20 text-[#c29a6b]">{analysesPendingCount}</span>
               )}
-              {s.key === 'cub' && cubsPendingCount > 0 && (
+              {s.key === 'cub' && cubsValidesCount > 0 && (
+                <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 font-bold">{cubsValidesCount} ✅</span>
+              )}
+              {s.key === 'cub' && cubsValidesCount === 0 && cubsPendingCount > 0 && (
                 <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400">{cubsPendingCount}</span>
               )}
               {s.key === 'live' && liveCount > 0 && (
@@ -838,7 +842,10 @@ ${selectedAnalyse.description ? `
           <>
             <div className="mb-8">
               <h1 className="text-2xl font-bold">Dossiers CUb</h1>
-              <p className="text-gray-400 text-sm mt-1">{cubsPendingCount} en attente · {cubs.filter(c => c.statut === 'livree').length} livrés</p>
+              <p className="text-gray-400 text-sm mt-1">
+                {cubs.filter(c => c.statut === 'validee').length > 0 && <span className="text-green-400 font-semibold">{cubs.filter(c => c.statut === 'validee').length} à déposer en mairie · </span>}
+                {cubs.filter(c => ['payee','en_validation'].includes(c.statut)).length} en cours · {cubs.filter(c => c.statut === 'livree').length} clôturés
+              </p>
             </div>
             <div className="space-y-3">
               {cubs.length === 0 && (
@@ -849,9 +856,11 @@ ${selectedAnalyse.description ? `
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        {c.statut === 'payee' && <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/20">✦ Payée — À traiter</span>}
-                        {c.statut === 'livree' && <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-green-500/15 text-green-400 border border-green-500/20"><CheckCircle className="w-3 h-3" /> Livré</span>}
                         {c.statut === 'pending' && <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-gray-500/15 text-gray-400 border border-gray-500/20">En attente paiement</span>}
+                        {c.statut === 'payee' && <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/20">✦ Payée — À traiter</span>}
+                        {c.statut === 'en_validation' && <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-orange-500/15 text-orange-400 border border-orange-500/20">⏳ En attente validation client</span>}
+                        {c.statut === 'validee' && <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-green-500/20 text-green-400 border border-green-500/30 font-semibold">✅ Validé — À déposer en mairie</span>}
+                        {c.statut === 'livree' && <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-white/10 text-gray-400 border border-white/10"><CheckCircle className="w-3 h-3" /> Déposé en mairie</span>}
                         <span className="text-xs text-gray-500 flex items-center gap-1"><Clock className="w-3 h-3" />{formatDate(c.created_at)}</span>
                       </div>
                       <h3 className="font-semibold">{c.nom}</h3>
@@ -1147,6 +1156,36 @@ ${selectedAnalyse.description ? `
                       </a>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Bannière validation client */}
+              {selectedCub.statut === 'validee' && (
+                <div className="mb-4 bg-green-500/10 border border-green-500/30 rounded-xl p-4 flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="font-semibold text-green-400 text-sm">Dossier validé par le client</p>
+                    <p className="text-xs text-gray-400 mt-1">Le client a approuvé les éléments. Le dossier est prêt à être déposé en mairie.</p>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      const { createClient } = await import('@supabase/supabase-js')
+                      const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+                      await sb.from('analyses').update({ statut: 'livree' }).eq('id', selectedCub.id)
+                      await loadCubs()
+                      setSelectedCub((prev: any) => prev ? { ...prev, statut: 'livree' } : prev)
+                    }}
+                    className="text-xs px-3 py-1.5 bg-green-500/20 hover:bg-green-500/30 text-green-300 rounded-lg border border-green-500/30 transition-colors flex-shrink-0"
+                  >
+                    Marquer déposé ✓
+                  </button>
+                </div>
+              )}
+
+              {selectedCub.statut === 'livree' && (
+                <div className="mb-4 bg-white/5 border border-white/10 rounded-xl p-4 flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                  <p className="text-sm text-gray-500">Dossier déposé en mairie — délai d'instruction : 2 mois.</p>
                 </div>
               )}
 
