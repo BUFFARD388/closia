@@ -11,67 +11,80 @@ const supabase = createClient(
 
 export async function POST(req: NextRequest) {
   try {
-    const { id, nom, adresse, cp, ville, parcelle, type_projet, surface, description, plu_info } = await req.json()
+    const { id, nom, adresse, cp, ville, parcelle, type_projet, objectif, surface, description, plu_info } = await req.json()
 
     const prompt = `
-Tu es un expert en droit de l'urbanisme français, spécialisé dans la préparation des dossiers de Certificat d'Urbanisme Opérationnel (CUb — article L410-1 b du Code de l'urbanisme).
+Tu es un expert en droit de l'urbanisme français, assistant Laurent Buffard (expert Closia) dans la rédaction d'un dossier de Certificat d'Urbanisme Opérationnel (CUb — article L410-1 b du Code de l'urbanisme).
 
-Tu dois préparer un dossier complet pour la demande de CUb d'un client. Ce dossier doit être directement utilisable, professionnel et précis.
+Laurent va déposer ce dossier en mairie pour le compte d'un client. Il a besoin de :
+1. La **note descriptive du projet** prête à insérer dans la rubrique correspondante du CERFA 13410
+2. Les **éléments CERFA pré-remplis** pour les autres rubriques clés
 
 **Informations du projet :**
-- Demandeur : ${nom}
+- Demandeur final : ${nom}
 - Adresse de la parcelle : ${adresse}, ${cp} ${ville}
-- Référence cadastrale : ${parcelle || 'À compléter'}
+- Référence cadastrale : ${parcelle || 'À compléter par Laurent'}
+- Objectif : ${objectif || 'Non précisé'}
 - Type de projet : ${type_projet}
 - Surface de plancher envisagée : ${surface ? surface + ' m²' : 'À préciser'}
 - Description du projet : ${description}
-${plu_info ? `- Informations PLU connues : ${plu_info}` : ''}
+${plu_info ? `- Informations PLU / contexte : ${plu_info}` : ''}
 
-**Ta réponse doit comporter EXACTEMENT trois sections, dans cet ordre :**
+**Ta réponse doit comporter EXACTEMENT deux sections :**
 
 ---NOTE_DESCRIPTIVE---
-Rédige la note descriptive complète du projet à insérer dans le CERFA 13410 (rubrique "Description du projet").
-Ton professionnel, précis, conforme aux exigences administratives françaises.
-Structure : présentation du terrain, description du projet envisagé, nature des travaux, surface de plancher, destination de la construction, raccordements aux réseaux envisagés.
-Environ 200-300 mots, prêt à copier-coller dans le formulaire.
+Rédige la note descriptive complète du projet pour le CERFA 13410 (rubrique "Description du projet envisagé").
+Style : professionnel, administratif, sobre. Environ 200-300 mots.
+Structure obligatoire :
+1. Présentation de la parcelle (situation, contexte, nature du terrain)
+2. Description du projet envisagé (nature de l'opération, destination)
+3. Caractéristiques techniques (surface de plancher, nombre de niveaux si pertinent, emprise)
+4. Raccordements aux réseaux envisagés (eau, assainissement, électricité)
+5. Conformité avec l'objectif (valorisation, faisabilité, etc.)
 
----CHECKLIST---
-Rédige la check-list personnalisée des pièces à joindre au dossier CUb pour ce projet spécifique.
-Pour chaque pièce : nom exact, format requis, où la trouver, et si elle est obligatoire ou facultative.
-Base-toi sur le type de projet (${type_projet}) et les spécificités de la demande.
-Inclus : plan de situation, plan cadastral, notice descriptive, et toute pièce spécifique au type de projet.
+Le texte doit être prêt à copier-coller dans le CERFA. Utilise "Le pétitionnaire envisage..." ou "Le projet consiste en..." comme formulation.
 
----GUIDE_DEPOT---
-Rédige un guide pratique de dépôt en mairie pour ce dossier CUb.
-Inclus : nombre d'exemplaires requis, modalités de dépôt (guichet, courrier, téléprocédure), délai légal d'instruction (2 mois), que faire en cas de dépassement du délai, comment interpréter la réponse (favorable, défavorable, tacite), durée de validité du CUb obtenu (18 mois prorogeable), et conseils pratiques pour maximiser les chances d'obtenir une réponse favorable.
+---ELEMENTS_CERFA---
+Liste les valeurs pré-remplies pour les rubriques CERFA suivantes (format clé : valeur) :
+- Identité du demandeur : ${nom}
+- Adresse du terrain : ${adresse}, ${cp} ${ville}
+- Référence cadastrale : ${parcelle || '[À compléter]'}
+- Destination de la construction projetée : [à déduire du type de projet]
+- Nature des travaux : [à déduire]
+- Surface de plancher totale existante : [indiquer 0 si terrain nu, sinon À vérifier]
+- Surface de plancher créée : ${surface ? surface + ' m²' : '[À préciser]'}
+- Nature de la demande : CUb opérationnel (art. L410-1 b)
 `
 
     const message = await anthropic.messages.create({
       model: 'claude-opus-4-5',
-      max_tokens: 2500,
+      max_tokens: 2000,
       messages: [{ role: 'user', content: prompt }],
     })
 
     const text = (message.content[0] as any).text as string
 
-    const noteMatch = text.match(/---NOTE_DESCRIPTIVE---\s*([\s\S]*?)(?=---CHECKLIST---|$)/)
-    const checklistMatch = text.match(/---CHECKLIST---\s*([\s\S]*?)(?=---GUIDE_DEPOT---|$)/)
-    const guideMatch = text.match(/---GUIDE_DEPOT---\s*([\s\S]*?)$/)
+    const noteMatch = text.match(/---NOTE_DESCRIPTIVE---\s*([\s\S]*?)(?=---ELEMENTS_CERFA---|$)/)
+    const cerfahMatch = text.match(/---ELEMENTS_CERFA---\s*([\s\S]*?)$/)
 
-    const dossier = {
-      note_descriptive: noteMatch?.[1]?.trim() || '',
-      checklist: checklistMatch?.[1]?.trim() || '',
-      guide_depot: guideMatch?.[1]?.trim() || '',
-    }
+    const note_descriptive = noteMatch?.[1]?.trim() || ''
+    const elements_cerfa = cerfahMatch?.[1]?.trim() || ''
 
-    // Sauvegarder en base sous forme de rapport structuré
-    const rapportComplet = `# DOSSIER CUb — ${nom}\n\n## 1. Note descriptive du projet\n\n${dossier.note_descriptive}\n\n## 2. Check-list des pièces à joindre\n\n${dossier.checklist}\n\n## 3. Guide de dépôt en mairie\n\n${dossier.guide_depot}`
+    // Sauvegarde en base — rapport = note_descriptive (principal) + éléments CERFA
+    const rapportComplet = `## Note descriptive du projet\n\n${note_descriptive}\n\n## Éléments CERFA pré-remplis\n\n${elements_cerfa}`
 
     if (id) {
-      await supabase.from('analyses').update({ rapport: rapportComplet }).eq('id', id)
+      await supabase.from('analyses').update({ rapport: rapportComplet, statut: 'payee' }).eq('id', id)
     }
 
-    return NextResponse.json({ ...dossier, rapport: rapportComplet })
+    return NextResponse.json({
+      note_descriptive,
+      elements_cerfa,
+      rapport: rapportComplet,
+      // Compatibilité avec l'ancien format
+      checklist: '',
+      guide_depot: '',
+    })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
   }

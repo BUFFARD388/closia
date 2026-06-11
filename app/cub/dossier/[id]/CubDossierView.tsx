@@ -1,196 +1,110 @@
 'use client'
 
+import { useState } from 'react'
+import { CheckCircle, FileText, Camera, AlertTriangle } from 'lucide-react'
+
 export default function CubDossierView({ dossier }: { dossier: any }) {
+  const [validating, setValidating] = useState(false)
+  const [validated, setValidated] = useState(dossier.statut === 'validee')
+  const [error, setError] = useState('')
 
-  function renderInline(text: string): string {
-    return text
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.+?)\*/g, '<em>$1</em>')
-  }
-
-  function renderLines(lines: string[]): string {
-    let html = ''
-    let inList = false
-    let inTable = false
-    let tableRows: string[][] = []
-
-    function flushTable() {
-      if (!tableRows.length) return
-      const header = tableRows[0]
-      const body = tableRows.slice(2)
-      html += '<table><thead><tr>' + header.map(c => `<th>${renderInline(c)}</th>`).join('') + '</tr></thead><tbody>'
-      body.forEach(row => { html += '<tr>' + row.map(c => `<td>${renderInline(c)}</td>`).join('') + '</tr>' })
-      html += '</tbody></table>'
-      tableRows = []
-      inTable = false
-    }
-
-    for (const line of lines) {
-      const t = line.trim()
-      if (t.startsWith('|') && t.endsWith('|')) {
-        if (inList) { html += '</ul>'; inList = false }
-        inTable = true
-        const cells = t.slice(1, -1).split('|').map(c => c.trim())
-        if (!cells.every(c => /^[-:| ]+$/.test(c))) tableRows.push(cells)
-        continue
-      }
-      if (inTable) flushTable()
-      if (!t) { if (inList) { html += '</ul>'; inList = false } continue }
-      if (/^#{1,3}\s/.test(t)) {
-        if (inList) { html += '</ul>'; inList = false }
-        html += `<h4>${renderInline(t.replace(/^#{1,3}\s+/, ''))}</h4>`
-      } else if (/^[-•*]\s+/.test(t)) {
-        if (!inList) { html += '<ul>'; inList = true }
-        html += `<li>${renderInline(t.replace(/^[-•*]\s+/, ''))}</li>`
-      } else if (/^\d+\.\s/.test(t)) {
-        if (inList) { html += '</ul>'; inList = false }
-        html += `<p class="numbered">${renderInline(t)}</p>`
-      } else if (t.startsWith('>')) {
-        if (inList) { html += '</ul>'; inList = false }
-        html += `<blockquote>${renderInline(t.replace(/^>\s*/, ''))}</blockquote>`
-      } else {
-        if (inList) { html += '</ul>'; inList = false }
-        html += `<p>${renderInline(t)}</p>`
-      }
-    }
-    if (inTable) flushTable()
-    if (inList) html += '</ul>'
-    return html
-  }
-
-  // Découper le rapport en 3 sections
+  // Extraire la note descriptive du rapport
   const rapport = dossier.rapport || ''
-  const sec1Match = rapport.match(/##\s*1[.)]\s*Note descriptive[^\n]*\n([\s\S]*?)(?=##\s*2[.)]|$)/i)
-  const sec2Match = rapport.match(/##\s*2[.)]\s*Check[^\n]*\n([\s\S]*?)(?=##\s*3[.)]|$)/i)
-  const sec3Match = rapport.match(/##\s*3[.)]\s*Guide[^\n]*\n([\s\S]*?)$/i)
+  const noteMatch = rapport.match(/## Note descriptive[^\n]*\n([\s\S]*?)(?=## Éléments CERFA|$)/i)
+  const cerfahMatch = rapport.match(/## Éléments CERFA[^\n]*\n([\s\S]*?)$/i)
+  const noteDescriptive = noteMatch?.[1]?.trim() || rapport.trim()
+  const elementsCerfa = cerfahMatch?.[1]?.trim() || ''
 
-  const sections = [
-    { num: '1', title: 'Note descriptive du projet', content: sec1Match?.[1]?.trim() || '', color: '#c29a6b' },
-    { num: '2', title: 'Check-list des pièces à joindre', content: sec2Match?.[1]?.trim() || '', color: '#60a5fa' },
-    { num: '3', title: 'Guide de dépôt en mairie', content: sec3Match?.[1]?.trim() || '', color: '#34d399' },
-  ]
+  const photos: string[] = Array.isArray(dossier.fichiers) ? dossier.fichiers : []
 
-  const logoUrl = typeof window !== 'undefined' ? window.location.origin + '/logo.png' : 'https://closia.net/logo.png'
-
-  function imprimer() {
-    const w = window.open('', '_blank')!
-    const sectionsHtml = sections.map(s => `
-      <div class="section-block">
-        <div class="section-header" style="border-left:4px solid ${s.color};">
-          <div class="section-num" style="background:${s.color};">${s.num}</div>
-          <div class="section-title">${s.title}</div>
-        </div>
-        <div class="section-body">${renderLines(s.content.split('\n'))}</div>
-      </div>
-    `).join('')
-
-    w.document.write(`<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8"/>
-  <title>Dossier CUb — ${dossier.adresse}</title>
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:Arial,Helvetica,sans-serif;color:#1a1a2e;background:#fff;font-size:13px;line-height:1.75}
-    .cover{background:linear-gradient(135deg,#0b1220 0%,#1b2a4a 100%);padding:36px 56px 32px;color:#fff;display:flex;align-items:center;justify-content:space-between}
-    .cover-logo{height:48px;margin-bottom:16px;display:block}
-    .cover-title{font-size:18px;font-weight:600;color:#fff;margin-bottom:4px}
-    .cover-sub{font-size:10px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:1.5px}
-    .cover-badge{background:rgba(194,154,107,.12);border:1px solid rgba(194,154,107,.35);border-radius:6px;padding:10px 18px;text-align:center}
-    .cover-badge-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.5);margin-bottom:4px}
-    .cover-badge-date{font-size:13px;font-weight:600;color:#c29a6b}
-    .info-strip{background:#f7f5f0;border-bottom:1px solid #e8e2d5;padding:20px 56px}
-    .info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-    .info-item{background:#fff;border:1px solid #e8e2d5;border-radius:6px;padding:10px 12px}
-    .info-item.wide{grid-column:1/-1}
-    .info-label{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:#9ca3af;margin-bottom:2px}
-    .info-value{font-size:12px;font-weight:600;color:#1a1a2e}
-    .content{padding:32px 56px 48px}
-    .section-block{margin-bottom:28px;page-break-inside:auto}
-    .section-header{display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:8px 12px;background:#f7f5f0;border-radius:6px;page-break-after:avoid}
-    .section-num{background:#c29a6b;color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
-    .section-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#1a1a2e}
-    .section-body{color:#374151;font-size:12.5px;line-height:1.8;padding:0 4px}
-    .section-body p{margin-bottom:8px}
-    .section-body h4{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#1a1a2e;margin:14px 0 6px;font-weight:700}
-    .section-body ul{padding-left:18px;margin-bottom:8px}
-    .section-body li{margin-bottom:4px}
-    .section-body blockquote{border-left:3px solid #c29a6b;padding:6px 12px;background:#fffdf9;color:#6b7280;font-size:11px;font-style:italic;margin:8px 0}
-    .section-body table{width:100%;border-collapse:collapse;margin:10px 0;font-size:11px;page-break-inside:auto}
-    .section-body th{background:#1a1a2e;color:#fff;text-align:left;padding:7px 10px;font-size:10px;text-transform:uppercase;letter-spacing:0.5px}
-    .section-body td{padding:6px 10px;border-bottom:1px solid #e8e2d5;color:#374151;vertical-align:top}
-    .section-body tr{page-break-inside:avoid}
-    .section-body tr:nth-child(even) td{background:#f7f5f0}
-    .footer{padding:14px 56px;background:#f7f5f0;border-top:1px solid #e8e2d5;display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#9ca3af}
-    .footer-brand{font-weight:600;color:#c29a6b;letter-spacing:2px;font-size:11px}
-    .confidential{background:#fff8ed;border:1px solid rgba(194,154,107,.4);border-radius:4px;padding:2px 8px;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#c29a6b;font-weight:700}
-    @media print{
-      body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-      .section-header{page-break-after:avoid;break-after:avoid}
-      .section-body tr{page-break-inside:avoid;break-inside:avoid}
-      @page{margin:1.2cm 1.5cm}
+  async function valider() {
+    setValidating(true)
+    setError('')
+    try {
+      const res = await fetch('/api/cub/valider', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ analyseId: dossier.id }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Erreur lors de la validation')
+      setValidated(true)
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setValidating(false)
     }
-  </style>
-</head>
-<body>
-<div class="cover">
-  <div>
-    <img src="${logoUrl}" class="cover-logo" onerror="this.style.display='none'"/>
-    <div class="cover-title">Dossier Certificat d'Urbanisme Opérationnel</div>
-    <div class="cover-sub">Document confidentiel — Usage exclusif du destinataire</div>
-  </div>
-  <div class="cover-badge">
-    <div class="cover-badge-label">Généré le</div>
-    <div class="cover-badge-date">${new Date().toLocaleDateString('fr-FR')}</div>
-  </div>
-</div>
-<div class="info-strip">
-  <div class="info-grid">
-    <div class="info-item"><div class="info-label">Demandeur</div><div class="info-value">${dossier.nom}</div></div>
-    <div class="info-item"><div class="info-label">Type de projet</div><div class="info-value">${dossier.type_bien || '—'}</div></div>
-    <div class="info-item"><div class="info-label">Date</div><div class="info-value">${new Date(dossier.created_at).toLocaleDateString('fr-FR')}</div></div>
-    ${dossier.parcelle ? `<div class="info-item"><div class="info-label">Référence cadastrale</div><div class="info-value">${dossier.parcelle}</div></div>` : ''}
-    ${dossier.surface ? `<div class="info-item"><div class="info-label">Surface envisagée</div><div class="info-value">${dossier.surface} m²</div></div>` : ''}
-    <div class="info-item wide"><div class="info-label">Parcelle concernée</div><div class="info-value">${dossier.adresse}</div></div>
-  </div>
-</div>
-<div class="content">${sectionsHtml}</div>
-<div class="footer">
-  <div class="footer-brand">CLOSIA</div>
-  <div>contact@closia.net · 06 87 76 33 40 · closia.net</div>
-  <div class="confidential">Confidentiel</div>
-</div>
-</body></html>`)
-    w.document.close()
-    w.print()
   }
 
-  return (
-    <div className="min-h-screen bg-[#0b1220] text-white">
-      {/* Header */}
-      <div className="bg-[#111720] border-b border-white/10 px-6 py-4 flex items-center justify-between print-btn">
-        <div className="flex items-center gap-4">
+  if (validated) {
+    return (
+      <div className="min-h-screen bg-[#0b1220] text-white flex flex-col">
+        <div className="bg-[#111720] border-b border-white/10 px-6 py-4 flex items-center gap-4">
           <img src="/logo.png" alt="Closia" className="h-9" />
           <div>
             <div className="text-xs text-[#c29a6b] uppercase tracking-widest">Dossier CUb</div>
             <div className="text-sm font-semibold">{dossier.nom}</div>
           </div>
         </div>
-        <button onClick={imprimer}
-          className="flex items-center gap-2 text-sm bg-[#c29a6b] text-black font-semibold px-5 py-2.5 rounded-xl hover:bg-[#b8895a] transition-colors">
-          Télécharger / Imprimer PDF
-        </button>
+        <div className="flex-1 flex items-center justify-center px-6">
+          <div className="max-w-md text-center">
+            <div className="w-20 h-20 rounded-full bg-green-500/15 border border-green-500/30 flex items-center justify-center mx-auto mb-6">
+              <CheckCircle className="w-10 h-10 text-green-400" />
+            </div>
+            <h1 className="text-2xl font-bold mb-3">Dossier validé ✓</h1>
+            <p className="text-gray-400 leading-relaxed mb-6">
+              Merci pour votre validation. Le dossier CUb pour le bien situé{' '}
+              <strong className="text-white">{dossier.adresse}</strong> va être déposé en mairie.
+            </p>
+            <div className="bg-[#111720] border border-white/10 rounded-xl p-4 text-sm text-gray-400 text-left">
+              <p className="text-[#c29a6b] font-semibold mb-2 text-xs uppercase tracking-widest">Prochaines étapes</p>
+              <p className="mb-2">1. Dépôt officiel du dossier en mairie sous 48h</p>
+              <p className="mb-2">2. Accusé de réception mairie (sous 15 jours)</p>
+              <p>3. Décision dans un délai de <strong className="text-white">2 mois</strong> à compter du dépôt</p>
+            </div>
+            <p className="mt-6 text-xs text-gray-600">
+              Pour toute question : <a href="mailto:contact@closia.net" className="text-[#c29a6b]">contact@closia.net</a> · 06 87 76 33 40
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-[#0b1220] text-white">
+      {/* Header */}
+      <div className="bg-[#111720] border-b border-white/10 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <img src="/logo.png" alt="Closia" className="h-9" />
+          <div>
+            <div className="text-xs text-[#c29a6b] uppercase tracking-widest">Dossier CUb — Validation</div>
+            <div className="text-sm font-semibold">{dossier.nom}</div>
+          </div>
+        </div>
       </div>
 
-      {/* Contenu */}
-      <div className="max-w-4xl mx-auto px-6 py-10 space-y-8">
-        {/* Infos */}
+      <div className="max-w-3xl mx-auto px-6 py-10 space-y-8">
+
+        {/* Bandeau d'instruction */}
+        <div className="bg-[#c29a6b]/10 border border-[#c29a6b]/40 rounded-2xl p-5 flex gap-4">
+          <AlertTriangle className="w-5 h-5 text-[#c29a6b] flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold text-[#c29a6b] mb-1">Action requise — Validation avant dépôt</p>
+            <p className="text-sm text-gray-300 leading-relaxed">
+              Veuillez relire le dossier ci-dessous et vérifier que les informations sont exactes.
+              Cliquez sur <strong className="text-white">« Je valide le dossier »</strong> en bas de page pour autoriser
+              le dépôt officiel en mairie. Le dépôt sera effectué sous 48h après votre confirmation.
+            </p>
+          </div>
+        </div>
+
+        {/* Infos parcelle */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
             { label: 'Demandeur', val: dossier.nom },
-            { label: 'Projet', val: dossier.type_bien || '—' },
-            { label: 'Parcelle', val: dossier.parcelle || '—' },
+            { label: 'Type de projet', val: dossier.type_bien || '—' },
+            { label: 'Référence cadastrale', val: dossier.parcelle || '—' },
             { label: 'Adresse', val: dossier.adresse },
           ].map(i => (
             <div key={i.label} className="bg-[#111720] border border-white/10 rounded-xl p-3">
@@ -200,19 +114,79 @@ export default function CubDossierView({ dossier }: { dossier: any }) {
           ))}
         </div>
 
-        {/* Sections */}
-        {sections.map(s => (
-          <div key={s.num} className="bg-[#111720] border border-white/10 rounded-2xl overflow-hidden">
-            <div className="flex items-center gap-3 px-6 py-4 border-b border-white/10" style={{ borderLeftWidth: 4, borderLeftColor: s.color }}>
-              <div className="w-7 h-7 rounded-full flex items-center justify-center text-black text-xs font-bold flex-shrink-0" style={{ background: s.color }}>
-                {s.num}
-              </div>
-              <h2 className="font-bold text-sm uppercase tracking-widest">{s.title}</h2>
+        {/* Photos transmises */}
+        {photos.length > 0 && (
+          <div className="bg-[#111720] border border-white/10 rounded-2xl overflow-hidden">
+            <div className="flex items-center gap-3 px-6 py-4 border-b border-white/10" style={{ borderLeft: '4px solid #6b7280' }}>
+              <Camera className="w-4 h-4 text-gray-400" />
+              <h2 className="font-bold text-sm uppercase tracking-widest text-gray-400">Photos transmises ({photos.length})</h2>
             </div>
-            <div className="px-6 py-5 prose prose-sm prose-invert max-w-none text-gray-300 leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: renderLines(s.content.split('\n')) }} />
+            <div className="p-5 grid grid-cols-3 gap-3">
+              {photos.map((url, i) => (
+                <a key={i} href={url} target="_blank" rel="noreferrer">
+                  <img src={url} alt={`Photo ${i + 1}`} className="w-full h-32 object-cover rounded-lg border border-white/10 hover:border-[#c29a6b]/40 transition-colors" />
+                </a>
+              ))}
+            </div>
           </div>
-        ))}
+        )}
+
+        {/* Note descriptive */}
+        <div className="bg-[#111720] border border-white/10 rounded-2xl overflow-hidden">
+          <div className="flex items-center gap-3 px-6 py-4 border-b border-white/10" style={{ borderLeft: '4px solid #c29a6b' }}>
+            <FileText className="w-4 h-4 text-[#c29a6b]" />
+            <h2 className="font-bold text-sm uppercase tracking-widest">Note descriptive du projet</h2>
+          </div>
+          <div className="px-6 py-5 text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
+            {noteDescriptive}
+          </div>
+        </div>
+
+        {/* Éléments CERFA */}
+        {elementsCerfa && (
+          <div className="bg-[#111720] border border-white/10 rounded-2xl overflow-hidden">
+            <div className="flex items-center gap-3 px-6 py-4 border-b border-white/10" style={{ borderLeft: '4px solid #60a5fa' }}>
+              <FileText className="w-4 h-4 text-blue-400" />
+              <h2 className="font-bold text-sm uppercase tracking-widest">Informations CERFA</h2>
+            </div>
+            <div className="px-6 py-5 text-gray-300 text-sm leading-relaxed font-mono whitespace-pre-wrap">
+              {elementsCerfa}
+            </div>
+          </div>
+        )}
+
+        {/* Bloc de validation */}
+        <div className="bg-[#111720] border border-[#c29a6b]/30 rounded-2xl p-6">
+          <p className="text-sm text-gray-400 leading-relaxed mb-4">
+            En cliquant sur <strong className="text-white">« Je valide le dossier »</strong>, vous confirmez que les informations
+            ci-dessus sont exactes et autorisez Laurent Buffard (Closia) à procéder au dépôt officiel
+            de votre demande de Certificat d'Urbanisme Opérationnel en mairie.
+          </p>
+
+          {error && (
+            <p className="text-red-400 text-sm mb-4">⚠️ {error}</p>
+          )}
+
+          <button
+            onClick={valider}
+            disabled={validating}
+            className="w-full flex items-center justify-center gap-3 py-4 bg-[#c29a6b] hover:bg-[#b8895a] text-black font-bold text-base rounded-xl transition-colors disabled:opacity-50"
+          >
+            {validating ? (
+              <span>Validation en cours…</span>
+            ) : (
+              <>
+                <CheckCircle className="w-5 h-5" />
+                Je valide le dossier — Autoriser le dépôt
+              </>
+            )}
+          </button>
+
+          <p className="text-center text-xs text-gray-600 mt-3">
+            Délai d'instruction mairie : 2 mois à compter du dépôt
+          </p>
+        </div>
+
       </div>
     </div>
   )

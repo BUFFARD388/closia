@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { CheckCircle, AlertCircle, Loader2, FileText, ArrowRight, X, ClipboardCheck, MapPin, Clock } from 'lucide-react'
+import { CheckCircle, AlertCircle, Loader2, FileText, ArrowRight, X, ClipboardCheck, MapPin, Clock, Camera } from 'lucide-react'
 
 const TYPE_PROJETS = [
   'Maison individuelle',
@@ -25,6 +25,7 @@ function CubContent() {
     type_projet: '', surface: '', description: '', plu_info: '',
     objectif: '',
   })
+  const [photos, setPhotos] = useState<File[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -33,11 +34,16 @@ function CubContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (photos.length === 0) {
+      setError('Veuillez joindre au moins une photo du terrain ou du bien.')
+      return
+    }
     setLoading(true)
     setError('')
     try {
       const fd = new FormData()
       Object.entries(form).forEach(([k, v]) => fd.append(k, v))
+      photos.forEach(f => fd.append('photos', f))
       const res = await fetch('/api/stripe/cub-checkout', { method: 'POST', body: fd })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
@@ -58,14 +64,13 @@ function CubContent() {
           </div>
           <h1 className="text-2xl font-bold text-white mb-3">Paiement confirmé !</h1>
           <p className="text-gray-400 leading-relaxed mb-4">
-            Votre dossier CUb est en cours de préparation. Vous serez contacté
-            <strong className="text-white"> sous 48h</strong> pour valider les plans et le CERFA avant dépôt officiel.
+            Votre demande est bien enregistrée. Laurent vous contactera
+            <strong className="text-white"> sous 48h</strong> pour vous soumettre le dossier préparé et valider les éléments avant dépôt officiel en mairie.
           </p>
           <div className="bg-[#111720] border border-[#c29a6b]/20 rounded-xl p-5 text-left text-sm text-gray-300 space-y-3 mb-8">
-            <p className="flex items-start gap-2"><span className="text-[#c29a6b] flex-shrink-0">01</span> CERFA 13410 complété et prêt à signer</p>
-            <p className="flex items-start gap-2"><span className="text-[#c29a6b] flex-shrink-0">02</span> Plans avec insertion cadastrale réalisés</p>
-            <p className="flex items-start gap-2"><span className="text-[#c29a6b] flex-shrink-0">03</span> Échange de validation avant envoi officiel</p>
-            <p className="flex items-start gap-2"><span className="text-[#c29a6b] flex-shrink-0">04</span> Dépôt en mairie pris en charge</p>
+            <p className="flex items-start gap-2"><span className="text-[#c29a6b] flex-shrink-0">01</span> Préparation du dossier CERFA + plans</p>
+            <p className="flex items-start gap-2"><span className="text-[#c29a6b] flex-shrink-0">02</span> Envoi pour relecture et validation</p>
+            <p className="flex items-start gap-2"><span className="text-[#c29a6b] flex-shrink-0">03</span> Dépôt officiel en mairie après validation</p>
             <div className="border-t border-white/10 pt-3 mt-3">
               <p className="text-xs text-gray-500">⏱ Délai d'instruction par la mairie : <strong className="text-gray-300">2 mois</strong> à partir du dépôt</p>
             </div>
@@ -122,12 +127,12 @@ function CubContent() {
           <div className="bg-[#111720] border border-[#c29a6b]/20 rounded-xl p-5">
             <div className="text-[#c29a6b] mb-3"><ClipboardCheck className="w-5 h-5" /></div>
             <p className="text-sm font-semibold text-white mb-1">Valider un projet avant construction</p>
-            <p className="text-xs text-gray-500 leading-relaxed">Obtenez une réponse officielle de la mairie sur la faisabilité de votre projet (division, construction, changement de destination…)</p>
+            <p className="text-xs text-gray-500 leading-relaxed">Obtenez une réponse officielle de la mairie sur la faisabilité de votre projet.</p>
           </div>
           <div className="bg-[#111720] border border-white/10 rounded-xl p-5">
             <div className="text-gray-400 mb-3"><MapPin className="w-5 h-5" /></div>
             <p className="text-sm font-semibold text-white mb-1">Sécuriser une vente avant achat</p>
-            <p className="text-xs text-gray-500 leading-relaxed">Votre client veut savoir si un terrain ou bien est réellement valorisable avant de s'engager ? Le CUb est la réponse officielle.</p>
+            <p className="text-xs text-gray-500 leading-relaxed">Votre client veut savoir si un terrain est valorisable avant de s'engager.</p>
           </div>
         </div>
 
@@ -138,7 +143,7 @@ function CubContent() {
             {[
               { n: '01', title: 'CERFA 13410 complété', desc: 'Nous remplissons l\'intégralité du formulaire réglementaire selon votre projet.' },
               { n: '02', title: 'Plans avec insertion cadastrale', desc: 'Réalisation des plans de situation et de masse intégrés au cadastre.' },
-              { n: '03', title: 'Validation par votre client', desc: 'Échange avec vous (et votre client si besoin) pour valider les documents avant dépôt.' },
+              { n: '03', title: 'Validation par votre client', desc: 'Échange avec vous pour valider les documents avant dépôt officiel.' },
               { n: '04', title: 'Dépôt officiel en mairie', desc: 'Nous déposons le dossier complet. Délai d\'instruction : 2 mois.' },
             ].map(step => (
               <div key={step.n} className="flex items-start gap-4">
@@ -152,7 +157,7 @@ function CubContent() {
           </div>
           <div className="mt-5 pt-5 border-t border-white/10 flex items-center gap-2 text-xs text-gray-500">
             <Clock className="w-3.5 h-3.5 text-[#c29a6b] flex-shrink-0" />
-            <span>Délai d'instruction mairie : <strong className="text-gray-300">2 mois</strong> à compter du dépôt. Le CUb peut aussi servir uniquement à valider la faisabilité avant engagement.</span>
+            <span>Délai d'instruction mairie : <strong className="text-gray-300">2 mois</strong> à compter du dépôt.</span>
           </div>
         </div>
 
@@ -222,7 +227,6 @@ function CubContent() {
             {/* Projet */}
             <div className="border-t border-white/10 pt-6">
               <p className="text-xs text-[#c29a6b] uppercase tracking-widest mb-4">Votre projet</p>
-
               <div className="mb-4">
                 <label className="block text-sm text-gray-400 mb-1.5">Objectif principal *</label>
                 <select className="input w-full" required value={form.objectif} onChange={set('objectif')}>
@@ -230,9 +234,7 @@ function CubContent() {
                   <option value="Valider faisabilité avant vente">Valider la faisabilité avant une vente / acquisition</option>
                   <option value="Déposer pour construire">Déposer pour autoriser un projet de construction</option>
                 </select>
-                <p className="text-xs text-gray-600 mt-1">Le CUb peut servir uniquement à valider un potentiel, sans projet de construction immédiat.</p>
               </div>
-
               <div className="mb-4">
                 <label className="block text-sm text-gray-400 mb-1.5">Type de projet *</label>
                 <select className="input w-full" required value={form.type_projet} onChange={set('type_projet')}>
@@ -254,13 +256,73 @@ function CubContent() {
                   Informations PLU connues <span className="text-gray-600">(optionnel)</span>
                 </label>
                 <textarea className="input w-full min-h-[80px] resize-none" value={form.plu_info} onChange={set('plu_info')}
-                  placeholder="Ex : zone UA, secteur protégé, servitudes connues, PPRI… (toute info utile pour personnaliser le dossier)" />
+                  placeholder="Ex : zone UA, secteur protégé, servitudes connues, PPRI…" />
               </div>
+            </div>
+
+            {/* Photos — OBLIGATOIRE */}
+            <div className="border-t border-white/10 pt-6">
+              <p className="text-xs text-[#c29a6b] uppercase tracking-widest mb-1">Photos du terrain / bien</p>
+              <p className="text-xs text-gray-500 mb-4">
+                <span className="text-red-400 font-semibold">Obligatoire</span> — requis pour le dossier de dépôt en mairie. Joignez des photos de l'ensemble de la parcelle (façades, limites, accès, environnement proche).
+              </p>
+
+              <div
+                onClick={() => document.getElementById('cub-photos')?.click()}
+                className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors ${photos.length === 0 ? 'border-red-500/30 hover:border-red-500/60' : 'border-[#c29a6b]/40 hover:border-[#c29a6b]/70'}`}
+              >
+                <input
+                  id="cub-photos"
+                  type="file"
+                  multiple
+                  accept=".jpg,.jpeg,.png,.webp"
+                  className="hidden"
+                  onChange={e => {
+                    if (e.target.files) setPhotos(prev => [...prev, ...Array.from(e.target.files!)])
+                  }}
+                />
+                <Camera className={`w-8 h-8 mx-auto mb-3 ${photos.length === 0 ? 'text-red-400/50' : 'text-[#c29a6b]/50'}`} />
+                <p className="text-sm text-gray-400">Cliquez pour ajouter des photos</p>
+                <p className="text-xs text-gray-600 mt-1">JPG, PNG, WEBP · Plusieurs fichiers acceptés</p>
+              </div>
+
+              {photos.length > 0 && (
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  {photos.map((f, i) => (
+                    <div key={i} className="relative group">
+                      <img
+                        src={URL.createObjectURL(f)}
+                        alt={f.name}
+                        className="w-full h-24 object-cover rounded-lg border border-white/10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setPhotos(prev => prev.filter((_, idx) => idx !== i))}
+                        className="absolute top-1 right-1 bg-black/70 rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-3 h-3 text-white" />
+                      </button>
+                    </div>
+                  ))}
+                  <div
+                    onClick={() => document.getElementById('cub-photos')?.click()}
+                    className="h-24 border-2 border-dashed border-white/20 rounded-lg flex items-center justify-center cursor-pointer hover:border-white/40 transition-colors"
+                  >
+                    <span className="text-xs text-gray-500">+ Ajouter</span>
+                  </div>
+                </div>
+              )}
+
+              {photos.length === 0 && (
+                <p className="text-xs text-red-400 mt-2 flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" /> Au moins une photo est requise pour valider la demande
+                </p>
+              )}
             </div>
 
             <div className="bg-[#c29a6b]/5 border border-[#c29a6b]/20 rounded-xl p-4 text-xs text-gray-400 leading-relaxed">
               <p className="text-[#c29a6b] font-medium mb-1">Comment ça se passe après le paiement ?</p>
-              Nous préparons votre dossier (CERFA + plans cadastraux) et vous revenons sous 48h pour une validation avant dépôt. Vous pouvez impliquer votre client final dans cet échange. Une fois validé, nous déposons en mairie — délai d'instruction : <strong className="text-gray-300">2 mois</strong>.
+              Nous préparons votre dossier (CERFA + plans cadastraux) et vous revenons sous 48h pour une validation avant dépôt. Une fois validé, nous déposons en mairie — délai d'instruction : <strong className="text-gray-300">2 mois</strong>.
             </div>
 
             {error && (

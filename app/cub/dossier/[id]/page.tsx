@@ -10,7 +10,7 @@ const supabase = createClient(
 export default async function CubDossierPage({ params }: { params: { id: string } }) {
   const { data } = await supabase
     .from('analyses')
-    .select('nom, email, adresse, cp, ville, parcelle, type_bien, surface, description, rapport, created_at')
+    .select('id, nom, email, adresse, cp, ville, parcelle, type_bien, surface, description, rapport, fichiers, statut, created_at')
     .eq('id', params.id)
     .eq('type', 'cub')
     .single()

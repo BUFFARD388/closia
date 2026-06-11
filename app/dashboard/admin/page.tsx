@@ -131,6 +131,9 @@ export default function DashboardAdmin() {
     if (!selectedCub) return
     setGeneratingCub(true)
     try {
+      const msgParts = (selectedCub.message || '').split('\n---\n')
+      const objectif = msgParts[0] || ''
+      const plu_info = msgParts[1] || ''
       const res = await fetch('/api/cub/generate-dossier', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -142,20 +145,131 @@ export default function DashboardAdmin() {
           ville: selectedCub.ville,
           parcelle: selectedCub.parcelle,
           type_projet: selectedCub.type_bien,
+          objectif,
           surface: selectedCub.surface,
           description: selectedCub.description,
-          plu_info: selectedCub.message,
+          plu_info,
         }),
       })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
-      setCubDossier({ note_descriptive: data.note_descriptive, checklist: data.checklist, guide_depot: data.guide_depot })
+      setCubDossier({ note_descriptive: data.note_descriptive, checklist: data.elements_cerfa || '', guide_depot: '' })
       await loadCubs()
     } catch (err: any) {
       alert('Erreur génération CUb : ' + err.message)
     } finally {
       setGeneratingCub(false)
     }
+  }
+
+  function telechargerCerfaCub() {
+    if (!selectedCub) return
+    const note = cubDossier?.note_descriptive || selectedCub.rapport?.replace(/##.*\n/g, '').trim() || ''
+    const cerfa = cubDossier?.checklist || ''
+    const logoUrl = window.location.origin + '/logo.png'
+    const w = window.open('', '_blank')!
+    w.document.write(`<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <title>CERFA 13410 — ${selectedCub.adresse}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#1a1a2e;background:#fff;line-height:1.6}
+    .header{background:#0b1220;padding:20px 40px;display:flex;align-items:center;justify-content:space-between;color:#fff}
+    .header img{height:36px}
+    .header-title{font-size:14px;font-weight:700;color:#c29a6b}
+    .header-sub{font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:1px}
+    .body{padding:32px 40px}
+    .cerfa-title{text-align:center;margin-bottom:24px}
+    .cerfa-title h1{font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;border:2px solid #1a1a2e;padding:8px 16px;display:inline-block}
+    .cerfa-title p{font-size:10px;color:#6b7280;margin-top:4px}
+    .section{margin-bottom:20px;border:1px solid #d1d5db;border-radius:4px;overflow:hidden}
+    .section-header{background:#f3f4f6;padding:6px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#374151;border-bottom:1px solid #d1d5db}
+    .section-body{padding:12px}
+    .field{display:grid;grid-template-columns:200px 1fr;gap:8px;margin-bottom:8px;align-items:start}
+    .field-label{font-size:10px;color:#6b7280;font-weight:600;padding-top:1px}
+    .field-value{font-size:11px;color:#1a1a2e;border-bottom:1px solid #d1d5db;padding-bottom:3px;min-height:18px}
+    .note-block{background:#fffdf9;border:1px solid rgba(194,154,107,.3);border-radius:4px;padding:14px;margin-top:8px}
+    .note-label{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:#c29a6b;font-weight:700;margin-bottom:8px}
+    .note-text{font-size:11.5px;color:#374151;line-height:1.8;white-space:pre-wrap}
+    .footer{padding:12px 40px;background:#f3f4f6;border-top:1px solid #d1d5db;display:flex;justify-content:space-between;font-size:10px;color:#9ca3af}
+    @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{margin:1cm 1.5cm}}
+  </style>
+</head>
+<body>
+<div class="header">
+  <div><img src="${logoUrl}" onerror="this.style.display='none'"/></div>
+  <div style="text-align:right">
+    <div class="header-title">CERFA 13410 — Demande de CUb</div>
+    <div class="header-sub">Certificat d'Urbanisme Opérationnel · Préparé le ${new Date().toLocaleDateString('fr-FR')}</div>
+  </div>
+</div>
+<div class="body">
+  <div class="cerfa-title">
+    <h1>Demande de Certificat d'Urbanisme Opérationnel</h1>
+    <p>Article L410-1 b du Code de l'urbanisme — CERFA n° 13410</p>
+  </div>
+
+  <div class="section">
+    <div class="section-header">1. Identité du demandeur</div>
+    <div class="section-body">
+      <div class="field"><span class="field-label">Nom et prénom</span><span class="field-value">${selectedCub.nom}</span></div>
+      ${selectedCub.societe ? `<div class="field"><span class="field-label">Société</span><span class="field-value">${selectedCub.societe}</span></div>` : ''}
+      <div class="field"><span class="field-label">Email</span><span class="field-value">${selectedCub.email}</span></div>
+      <div class="field"><span class="field-label">Téléphone</span><span class="field-value">${selectedCub.tel || '—'}</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">2. Terrain concerné</div>
+    <div class="section-body">
+      <div class="field"><span class="field-label">Adresse</span><span class="field-value">${selectedCub.adresse}</span></div>
+      <div class="field"><span class="field-label">Commune</span><span class="field-value">${selectedCub.ville} (${selectedCub.cp})</span></div>
+      <div class="field"><span class="field-label">Référence cadastrale</span><span class="field-value">${selectedCub.parcelle || '[À compléter]'}</span></div>
+      ${selectedCub.surface ? `<div class="field"><span class="field-label">Surface de plancher envisagée</span><span class="field-value">${selectedCub.surface} m²</span></div>` : ''}
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">3. Description du projet envisagé</div>
+    <div class="section-body">
+      <div class="field"><span class="field-label">Type de projet</span><span class="field-value">${selectedCub.type_bien || '—'}</span></div>
+      <div class="note-block">
+        <div class="note-label">Note descriptive (rubrique CERFA)</div>
+        <div class="note-text">${note.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+      </div>
+    </div>
+  </div>
+
+  ${cerfa ? `<div class="section">
+    <div class="section-header">4. Éléments complémentaires</div>
+    <div class="section-body">
+      <div class="note-text" style="white-space:pre-wrap;font-size:11px;color:#374151">${cerfa.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+    </div>
+  </div>` : ''}
+
+  <div class="section" style="margin-top:32px">
+    <div class="section-header">Signatures</div>
+    <div class="section-body" style="display:grid;grid-template-columns:1fr 1fr;gap:32px;padding:20px">
+      <div>
+        <p style="font-size:10px;color:#6b7280;margin-bottom:24px;">Le demandeur (ou son mandataire)</p>
+        <div style="border-top:1px solid #d1d5db;padding-top:4px;font-size:10px;color:#9ca3af;">Signature + date</div>
+      </div>
+      <div>
+        <p style="font-size:10px;color:#6b7280;margin-bottom:24px;">Préparé par : Laurent Buffard — Closia</p>
+        <div style="border-top:1px solid #d1d5db;padding-top:4px;font-size:10px;color:#9ca3af;">contact@closia.net · 06 87 76 33 40</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="footer">
+  <span>CLOSIA · closia.net</span>
+  <span>Document préparé le ${new Date().toLocaleDateString('fr-FR')} · Confidentiel</span>
+</div>
+</body></html>`)
+    w.document.close()
+    w.print()
   }
 
   async function envoyerCub() {
@@ -1004,9 +1118,35 @@ ${selectedAnalyse.description ? `
                 </div>
               )}
               {selectedCub.message && (
+                <div className="mb-4">
+                  {(() => {
+                    const parts = (selectedCub.message || '').split('\n---\n')
+                    const objectif = parts[0]
+                    const plu = parts[1]
+                    return (
+                      <>
+                        {objectif && <div className="mb-2"><span className="text-xs text-gray-500 uppercase tracking-widest mr-2">Objectif :</span><span className="text-sm text-gray-300">{objectif}</span></div>}
+                        {plu && <div><span className="text-xs text-gray-500 uppercase tracking-widest mr-2">PLU :</span><span className="text-sm text-gray-400 italic">{plu}</span></div>}
+                      </>
+                    )
+                  })()}
+                </div>
+              )}
+
+              {/* Photos du client */}
+              {Array.isArray(selectedCub.fichiers) && selectedCub.fichiers.length > 0 && (
                 <div className="mb-6">
-                  <p className="text-xs text-gray-500 uppercase tracking-widest mb-2">Infos PLU transmises</p>
-                  <p className="text-sm text-gray-400 italic">{selectedCub.message}</p>
+                  <p className="text-xs text-gray-500 uppercase tracking-widest mb-3">Photos transmises ({selectedCub.fichiers.length})</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {selectedCub.fichiers.map((url: string, i: number) => (
+                      <a key={i} href={url} target="_blank" rel="noreferrer" className="relative group block">
+                        <img src={url} alt={`Photo ${i + 1}`} className="w-full h-24 object-cover rounded-lg border border-white/10 group-hover:border-[#c29a6b]/40 transition-colors" />
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
+                          <Download className="w-4 h-4 text-white" />
+                        </div>
+                      </a>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -1015,8 +1155,8 @@ ${selectedAnalyse.description ? `
                 {cubEnvoye ? (
                   <div className="text-center py-6">
                     <CheckCircle className="w-10 h-10 text-blue-400 mx-auto mb-3" />
-                    <p className="font-semibold mb-1">Dossier CUb envoyé !</p>
-                    <p className="text-sm text-gray-400">Le client a reçu ses 3 documents par email.</p>
+                    <p className="font-semibold mb-1">Envoyé pour validation !</p>
+                    <p className="text-sm text-gray-400">Le client a reçu un email avec le lien de validation.</p>
                     <button onClick={() => setSelectedCub(null)} className="btn-primary mt-6 justify-center">Fermer</button>
                   </div>
                 ) : (
@@ -1028,28 +1168,38 @@ ${selectedAnalyse.description ? `
                       </button>
                     ) : (
                       <>
-                        {[
-                          { label: '1. Note descriptive', key: 'note_descriptive', color: 'border-[#c29a6b]/30' },
-                          { label: '2. Check-list des pièces', key: 'checklist', color: 'border-blue-500/30' },
-                          { label: '3. Guide de dépôt', key: 'guide_depot', color: 'border-green-500/30' },
-                        ].map(({ label, key, color }) => (
-                          <div key={key} className={`border ${color} rounded-xl p-4`}>
-                            <p className="text-xs text-gray-400 uppercase tracking-widest mb-2">{label}</p>
-                            <textarea
-                              className="input min-h-[120px] resize-none text-sm w-full"
-                              value={(cubDossier as any)[key]}
-                              onChange={e => setCubDossier(d => d ? { ...d, [key]: e.target.value } : d)}
-                            />
-                          </div>
-                        ))}
+                        {/* Note descriptive */}
+                        <div className="border border-[#c29a6b]/30 rounded-xl p-4">
+                          <p className="text-xs text-gray-400 uppercase tracking-widest mb-2">Note descriptive du projet</p>
+                          <textarea
+                            className="input min-h-[180px] resize-y text-sm w-full"
+                            value={cubDossier.note_descriptive}
+                            onChange={e => setCubDossier(d => d ? { ...d, note_descriptive: e.target.value } : d)}
+                          />
+                        </div>
+
+                        {/* Éléments CERFA */}
+                        <div className="border border-blue-500/30 rounded-xl p-4">
+                          <p className="text-xs text-gray-400 uppercase tracking-widest mb-2">Éléments CERFA pré-remplis</p>
+                          <textarea
+                            className="input min-h-[140px] resize-y text-sm w-full font-mono"
+                            value={cubDossier.checklist}
+                            onChange={e => setCubDossier(d => d ? { ...d, checklist: e.target.value } : d)}
+                          />
+                        </div>
+
                         <div className="flex gap-3 pt-2">
                           <button onClick={genererDossierCub} disabled={generatingCub}
                             className="flex items-center gap-2 px-4 py-2.5 border border-white/10 rounded-xl text-sm text-gray-400 hover:text-white transition-colors">
                             {generatingCub ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />} Regénérer
                           </button>
+                          <button onClick={telechargerCerfaCub}
+                            className="flex items-center gap-2 px-4 py-2.5 border border-[#c29a6b]/40 rounded-xl text-sm text-[#c29a6b] hover:bg-[#c29a6b]/10 transition-colors">
+                            <Download className="w-4 h-4" /> CERFA
+                          </button>
                           <button onClick={envoyerCub} disabled={sendingCub}
                             className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#c29a6b] hover:bg-[#b8895a] text-black font-semibold rounded-xl transition-colors disabled:opacity-50">
-                            {sendingCub ? <><Loader2 className="w-4 h-4 animate-spin" /> Envoi…</> : <><Send className="w-4 h-4" /> Envoyer au client</>}
+                            {sendingCub ? <><Loader2 className="w-4 h-4 animate-spin" /> Envoi…</> : <><Send className="w-4 h-4" /> Envoyer pour validation</>}
                           </button>
                         </div>
                       </>
