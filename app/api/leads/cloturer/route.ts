@@ -77,12 +77,11 @@ export async function POST(req: NextRequest) {
 
       // Récupérer les emails des acheteurs via auth admin
       const { data: { users } } = await supabase.auth.admin.listUsers({ perPage: 1000 })
-      const userEmailMap = new Map<string, { email: string; prenom: string }>(
-        users.map(u => [u.id, {
-          email: u.email ?? '',
-          prenom: (u.user_metadata?.prenom as string) || '',
-        }])
-      )
+      const userEmailMap = new Map<string, { email: string; prenom: string }>()
+      users.forEach(u => userEmailMap.set(u.id, {
+        email: u.email ?? '',
+        prenom: (u.user_metadata?.prenom as string) || '',
+      }))
 
       // Récupérer prénoms depuis profiles
       const acheteurIds = achats.map(a => a.acheteur_id)
