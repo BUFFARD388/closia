@@ -130,8 +130,9 @@ export async function POST(req: NextRequest) {
         .single()
 
       if (bien && achat) {
-        const { data: { users } } = await supabase.auth.admin.listUsers({ perPage: 1000 })
-        const acheteurUser = users.find(u => u.id === achat.acheteur_id)
+        const { data: listData } = await supabase.auth.admin.listUsers({ perPage: 1000 })
+        const users = (listData?.users ?? []) as any[]
+        const acheteurUser = users.find((u: any) => u.id === achat.acheteur_id)
         const acheteurEmail = acheteurUser?.email
 
         const { data: acheteurProfile } = await supabase
