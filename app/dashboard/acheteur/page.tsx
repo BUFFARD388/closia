@@ -452,7 +452,32 @@ export default function DashboardAcheteur() {
                             </div>
                           ) : (
                             <div className="mt-4 bg-blue-500/5 border border-blue-500/20 rounded-xl p-4">
-                              <p className="text-xs text-blue-300">⏳ En attente de la clôture du lead (72h). Vous recevrez un email avec le prix final à payer.</p>
+                              {(() => {
+                                const h = achat.biens?.date_expiration ? heuresRestantes(achat.biens.date_expiration) : 0
+                                const expired = h <= 0
+                                return (
+                                  <>
+                                    <div className="flex items-center justify-between mb-2">
+                                      <p className="text-xs text-blue-300 font-semibold">⏳ Lead partagé — en attente de clôture</p>
+                                      {!expired && (
+                                        <span className={`text-xs font-bold flex items-center gap-1 ${timerColor(h)}`}>
+                                          <Clock className="w-3 h-3" /> {Math.floor(h)}h {Math.floor((h % 1) * 60)}min restantes
+                                        </span>
+                                      )}
+                                    </div>
+                                    {expired
+                                      ? <p className="text-xs text-orange-300">La période est terminée — un email de paiement va vous être envoyé.</p>
+                                      : <p className="text-xs text-gray-400">À la clôture, vous recevrez un email avec le lien de paiement au prix final selon le nombre d'acheteurs.</p>
+                                    }
+                                    {!expired && (
+                                      <div className="mt-2 h-1 bg-white/10 rounded-full overflow-hidden">
+                                        <div className="h-full rounded-full bg-blue-400 transition-all"
+                                          style={{ width: `${Math.min(100, ((72 - h) / 72) * 100)}%` }} />
+                                      </div>
+                                    )}
+                                  </>
+                                )
+                              })()}
                             </div>
                           )}
                         </>
