@@ -119,7 +119,7 @@ export default function DashboardAcheteur() {
     if (achatData) {
       const confirmes = achatData.filter(a => a.statut === 'confirme' && a.biens?.apporteur_id)
       if (confirmes.length > 0) {
-        const apporteurIds = [...new Set(confirmes.map(a => a.biens.apporteur_id))]
+        const apporteurIds = Array.from(new Set(confirmes.map((a: any) => a.biens.apporteur_id)))
         const { data: vendeurs } = await supabase
           .from('profiles')
           .select('id, prenom, nom, tel, email, statut_pro')
