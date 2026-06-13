@@ -76,9 +76,10 @@ export async function POST(req: NextRequest) {
       const prixUnitaire = getPrixPartage(bien.prix, nbAcheteurs)
 
       // Récupérer les emails des acheteurs via auth admin
-      const { data: { users } } = await supabase.auth.admin.listUsers({ perPage: 1000 })
+      const { data: listData } = await supabase.auth.admin.listUsers({ perPage: 1000 })
+      const users = (listData?.users ?? []) as any[]
       const userEmailMap = new Map<string, { email: string; prenom: string }>()
-      users.forEach(u => userEmailMap.set(u.id, {
+      users.forEach((u: any) => userEmailMap.set(u.id, {
         email: u.email ?? '',
         prenom: (u.user_metadata?.prenom as string) || '',
       }))
