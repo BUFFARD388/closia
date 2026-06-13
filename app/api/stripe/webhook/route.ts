@@ -112,7 +112,16 @@ export async function POST(req: NextRequest) {
       await supabase.from('achats').update({ statut: 'confirme' }).eq('id', achatId)
 
       if (mode === 'exclusif') {
-        // Annuler les réservations partagées en attente
+        // Récupérer les acheteurs partagés avant de les annuler (pour les notifier)
+        const { data: partagesAnnules } = await supabase
+          .from('achats')
+          .select('id, acheteur_id')
+          .eq('bien_id', bienId)
+          .eq('mode', 'partage')
+          .eq('statut', 'reserve')
+          .neq('id', achatId)
+
+        // Annuler les réservations partagées
         await supabase
           .from('achats')
           .update({ statut: 'annule' })
@@ -120,7 +129,43 @@ export async function POST(req: NextRequest) {
           .eq('mode', 'partage')
           .eq('statut', 'reserve')
           .neq('id', achatId)
+
         await supabase.from('biens').update({ statut: 'archive' }).eq('id', bienId)
+
+        // Notifier les acheteurs partagés annulés
+        if (partagesAnnules && partagesAnnules.length > 0) {
+          const { data: listDataExclu } = await supabase.auth.admin.listUsers({ perPage: 1000 })
+          const usersExclu = (listDataExclu?.users ?? []) as any[]
+          const bienInfo = await supabase.from('biens').select('type, ville, cp').eq('id', bienId).single()
+          const b = bienInfo.data
+
+          for (const a of partagesAnnules) {
+            const u = usersExclu.find((x: any) => x.id === a.acheteur_id)
+            if (!u?.email) continue
+            const { data: p } = await supabase.from('profiles').select('prenom').eq('id', a.acheteur_id).single()
+            await resend.emails.send({
+              from: 'Closia <noreply@closia.net>',
+              to: u.email,
+              subject: `Votre réservation a été annulée — ${b?.type} · ${b?.ville}`,
+              html: `
+                <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#0b1220;color:#fff;padding:40px;border-radius:12px;">
+                  <img src="https://closia.net/logo.png" alt="Closia" style="height:40px;margin-bottom:24px;display:block;" />
+                  <h2 style="color:#f87171;margin:0 0 16px;">Réservation annulée — Accès exclusif pris</h2>
+                  <p style="color:#9ca3af;">Bonjour ${p?.prenom || ''},</p>
+                  <p style="color:#d1d5db;line-height:1.75;">Un acheteur vient d'acquérir ce lead en <strong style="color:#c29a6b;">exclusivité</strong>. Conformément aux conditions d'utilisation, votre réservation partagée est annulée <strong>sans aucun frais</strong>.</p>
+                  <div style="background:#111720;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:16px;margin:24px 0;">
+                    <p style="margin:0;"><strong>${b?.type}</strong> · ${b?.cp} ${b?.ville}</p>
+                  </div>
+                  <p style="color:#9ca3af;font-size:13px;">D'autres leads sont disponibles sur votre dashboard.</p>
+                  <div style="text-align:center;margin-top:24px;">
+                    <a href="https://closia.net/dashboard/acheteur" style="display:inline-block;background:#c29a6b;color:#000;font-weight:700;padding:12px 28px;border-radius:8px;text-decoration:none;font-size:13px;">Voir les leads disponibles</a>
+                  </div>
+                  <p style="color:#6b7280;font-size:11px;margin-top:32px;border-top:1px solid rgba(255,255,255,0.08);padding-top:16px;text-align:center;">Closia · contact@closia.net</p>
+                </div>
+              `,
+            }).catch(console.warn)
+          }
+        }
       }
 
       // Récupérer les infos du bien et de l'apporteur pour envoyer les coordonnées
@@ -216,17 +261,49 @@ export async function POST(req: NextRequest) {
           }).catch(console.warn)
         }
 
-        // Si lead partagé : vérifier si tous les acheteurs ont payé → archiver
+        // Si lead partagé : vérifier les autres acheteurs encore en attente
         if (mode === 'partage') {
           const { data: achatRestants } = await supabase
             .from('achats')
-            .select('id')
+            .select('id, acheteur_id')
             .eq('bien_id', bienId)
             .eq('mode', 'partage')
             .eq('statut', 'reserve')
 
           if (!achatRestants || achatRestants.length === 0) {
             await supabase.from('biens').update({ statut: 'archive' }).eq('id', bienId)
+          } else {
+            // Notifier les acheteurs partagés encore en attente
+            const { data: listDataP } = await supabase.auth.admin.listUsers({ perPage: 1000 })
+            const usersP = (listDataP?.users ?? []) as any[]
+            const bienP = await supabase.from('biens').select('type, ville, cp').eq('id', bienId).single()
+            const bp = bienP.data
+            const confirmes = await supabase.from('achats').select('id').eq('bien_id', bienId).eq('mode', 'partage').eq('statut', 'confirme')
+            const nbConfirmes = confirmes.data?.length ?? 0
+
+            for (const a of achatRestants) {
+              const u = usersP.find((x: any) => x.id === a.acheteur_id)
+              if (!u?.email) continue
+              const { data: pp } = await supabase.from('profiles').select('prenom').eq('id', a.acheteur_id).single()
+              await resend.emails.send({
+                from: 'Closia <noreply@closia.net>',
+                to: u.email,
+                subject: `Un acheteur a finalisé son paiement — ${bp?.type} · ${bp?.ville}`,
+                html: `
+                  <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#0b1220;color:#fff;padding:40px;border-radius:12px;">
+                    <img src="https://closia.net/logo.png" alt="Closia" style="height:40px;margin-bottom:24px;display:block;" />
+                    <h2 style="color:#c29a6b;margin:0 0 16px;">Un acheteur a confirmé son paiement</h2>
+                    <p style="color:#9ca3af;">Bonjour ${pp?.prenom || ''},</p>
+                    <p style="color:#d1d5db;line-height:1.75;">Un des acheteurs partagés vient de finaliser son paiement sur ce lead. <strong style="color:#fff;">${nbConfirmes} acheteur${nbConfirmes > 1 ? 's' : ''} ont confirmé</strong> leur achat.</p>
+                    <div style="background:#111720;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:16px;margin:24px 0;">
+                      <p style="margin:0;"><strong>${bp?.type}</strong> · ${bp?.cp} ${bp?.ville}</p>
+                    </div>
+                    <p style="color:#d1d5db;">Votre lien de paiement est disponible dans votre email de clôture. Pensez à finaliser votre achat pour accéder aux coordonnées du vendeur.</p>
+                    <p style="color:#6b7280;font-size:11px;margin-top:32px;border-top:1px solid rgba(255,255,255,0.08);padding-top:16px;text-align:center;">Closia · contact@closia.net</p>
+                  </div>
+                `,
+              }).catch(console.warn)
+            }
           }
         }
       }
