@@ -110,8 +110,116 @@ export async function POST(req: NextRequest) {
     // ── Paiement lead ──
     if (achatId) {
       await supabase.from('achats').update({ statut: 'confirme' }).eq('id', achatId)
+
       if (mode === 'exclusif') {
         await supabase.from('biens').update({ statut: 'archive' }).eq('id', bienId)
+      }
+
+      // Récupérer les infos du bien et de l'apporteur pour envoyer les coordonnées
+      const { data: bien } = await supabase
+        .from('biens')
+        .select('*, profiles!biens_apporteur_id_fkey(prenom, nom, tel, email, societe, statut_pro)')
+        .eq('id', bienId)
+        .single()
+
+      // Récupérer l'email de l'acheteur
+      const { data: achat } = await supabase
+        .from('achats')
+        .select('acheteur_id')
+        .eq('id', achatId)
+        .single()
+
+      if (bien && achat) {
+        const { data: { users } } = await supabase.auth.admin.listUsers({ perPage: 1000 })
+        const acheteurUser = users.find(u => u.id === achat.acheteur_id)
+        const acheteurEmail = acheteurUser?.email
+
+        const { data: acheteurProfile } = await supabase
+          .from('profiles')
+          .select('prenom, nom')
+          .eq('id', achat.acheteur_id)
+          .single()
+
+        const vendeur = bien.profiles
+        const prenom = acheteurProfile?.prenom || 'Bonjour'
+
+        // Email à l'acheteur avec les coordonnées du vendeur
+        if (acheteurEmail) {
+          await resend.emails.send({
+            from: 'Closia <noreply@closia.net>',
+            to: acheteurEmail,
+            subject: `Coordonnées du vendeur — ${bien.type} · ${bien.ville}`,
+            html: `
+              <div style="font-family:Arial,Helvetica,sans-serif;max-width:600px;margin:0 auto;background:#0b1220;color:#fff;border-radius:12px;overflow:hidden;">
+                <div style="background:linear-gradient(135deg,#0b1220 0%,#1b2a4a 100%);padding:40px 48px 32px;border-bottom:1px solid rgba(194,154,107,0.3);">
+                  <img src="https://closia.net/logo.png" alt="Closia" style="height:44px;margin-bottom:24px;display:block;" />
+                  <p style="font-size:18px;font-weight:600;color:#fff;margin:0 0 6px;">Paiement confirmé — Voici les coordonnées ✓</p>
+                  <p style="font-size:12px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:1.5px;margin:0;">${bien.type} · ${bien.cp} ${bien.ville}</p>
+                </div>
+                <div style="padding:36px 48px;">
+                  <p style="color:#9ca3af;margin:0 0 16px;">Bonjour ${prenom},</p>
+                  <p style="color:#d1d5db;line-height:1.75;margin:0 0 24px;">Votre paiement a bien été reçu. Voici les coordonnées complètes de l'apporteur du dossier.</p>
+
+                  <div style="background:#111720;border:1px solid rgba(194,154,107,0.3);border-radius:10px;padding:20px;margin-bottom:24px;">
+                    <p style="color:#c29a6b;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 14px;font-weight:700;">Coordonnées du vendeur</p>
+                    <p style="color:#fff;font-size:16px;font-weight:700;margin:0 0 4px;">${vendeur?.prenom} ${vendeur?.nom}</p>
+                    ${vendeur?.societe ? `<p style="color:#9ca3af;margin:0 0 4px;">${vendeur.societe}</p>` : ''}
+                    ${vendeur?.statut_pro ? `<p style="color:#9ca3af;font-size:12px;margin:0 0 12px;">${vendeur.statut_pro}</p>` : ''}
+                    <div style="border-top:1px solid rgba(255,255,255,0.1);padding-top:12px;margin-top:8px;">
+                      <p style="margin:0 0 6px;"><a href="mailto:${vendeur?.email}" style="color:#c29a6b;">✉️ ${vendeur?.email}</a></p>
+                      <p style="margin:0;"><a href="tel:${vendeur?.tel}" style="color:#c29a6b;">📞 ${vendeur?.tel}</a></p>
+                    </div>
+                  </div>
+
+                  <div style="background:#111720;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px 20px;">
+                    <p style="color:#9ca3af;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 8px;">Le bien</p>
+                    <p style="color:#fff;font-weight:600;margin:0 0 4px;">${bien.type}</p>
+                    <p style="color:#9ca3af;font-size:13px;margin:0;">${bien.adresse ? bien.adresse + ' · ' : ''}${bien.cp} ${bien.ville}</p>
+                    ${bien.prix ? `<p style="color:#c29a6b;font-weight:700;margin:8px 0 0;">${Number(bien.prix).toLocaleString('fr-FR')} €</p>` : ''}
+                  </div>
+                </div>
+                <div style="padding:20px 48px;border-top:1px solid rgba(255,255,255,0.08);text-align:center;">
+                  <p style="color:#6b7280;font-size:11px;margin:0;">Closia · contact@closia.net · 06 87 76 33 40</p>
+                  <a href="https://closia.net" style="color:#c29a6b;font-size:11px;">closia.net</a>
+                </div>
+              </div>
+            `,
+          }).catch(console.warn)
+        }
+
+        // Notifier le vendeur (apporteur)
+        if (vendeur?.email) {
+          await resend.emails.send({
+            from: 'Closia <noreply@closia.net>',
+            to: vendeur.email,
+            subject: `Un acheteur a acheté votre lead — ${bien.type} · ${bien.ville}`,
+            html: `
+              <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:32px;background:#0b1220;color:#fff;border-radius:12px;">
+                <img src="https://closia.net/logo.png" alt="Closia" style="height:40px;margin-bottom:24px;display:block;" />
+                <h2 style="color:#c29a6b;margin:0 0 16px;">Un acheteur s'est positionné sur votre dossier ✓</h2>
+                <div style="background:#111720;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:16px;margin-bottom:16px;">
+                  <p style="margin:0 0 4px;"><strong>Bien :</strong> ${bien.type} · ${bien.cp} ${bien.ville}</p>
+                  <p style="margin:0;"><strong>Mode :</strong> ${mode === 'exclusif' ? 'Exclusif' : 'Partagé'}</p>
+                </div>
+                <p style="color:#9ca3af;font-size:13px;">Un acheteur professionnel a réglé l'accès à vos coordonnées et va vous contacter directement.</p>
+              </div>
+            `,
+          }).catch(console.warn)
+        }
+
+        // Si lead partagé : vérifier si tous les acheteurs ont payé → archiver
+        if (mode === 'partage') {
+          const { data: achatRestants } = await supabase
+            .from('achats')
+            .select('id')
+            .eq('bien_id', bienId)
+            .eq('mode', 'partage')
+            .eq('statut', 'reserve')
+
+          if (!achatRestants || achatRestants.length === 0) {
+            await supabase.from('biens').update({ statut: 'archive' }).eq('id', bienId)
+          }
+        }
       }
     }
   }
