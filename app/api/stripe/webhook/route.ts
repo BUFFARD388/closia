@@ -112,6 +112,14 @@ export async function POST(req: NextRequest) {
       await supabase.from('achats').update({ statut: 'confirme' }).eq('id', achatId)
 
       if (mode === 'exclusif') {
+        // Annuler les réservations partagées en attente
+        await supabase
+          .from('achats')
+          .update({ statut: 'annule' })
+          .eq('bien_id', bienId)
+          .eq('mode', 'partage')
+          .eq('statut', 'reserve')
+          .neq('id', achatId)
         await supabase.from('biens').update({ statut: 'archive' }).eq('id', bienId)
       }
 

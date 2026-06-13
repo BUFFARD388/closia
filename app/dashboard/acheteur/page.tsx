@@ -107,12 +107,34 @@ export default function DashboardAcheteur() {
       .order('date_diffusion', { ascending: false })
     setLeads(biensData || [])
 
-    // Mes achats avec infos apporteur
-    const { data: achatData } = await supabase
+    // Mes achats avec infos bien (sans join profiles — chargé séparément si confirmé)
+    const { data: achatData, error: achatError } = await supabase
       .from('achats')
-      .select('*, biens(*, profiles!biens_apporteur_id_fkey(prenom, nom, tel, email, statut_pro))')
+      .select('*, biens(*)')
       .eq('acheteur_id', uid)
       .neq('statut', 'annule')
+    console.log('[loadLeads] achatData:', achatData, 'error:', achatError)
+
+    // Pour les achats confirmés : charger les infos apporteur séparément
+    if (achatData) {
+      const confirmes = achatData.filter(a => a.statut === 'confirme' && a.biens?.apporteur_id)
+      if (confirmes.length > 0) {
+        const apporteurIds = [...new Set(confirmes.map(a => a.biens.apporteur_id))]
+        const { data: vendeurs } = await supabase
+          .from('profiles')
+          .select('id, prenom, nom, tel, email, statut_pro')
+          .in('id', apporteurIds)
+        if (vendeurs) {
+          const vendeurMap = new Map(vendeurs.map(v => [v.id, v]))
+          achatData.forEach(a => {
+            if (a.biens?.apporteur_id) {
+              a.biens.profiles = vendeurMap.get(a.biens.apporteur_id) || null
+            }
+          })
+        }
+      }
+    }
+
     setLeadsAchetes(achatData || [])
 
     setLoading(false)
@@ -336,7 +358,7 @@ export default function DashboardAcheteur() {
                           ? <span className="text-red-400">Exclusivité prise</span>
                           : acheteurs.length === 0
                             ? <span className="text-gold-400 font-medium">✦ Exclusivité disponible</span>
-                            : <span>{acheteurs.length}/3 acheteur{acheteurs.length > 1 ? 's' : ''} en liste</span>}
+                            : <span className="text-orange-400">{acheteurs.length}/3 partagé · exclu possible</span>}
                       </div>
 
                       <div className="pt-4 border-t border-navy-700 mt-auto">
@@ -538,7 +560,7 @@ export default function DashboardAcheteur() {
 
                     <div className="space-y-4 mb-6">
                       {/* Exclusivité */}
-                      <button onClick={() => setBuyMode('exclu')} disabled={exclusifPris || acheteurs.length > 0}
+                      <button onClick={() => setBuyMode('exclu')} disabled={exclusifPris}
                         className={`w-full p-5 rounded-xl border-2 transition-all text-left disabled:opacity-40 disabled:cursor-not-allowed ${buyMode === 'exclu' ? 'border-[#c29a6b] bg-[#1a1200]' : 'border-[#c29a6b]/40 bg-[#0f1926] hover:border-[#c29a6b]'}`}>
                         <div className="flex items-start justify-between gap-3 mb-2">
                           <div>
@@ -546,8 +568,13 @@ export default function DashboardAcheteur() {
                               <Lock className="w-4 h-4 text-[#c29a6b]" /> Accès immédiat — Exclusivité
                             </div>
                             <p className="text-xs text-gray-400">Accès instantané aux coordonnées. Seul acheteur. Aucun concurrent.</p>
-                            {(exclusifPris || acheteurs.length > 0) && (
-                              <p className="text-xs text-red-400 mt-1">Non disponible — des acheteurs sont déjà positionnés.</p>
+                            {exclusifPris && (
+                              <p className="text-xs text-red-400 mt-1">Exclusivité déjà prise.</p>
+                            )}
+                            {!exclusifPris && acheteurs.length > 0 && (
+                              <p className="text-xs text-orange-400 mt-1">
+                                ⚠ {acheteurs.length} acheteur{acheteurs.length > 1 ? 's' : ''} en partagé — votre achat exclusif les retirera de la liste.
+                              </p>
                             )}
                           </div>
                           <div className="text-right flex-shrink-0">
