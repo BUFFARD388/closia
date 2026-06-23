@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1200px;
+    height: 627px;
+    background: #0d1117;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    overflow: hidden;
+  }
+
+  .container {
+    width: 1200px;
+    height: 627px;
+    background: linear-gradient(135deg, #0d1117 0%, #1a2232 60%, #0d1117 100%);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 60px 80px;
+  }
+
+  /* Decorative lines */
+  .deco-line-top {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 4px;
+    background: linear-gradient(90deg, transparent, #c9a227, transparent);
+  }
+  .deco-line-bottom {
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 100%; height: 4px;
+    background: linear-gradient(90deg, transparent, #c9a227, transparent);
+  }
+  .deco-line-left {
+    position: absolute;
+    left: 0; top: 0;
+    width: 4px; height: 100%;
+    background: linear-gradient(180deg, transparent, #c9a227 50%, transparent);
+  }
+  .deco-circle {
+    position: absolute;
+    right: -150px; top: -150px;
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    border: 1px solid rgba(201, 162, 39, 0.08);
+  }
+  .deco-circle2 {
+    position: absolute;
+    right: -80px; top: -80px;
+    width: 360px; height: 360px;
+    border-radius: 50%;
+    border: 1px solid rgba(201, 162, 39, 0.12);
+  }
+
+  /* Left side */
+  .left {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    z-index: 2;
+    flex: 1;
+  }
+
+  .logo-area {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .logo-text {
+    font-size: 42px;
+    font-weight: 300;
+    letter-spacing: 0.22em;
+    color: #e8e8e8;
+    text-transform: uppercase;
+  }
+
+  .logo-sub {
+    font-size: 12px;
+    letter-spacing: 0.28em;
+    color: #c9a227;
+    text-transform: uppercase;
+    font-weight: 400;
+  }
+
+  .separator {
+    width: 60px;
+    height: 1px;
+    background: #c9a227;
+  }
+
+  .headline {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .label {
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: #c9a227;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  .title {
+    font-size: 36px;
+    font-weight: 300;
+    color: #ffffff;
+    line-height: 1.2;
+    letter-spacing: 0.02em;
+  }
+
+  .title span {
+    color: #c9a227;
+    font-weight: 500;
+  }
+
+  .subtitle {
+    font-size: 15px;
+    color: rgba(255,255,255,0.5);
+    font-weight: 300;
+    letter-spacing: 0.05em;
+    margin-top: 4px;
+  }
+
+  /* Right side — cards */
+  .right {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    z-index: 2;
+    min-width: 320px;
+  }
+
+  .card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(201, 162, 39, 0.2);
+    border-left: 3px solid #c9a227;
+    padding: 18px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .card-label {
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    color: #c9a227;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  .card-value {
+    font-size: 22px;
+    font-weight: 300;
+    color: #ffffff;
+    letter-spacing: 0.04em;
+  }
+
+  .card-value strong {
+    font-weight: 600;
+    color: #e8e8e8;
+  }
+
+  .cta {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .cta-box {
+    background: #c9a227;
+    padding: 12px 28px;
+    display: inline-block;
+  }
+
+  .cta-text {
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    color: #0d1117;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  .cta-url {
+    font-size: 13px;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.1em;
+  }
+
+  /* Badge */
+  .badge {
+    position: absolute;
+    bottom: 50px;
+    left: 80px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .badge-dot {
+    width: 8px; height: 8px;
+    background: #c9a227;
+    border-radius: 50%;
+  }
+
+  .badge-text {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: rgba(255,255,255,0.3);
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="deco-line-top"></div>
+  <div class="deco-line-bottom"></div>
+  <div class="deco-line-left"></div>
+  <div class="deco-circle"></div>
+  <div class="deco-circle2"></div>
+
+  <div class="left">
+    <div class="logo-area">
+      <div class="logo-text">Closia</div>
+      <div class="logo-sub">Sélection off-market</div>
+    </div>
+
+    <div class="separator"></div>
+
+    <div class="headline">
+      <div class="label">Nouveau bien — Mise en ligne semaine prochaine</div>
+      <div class="title">
+        Maine-et-Loire <span>(49)</span><br>
+        30 km est de Nantes
+      </div>
+      <div class="subtitle">Opportunité de division — acheteurs pro uniquement</div>
+    </div>
+
+    <div class="cta">
+      <div class="cta-box">
+        <div class="cta-text">Inscription gratuite</div>
+      </div>
+      <div class="cta-url">closia.net</div>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="card">
+      <div class="card-label">Département</div>
+      <div class="card-value"><strong>49</strong> — Maine-et-Loire</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Potentiel</div>
+      <div class="card-value">Division en <strong>3 lots</strong></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Mise en ligne</div>
+      <div class="card-value">Semaine du <strong>29 juin</strong></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Accès</div>
+      <div class="card-value">Sur inscription — <strong>gratuit</strong></div>
+    </div>
+  </div>
+
+  <div class="badge">
+    <div class="badge-dot"></div>
+    <div class="badge-text">Réseau off-market — Professionnels de l'immobilier</div>
+  </div>
+</div>
+</body>
+</html>

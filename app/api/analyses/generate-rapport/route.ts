@@ -327,14 +327,28 @@ ${description || 'Aucune.'}
 --- MESSAGE ---
 ${message || 'Aucun.'}`
 
-    const response = await anthropic.messages.create({
-      model: 'claude-opus-4-8',
-      max_tokens: 4000,
-      messages: [{ role: 'user', content: userPrompt }],
-      system: systemPrompt,
-    })
+    // Retry automatique si l'API est surchargée (529)
+    let response: Awaited<ReturnType<typeof anthropic.messages.create>> | null = null
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        response = await anthropic.messages.create({
+          model: 'claude-opus-4-8',
+          max_tokens: 4000,
+          messages: [{ role: 'user', content: userPrompt }],
+          system: systemPrompt,
+        })
+        break
+      } catch (err: any) {
+        const status = err?.status ?? err?.error?.status
+        if ((status === 529 || status === 529 || err?.message?.includes('overloaded')) && attempt < 3) {
+          await new Promise(res => setTimeout(res, attempt * 3000))
+          continue
+        }
+        throw err
+      }
+    }
 
-    const rapport = response.content[0].type === 'text' ? response.content[0].text : ''
+    const rapport = response!.content[0].type === 'text' ? response!.content[0].text : ''
 
     return NextResponse.json({
       rapport,
