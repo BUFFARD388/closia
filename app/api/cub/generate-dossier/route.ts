@@ -57,7 +57,7 @@ Liste les valeurs pré-remplies pour les rubriques CERFA suivantes (format clé 
 `
 
     const message = await anthropic.messages.create({
-      model: 'claude-opus-4-5',
+      model: 'claude-opus-4-8',
       max_tokens: 2000,
       messages: [{ role: 'user', content: prompt }],
     })

@@ -42,7 +42,7 @@ ${corrections}
 Produis maintenant le rapport définitif corrigé, en intégrant toutes les remarques ci-dessus.`
 
     const response = await anthropic.messages.create({
-      model: 'claude-opus-4-5',
+      model: 'claude-opus-4-8',
       max_tokens: 4000,
       messages: [{ role: 'user', content: userPrompt }],
       system: systemPrompt,

@@ -46,7 +46,7 @@ ${complements ? `\n**Compléments apportés par Laurent après vérification (PL
 `
 
     const message = await anthropic.messages.create({
-      model: 'claude-opus-4-5',
+      model: 'claude-opus-4-8',
       max_tokens: 1500,
       messages: [{ role: 'user', content: prompt }],
     })

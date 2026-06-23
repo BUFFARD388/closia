@@ -202,6 +202,25 @@ export default function DashboardVendeur() {
         await supabase.from('biens').update({ photos_urls: urls }).eq('id', bien.id)
       }
 
+      // Notifier l'admin
+      await fetch('/api/emails/notify-admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: formType,
+          adresse: formAdresse,
+          cp: formCp,
+          ville: formVille,
+          prix: formPrix,
+          surface: formSurface || null,
+          situation: formSituation,
+          potentiel: formPotentiel || null,
+          apporteurPrenom: userName?.prenom || '',
+          apporteurNom: userName?.nom || '',
+          bienId: bien.id,
+        }),
+      })
+
       await loadBiens(userId)
       setStep(3)
     } catch (err: any) {
