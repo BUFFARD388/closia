@@ -84,6 +84,10 @@ export default function DashboardAdmin() {
   const [screeningBien, setScreeningBien] = useState('')
   const [brouillonValidation, setBrouillonValidation] = useState('')
   const [brouillonRefus, setBrouillonRefus] = useState('')
+  const [editingLead, setEditingLead] = useState<any | null>(null)
+  const [editPotentiel, setEditPotentiel] = useState('')
+  const [editDescription, setEditDescription] = useState('')
+  const [savingLead, setSavingLead] = useState(false)
 
   useEffect(() => { checkAdmin(); loadBiens(); loadAnalyses(); loadCubs() }, [])
   useEffect(() => { if (section === 'live') loadLeadsLive() }, [section])
@@ -702,6 +706,18 @@ ${selectedAnalyse.description ? `
     }
   }
 
+  async function sauvegarderLead() {
+    if (!editingLead) return
+    setSavingLead(true)
+    await supabase.from('biens').update({
+      potentiel: editPotentiel,
+      description: editDescription,
+    }).eq('id', editingLead.id)
+    await loadLeadsLive()
+    setSavingLead(false)
+    setEditingLead(null)
+  }
+
   const formatDate = (d: string) => new Date(d).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 
   const pendingCount = biens.filter(b => b.statut === 'pending').length
@@ -985,6 +1001,20 @@ ${selectedAnalyse.description ? `
                             <span className="flex items-center gap-1"><Euro className="w-3.5 h-3.5 text-[#c29a6b]" />{Number(lead.prix).toLocaleString('fr-FR')} €</span>
                             {lead.profiles && <span className="flex items-center gap-1"><User className="w-3.5 h-3.5" />{lead.profiles.prenom} {lead.profiles.nom}</span>}
                           </div>
+
+                          {/* Potentiel affiché */}
+                          {lead.potentiel && (
+                            <div className="bg-[#c29a6b]/8 border border-[#c29a6b]/20 rounded-lg p-3 mb-4">
+                              <p className="text-xs text-[#c29a6b] uppercase tracking-widest mb-1">✦ Potentiel affiché aux acheteurs</p>
+                              <p className="text-xs text-gray-300 leading-relaxed">{lead.potentiel}</p>
+                            </div>
+                          )}
+
+                          <button
+                            onClick={() => { setEditingLead(lead); setEditPotentiel(lead.potentiel || ''); setEditDescription(lead.description || '') }}
+                            className="text-xs px-3 py-1.5 border border-white/20 rounded-lg text-gray-400 hover:text-white hover:border-white/40 transition-colors mb-4 flex items-center gap-1.5">
+                            <FileText className="w-3 h-3" /> Modifier le potentiel / description
+                          </button>
 
                           {/* Barre timer */}
                           <div>
@@ -1622,6 +1652,51 @@ ${selectedAnalyse.description ? `
                     </button>
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ════ MODAL ÉDITION LEAD LIVE ════ */}
+      {editingLead && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#111720] border border-white/10 rounded-2xl w-full max-w-lg">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-lg font-bold">Modifier le lead en diffusion</h2>
+                  <p className="text-xs text-gray-400 mt-1">{editingLead.type} · {editingLead.cp} {editingLead.ville}</p>
+                </div>
+                <button onClick={() => setEditingLead(null)} className="text-gray-400 hover:text-white"><X className="w-5 h-5" /></button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs text-[#c29a6b] uppercase tracking-widest mb-2">✦ Potentiel de valorisation <span className="text-gray-500 normal-case">(visible aux acheteurs)</span></label>
+                  <textarea
+                    className="input min-h-[100px] resize-none w-full text-sm"
+                    value={editPotentiel}
+                    onChange={e => setEditPotentiel(e.target.value)}
+                    placeholder="Division en 3 lots, rénovation puis revente, surélévation possible…"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-400 uppercase tracking-widest mb-2">Description <span className="text-gray-600 normal-case">(verrouillée, visible après achat)</span></label>
+                  <textarea
+                    className="input min-h-[80px] resize-none w-full text-sm"
+                    value={editDescription}
+                    onChange={e => setEditDescription(e.target.value)}
+                    placeholder="Description détaillée du bien…"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button onClick={() => setEditingLead(null)} className="btn-outline flex-1 justify-center text-sm">Annuler</button>
+                <button onClick={sauvegarderLead} disabled={savingLead} className="btn-primary flex-1 justify-center text-sm disabled:opacity-50">
+                  {savingLead ? <><Loader2 className="w-4 h-4 animate-spin" /> Enregistrement…</> : <><CheckCircle className="w-4 h-4" /> Enregistrer</>}
+                </button>
               </div>
             </div>
           </div>
