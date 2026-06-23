@@ -344,11 +344,20 @@ export default function DashboardAcheteur() {
                         {lead.surface && <div className="flex items-center gap-2"><span className="text-gold-500 text-xs font-medium">m²</span>{lead.surface} m²</div>}
                       </div>
 
+                      {/* Potentiel de valorisation — visible */}
+                      {lead.potentiel && (
+                        <div className="bg-[#c29a6b]/8 border border-[#c29a6b]/25 rounded-lg p-3 mb-4">
+                          <p className="text-xs text-[#c29a6b] uppercase tracking-widest font-medium mb-1.5">✦ Potentiel identifié</p>
+                          <p className="text-xs text-gray-300 leading-relaxed line-clamp-3">{lead.potentiel}</p>
+                        </div>
+                      )}
+
+                      {/* Analyse complète verrouillée */}
                       <div className="bg-navy-700/50 rounded-lg p-3 mb-4 relative overflow-hidden">
-                        <p className="text-xs text-gray-400 blur-sm select-none line-clamp-2">{lead.potentiel || lead.description || 'Analyse disponible après achat.'}</p>
+                        <p className="text-xs text-gray-400 blur-sm select-none line-clamp-2">{lead.description || 'Analyse complète disponible après achat.'}</p>
                         <div className="absolute inset-0 flex items-center justify-center">
                           <span className="text-xs text-gold-500 font-medium flex items-center gap-1">
-                            <Lock className="w-3 h-3" /> Acheter pour voir l'analyse
+                            <Lock className="w-3 h-3" /> Analyse complète après achat
                           </span>
                         </div>
                       </div>
