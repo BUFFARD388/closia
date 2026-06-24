@@ -84,6 +84,7 @@ export default function DashboardAdmin() {
   const [screeningBien, setScreeningBien] = useState('')
   const [brouillonValidation, setBrouillonValidation] = useState('')
   const [brouillonRefus, setBrouillonRefus] = useState('')
+  const [potentielSynthetise, setPotentielSynthetise] = useState('')
   const [editingLead, setEditingLead] = useState<any | null>(null)
   const [editPotentiel, setEditPotentiel] = useState('')
   const [editDescription, setEditDescription] = useState('')
@@ -600,6 +601,7 @@ ${selectedAnalyse.description ? `
     setReponse('')
     setSent(false)
     setScreeningBien('')
+    setPotentielSynthetise('')
     setBrouillonValidation('')
     setBrouillonRefus('')
     setComplementsBien('')
@@ -629,6 +631,7 @@ ${selectedAnalyse.description ? `
       const data = await res.json()
       if (data.error) throw new Error(data.error)
       setScreeningBien(data.screening)
+      setPotentielSynthetise(data.potentiel_synthetise || '')
       setBrouillonValidation(data.brouillon_validation)
       setBrouillonRefus(data.brouillon_refus)
       // Sauvegarde persistante du screening en base
@@ -1428,22 +1431,44 @@ ${selectedAnalyse.description ? `
                     </button>
 
                     {screeningBien && (
-                      <div className="grid grid-cols-2 gap-3 mt-2">
-                        <button
-                          onClick={() => { setDecision('validate'); setReponse(brouillonValidation) }}
-                          className="text-xs p-3 rounded-lg border border-green-500/30 bg-green-500/5 text-green-400 hover:bg-green-500/10 transition-colors text-left"
-                        >
-                          <CheckCircle className="w-3.5 h-3.5 mb-1" />
-                          Utiliser le brouillon de validation
-                        </button>
-                        <button
-                          onClick={() => { setDecision('reject'); setReponse(brouillonRefus) }}
-                          className="text-xs p-3 rounded-lg border border-red-500/30 bg-red-500/5 text-red-400 hover:bg-red-500/10 transition-colors text-left"
-                        >
-                          <XCircle className="w-3.5 h-3.5 mb-1" />
-                          Utiliser le brouillon de refus
-                        </button>
-                      </div>
+                      <>
+                        {/* Synthèse potentiel acheteurs */}
+                        {potentielSynthetise && (
+                          <div className="mb-3 border border-[#c29a6b]/40 rounded-lg p-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <p className="text-xs text-[#c29a6b] uppercase tracking-widest font-semibold">✦ Synthèse potentiel (acheteurs)</p>
+                              <button
+                                onClick={async () => {
+                                  await supabase.from('biens').update({ potentiel: potentielSynthetise }).eq('id', selected.id)
+                                  await loadBiens()
+                                  setSelected((prev: any) => prev ? { ...prev, potentiel: potentielSynthetise } : prev)
+                                }}
+                                className="text-xs px-3 py-1 rounded-lg bg-[#c29a6b] text-black font-semibold hover:bg-[#b8895a] transition-colors"
+                              >
+                                Appliquer au bien
+                              </button>
+                            </div>
+                            <p className="text-sm text-gray-300 leading-relaxed italic">{potentielSynthetise}</p>
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-2 gap-3 mt-2">
+                          <button
+                            onClick={() => { setDecision('validate'); setReponse(brouillonValidation) }}
+                            className="text-xs p-3 rounded-lg border border-green-500/30 bg-green-500/5 text-green-400 hover:bg-green-500/10 transition-colors text-left"
+                          >
+                            <CheckCircle className="w-3.5 h-3.5 mb-1" />
+                            Utiliser le brouillon de validation
+                          </button>
+                          <button
+                            onClick={() => { setDecision('reject'); setReponse(brouillonRefus) }}
+                            className="text-xs p-3 rounded-lg border border-red-500/30 bg-red-500/5 text-red-400 hover:bg-red-500/10 transition-colors text-left"
+                          >
+                            <XCircle className="w-3.5 h-3.5 mb-1" />
+                            Utiliser le brouillon de refus
+                          </button>
+                        </div>
+                      </>
                     )}
                   </>
                 )}
