@@ -631,6 +631,11 @@ ${selectedAnalyse.description ? `
       setScreeningBien(data.screening)
       setBrouillonValidation(data.brouillon_validation)
       setBrouillonRefus(data.brouillon_refus)
+      // Sauvegarde persistante du screening en base
+      if (data.screening && selected?.id) {
+        await supabase.from('biens').update({ screening_ia: data.screening }).eq('id', selected.id)
+        await loadBiens()
+      }
     } catch (err: any) {
       alert('Erreur analyse IA : ' + err.message)
     } finally {
@@ -1388,41 +1393,42 @@ ${selectedAnalyse.description ? `
               )}
 
               {/* ── ANALYSE IA ── */}
-              {selected.statut === 'pending' && (
-                <div className="border border-[#c29a6b]/30 bg-[#c29a6b]/5 rounded-xl p-5 mb-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <p className="text-xs text-[#c29a6b] uppercase tracking-widest font-semibold">Analyse IA du dossier</p>
+              <div className="border border-[#c29a6b]/30 bg-[#c29a6b]/5 rounded-xl p-5 mb-6">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs text-[#c29a6b] uppercase tracking-widest font-semibold">Analyse IA du dossier</p>
+                </div>
+
+                {/* Résultat sauvegardé en base (visible quel que soit le statut) */}
+                {(selected.screening_ia || screeningBien) && (
+                  <div className="bg-[#0b1220] rounded-lg p-4 text-sm text-gray-300 leading-relaxed whitespace-pre-wrap mb-4">
+                    {screeningBien || selected.screening_ia}
                   </div>
+                )}
 
-                  <div className="mb-3">
-                    <label className="text-xs text-gray-400 mb-1.5 block">
-                      Compléments d'information <span className="text-gray-600">(PLU, marché local, vérifications terrain…)</span>
-                    </label>
-                    <textarea
-                      className="input min-h-[90px] resize-none rounded-xl text-sm w-full"
-                      placeholder="Ex : PLU consulté — zone UB, COS 0.4, division possible sous conditions. Marché tendu sur le secteur, prix au m² ~3 200 €. Bien en limite de PPRI à vérifier…"
-                      value={complementsBien}
-                      onChange={e => setComplementsBien(e.target.value)}
-                    />
-                  </div>
+                {selected.statut === 'pending' && (
+                  <>
+                    <div className="mb-3">
+                      <label className="text-xs text-gray-400 mb-1.5 block">
+                        Compléments d'information <span className="text-gray-600">(PLU, marché local, vérifications terrain…)</span>
+                      </label>
+                      <textarea
+                        className="input min-h-[90px] resize-none rounded-xl text-sm w-full"
+                        placeholder="Ex : PLU consulté — zone UB, COS 0.4, division possible sous conditions. Marché tendu sur le secteur, prix au m² ~3 200 €. Bien en limite de PPRI à vérifier…"
+                        value={complementsBien}
+                        onChange={e => setComplementsBien(e.target.value)}
+                      />
+                    </div>
 
-                  <button
-                    onClick={analyserBienIA}
-                    disabled={analysantBien}
-                    className="flex items-center gap-2 text-xs px-4 py-2 rounded-lg bg-[#c29a6b] text-black font-semibold hover:bg-[#b8895a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-3"
-                  >
-                    {analysantBien ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Analyse en cours…</> : <><Zap className="w-3.5 h-3.5" /> Analyser avec l'IA</>}
-                  </button>
+                    <button
+                      onClick={analyserBienIA}
+                      disabled={analysantBien}
+                      className="flex items-center gap-2 text-xs px-4 py-2 rounded-lg bg-[#c29a6b] text-black font-semibold hover:bg-[#b8895a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-3"
+                    >
+                      {analysantBien ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Analyse en cours…</> : <><Zap className="w-3.5 h-3.5" /> {selected.screening_ia ? 'Relancer l\'analyse' : 'Analyser avec l\'IA'}</>}
+                    </button>
 
-                  {screeningBien && (
-                    <div className="space-y-4">
-                      {/* Note de screening */}
-                      <div className="bg-[#0b1220] rounded-lg p-4 text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">
-                        {screeningBien}
-                      </div>
-
-                      {/* Brouillons */}
-                      <div className="grid grid-cols-2 gap-3">
+                    {screeningBien && (
+                      <div className="grid grid-cols-2 gap-3 mt-2">
                         <button
                           onClick={() => { setDecision('validate'); setReponse(brouillonValidation) }}
                           className="text-xs p-3 rounded-lg border border-green-500/30 bg-green-500/5 text-green-400 hover:bg-green-500/10 transition-colors text-left"
@@ -1438,10 +1444,14 @@ ${selectedAnalyse.description ? `
                           Utiliser le brouillon de refus
                         </button>
                       </div>
-                    </div>
-                  )}
-                </div>
-              )}
+                    )}
+                  </>
+                )}
+
+                {!selected.screening_ia && !screeningBien && selected.statut !== 'pending' && (
+                  <p className="text-xs text-gray-500 italic">Aucune analyse IA enregistrée pour ce bien.</p>
+                )}
+              </div>
 
               <div className="border-t border-white/10 pt-6">
                 {sent ? (
