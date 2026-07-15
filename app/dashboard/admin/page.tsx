@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   Clock, CheckCircle, XCircle, Eye, LogOut,
   MapPin, Euro, FileText, ImageIcon, Download, ChevronRight,
-  Timer, AlertCircle, X, Send, User, ShoppingCart, Ban, Zap, Loader2, Users
+  Timer, AlertCircle, X, Send, User, ShoppingCart, Ban, Zap, Loader2, Users, Printer
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
@@ -85,6 +85,7 @@ export default function DashboardAdmin() {
   const [brouillonValidation, setBrouillonValidation] = useState('')
   const [brouillonRefus, setBrouillonRefus] = useState('')
   const [potentielSynthetise, setPotentielSynthetise] = useState('')
+  const [dossierBienHtml, setDossierBienHtml] = useState('')
   const [editingLead, setEditingLead] = useState<any | null>(null)
   const [editPotentiel, setEditPotentiel] = useState('')
   const [editDescription, setEditDescription] = useState('')
@@ -612,6 +613,141 @@ ${selectedAnalyse.description ? `
     w.print()
   }
 
+  function imprimerDossierBien() {
+    if (!selected || !dossierBienHtml) return
+
+    const logoUrl = window.location.origin + '/logo.png'
+    const adresseComplete = `${selected.adresse || ''}, ${selected.cp || ''} ${selected.ville || ''}`.trim()
+
+    const w = window.open('', '_blank')!
+    w.document.write(`<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Dossier de synthèse — ${adresseComplete}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Arial,Helvetica,sans-serif;color:#1a1a2e;background:#fff;font-size:13.5px;line-height:1.75}
+    /* HEADER */
+    .cover{background:linear-gradient(135deg,#0b1220 0%,#1b2a4a 100%);padding:40px 56px 36px;color:#fff;display:flex;align-items:center;justify-content:space-between}
+    .cover-left{}
+    .cover-logo{height:52px;margin-bottom:20px;display:block}
+    .cover-logo-text{font-size:26px;font-weight:700;color:#c29a6b;letter-spacing:6px;margin-bottom:20px}
+    .cover-title{font-size:20px;font-weight:600;color:#fff;margin-bottom:6px}
+    .cover-sub{font-size:11px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:1.5px}
+    .cover-badge{background:rgba(194,154,107,.12);border:1px solid rgba(194,154,107,.35);border-radius:6px;padding:10px 18px;text-align:center}
+    .cover-badge-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.5);margin-bottom:4px}
+    .cover-badge-date{font-size:14px;font-weight:600;color:#c29a6b}
+    /* INFO STRIP */
+    .info-strip{background:#f7f5f0;border-bottom:1px solid #e8e2d5;padding:24px 56px}
+    .info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .info-item{background:#fff;border:1px solid #e8e2d5;border-radius:8px;padding:12px 14px}
+    .info-item.wide{grid-column:1/-1}
+    .info-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#9ca3af;margin-bottom:3px}
+    .info-value{font-size:13px;font-weight:600;color:#1a1a2e}
+    /* DESCRIPTION */
+    .desc-strip{padding:20px 56px;background:#fffdf9;border-bottom:1px solid #e8e2d5;border-left:4px solid #c29a6b}
+    .desc-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#c29a6b;margin-bottom:6px;font-weight:700}
+    .desc-text{font-size:13px;color:#4b5563;line-height:1.7}
+    /* CONTENT */
+    .content{padding:36px 56px 48px}
+    /* SECTIONS */
+    .section-block{margin-bottom:32px;page-break-inside:avoid}
+    .section-header{display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #f0ebe0}
+    .section-num{background:#c29a6b;color:#fff;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+    .section-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#1a1a2e}
+    .section-body{color:#374151;font-size:13.5px;line-height:1.8}
+    .section-body p{margin-bottom:9px}
+    .section-body ul{padding-left:18px;margin-bottom:9px}
+    .section-body li{margin-bottom:5px}
+    .section-body strong{color:#1a1a2e;font-weight:600}
+    .section-body table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
+    .section-body th{background:#1a1a2e;color:#fff;text-align:left;padding:8px 12px;font-size:11px;text-transform:uppercase;letter-spacing:0.5px}
+    .section-body td{padding:7px 12px;border-bottom:1px solid #e8e2d5;color:#374151;vertical-align:top}
+    .section-body tr:nth-child(even) td{background:#f7f5f0}
+    /* BOXES / ESTIMATION / CONCLUSION */
+    .box{border-radius:7px;padding:14px 18px;margin:12px 0;font-size:13px;line-height:1.7}
+    .box-title{font-weight:700;margin-bottom:5px;font-size:11.5px;text-transform:uppercase;letter-spacing:0.5px}
+    .box-blue{background:#eef4fb;border:1px solid #cfe0f3;color:#1f2937}
+    .box-gold{background:#fdf6ea;border:1px solid #e8c87a;color:#92660b}
+    .box-red{background:#fdf2f2;border:1px solid #f3c6c6;color:#b42318}
+    .box-green{background:#f1f8f0;border:1px solid #c3e0bd;color:#276022}
+    .estimation-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+    .estimation-card{border-radius:8px;padding:18px 20px;text-align:center;border:1.5px solid #e8e2d5}
+    .estimation-card.low{background:#f9f8f5;border-color:#e8e2d5}
+    .estimation-card.high{background:#1a1a2e;border-color:#1a1a2e}
+    .estimation-card-label{font-size:10px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#9ca3af;margin-bottom:6px}
+    .estimation-card.high .estimation-card-label{color:#c29a6b}
+    .estimation-card-value{font-family:Georgia,serif;font-size:26px;color:#1a1a2e;line-height:1}
+    .estimation-card.high .estimation-card-value{color:#fff}
+    .estimation-card-sub{font-size:11px;color:#9ca3af;margin-top:4px}
+    .estimation-card.high .estimation-card-sub{color:rgba(255,255,255,.5)}
+    .conclusion-block{background:#1a1a2e;border-radius:10px;padding:24px 28px;color:#fff;margin-top:12px;page-break-inside:avoid}
+    .conclusion-block h3{font-size:13px;text-transform:uppercase;letter-spacing:2px;color:#c29a6b;font-weight:700;margin-bottom:14px}
+    .conclusion-rec{display:flex;flex-direction:column;gap:8px}
+    .conclusion-rec-item{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:10px 14px;display:flex;gap:12px;align-items:flex-start}
+    .conclusion-rec-num{background:#c29a6b;color:#1a1a2e;font-size:11px;font-weight:800;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+    .conclusion-rec-text{font-size:12.5px;color:#e5e7eb;line-height:1.6}
+    .conclusion-rec-text strong{color:#fff}
+    .conclusion-quote{border-left:3px solid #c29a6b;padding:10px 16px;margin-top:16px;background:rgba(255,255,255,.04);border-radius:0 6px 6px 0;font-style:italic;font-size:12.5px;color:#cbd5e1;line-height:1.7}
+    .disclaimer{margin-top:20px;padding:12px 16px;background:#f7f5f0;border-radius:6px;font-size:11px;color:#6b7280;line-height:1.6;border:1px solid #e8e2d5;font-style:italic}
+    .box,.estimation-grid,.conclusion-block{page-break-inside:avoid}
+    /* FOOTER */
+    .footer{padding:16px 56px;background:#f7f5f0;border-top:1px solid #e8e2d5;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#9ca3af}
+    .footer-brand{font-weight:600;color:#c29a6b;letter-spacing:2px;font-size:12px}
+    .confidential{background:#fff8ed;border:1px solid rgba(194,154,107,.4);border-radius:4px;padding:3px 10px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#c29a6b;font-weight:700}
+    @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.section-block{page-break-inside:avoid}}
+  </style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="cover-left">
+    <img src="${logoUrl}" class="cover-logo" onerror="this.style.display='none';document.getElementById('logo-text').style.display='block'"/>
+    <div id="logo-text" class="cover-logo-text" style="display:none">CLOSIA</div>
+    <div class="cover-title">Dossier de synthèse — Screening du bien</div>
+    <div class="cover-sub">Document interne — Usage exclusif Closia</div>
+  </div>
+  <div class="cover-badge">
+    <div class="cover-badge-label">Généré le</div>
+    <div class="cover-badge-date">${new Date().toLocaleDateString('fr-FR')}</div>
+  </div>
+</div>
+
+<div class="info-strip">
+  <div class="info-grid">
+    <div class="info-item"><div class="info-label">Apporteur</div><div class="info-value">${apporteur ? `${apporteur.prenom} ${apporteur.nom}` : '—'}</div></div>
+    <div class="info-item"><div class="info-label">Type de bien</div><div class="info-value">${selected.type || '—'}</div></div>
+    <div class="info-item"><div class="info-label">Prix demandé</div><div class="info-value">${selected.prix ? Number(selected.prix).toLocaleString('fr-FR') + ' €' : '—'}</div></div>
+    <div class="info-item"><div class="info-label">Surface</div><div class="info-value">${selected.surface ? selected.surface + ' m²' : '—'}</div></div>
+    <div class="info-item"><div class="info-label">Date de soumission</div><div class="info-value">${selected.created_at ? new Date(selected.created_at).toLocaleDateString('fr-FR') : '—'}</div></div>
+    <div class="info-item"><div class="info-label">Statut actuel</div><div class="info-value">${selected.statut || '—'}</div></div>
+    <div class="info-item wide"><div class="info-label">Bien analysé</div><div class="info-value">${adresseComplete}</div></div>
+  </div>
+</div>
+
+${selected.description ? `
+<div class="desc-strip">
+  <div class="desc-label">Description transmise par l'apporteur</div>
+  <div class="desc-text">${selected.description}</div>
+</div>` : ''}
+
+<div class="content">
+  ${dossierBienHtml}
+</div>
+
+<div class="footer">
+  <div class="footer-brand">CLOSIA</div>
+  <div>contact@closia.net &nbsp;·&nbsp; 06 87 76 33 40 &nbsp;·&nbsp; closia.net</div>
+  <div class="confidential">Confidentiel</div>
+</div>
+
+</body>
+</html>`)
+    w.document.close()
+    w.print()
+  }
+
   async function loadLeadsLive() {
     setLoadingLive(true)
     const { data } = await supabase
@@ -640,6 +776,7 @@ ${selectedAnalyse.description ? `
     setBrouillonValidation('')
     setBrouillonRefus('')
     setComplementsBien('')
+    setDossierBienHtml('')
   }
 
   async function analyserBienIA() {
@@ -669,6 +806,7 @@ ${selectedAnalyse.description ? `
       setPotentielSynthetise(data.potentiel_synthetise || '')
       setBrouillonValidation(data.brouillon_validation)
       setBrouillonRefus(data.brouillon_refus)
+      setDossierBienHtml(data.dossier_html || '')
       // Sauvegarde persistante du screening en base
       if (data.screening && selected?.id) {
         await supabase.from('biens').update({ screening_ia: data.screening }).eq('id', selected.id)
@@ -1503,6 +1641,15 @@ ${selectedAnalyse.description ? `
                             Utiliser le brouillon de refus
                           </button>
                         </div>
+
+                        {dossierBienHtml && (
+                          <button
+                            onClick={imprimerDossierBien}
+                            className="flex items-center justify-center gap-2 text-xs px-4 py-2.5 rounded-lg border border-[#c29a6b]/40 bg-[#c29a6b]/10 text-[#c29a6b] font-semibold hover:bg-[#c29a6b]/20 transition-colors mt-3 w-full"
+                          >
+                            <Printer className="w-3.5 h-3.5" /> Aperçu / Imprimer le dossier PDF
+                          </button>
+                        )}
                       </>
                     )}
                   </>
@@ -1705,7 +1852,7 @@ ${selectedAnalyse.description ? `
                 ) : (
                   <div className="space-y-3">
                     {!rapport.trim() && (
-                      <p className="text-xs text-center text-gray-500 italic">Rédigez le rapport ci-dessus pour pouvoir l’envoyer.</p>
+                      <p className="text-xs text-center text-gray-500 italic">Rédigez le rapport ci-dessus pour pouvoir l'envoyer.</p>
                     )}
                     <button
                       onClick={imprimerRapport}
