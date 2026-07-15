@@ -1,10 +1,19 @@
 import { Resend } from 'resend'
 import { NextResponse } from 'next/server'
+import { buildDossierBienHtml } from '@/lib/dossierBienTemplate'
+import { htmlToPdfBuffer } from '@/lib/generatePdf'
+
+export const runtime = 'nodejs'
+export const maxDuration = 60
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(req: Request) {
-  const { email, prenom, type, ville, decision, message } = await req.json()
+  const {
+    email, prenom, type, ville, decision, message,
+    // Champs additionnels transmis lors d'une validation, pour générer le PDF du dossier
+    dossierHtml, adresse, cp, prix, surface, createdAt, statut, description, apporteurNom, photoUrl,
+  } = await req.json()
 
   const isValidated = decision === 'validate'
 
@@ -30,6 +39,7 @@ export async function POST(req: Request) {
       ${isValidated ? `
         <p style="color: #d1d5db;">Votre dossier a été analysé et validé par notre équipe. Votre bien est maintenant <strong style="color: #c29a6b;">diffusé auprès des acheteurs professionnels</strong> de notre réseau pour une durée de 72h.</p>
         <p style="color: #d1d5db;">Vous serez notifié dès qu'un acheteur se positionne.</p>
+        <p style="color: #d1d5db;">Vous trouverez en pièce jointe le dossier de synthèse ayant justifié cette diffusion.</p>
       ` : `
         <p style="color: #d1d5db;">Après analyse, votre dossier n'a pas pu être retenu pour diffusion.</p>
       `}
@@ -52,14 +62,41 @@ export async function POST(req: Request) {
     </div>
   `
 
+  // Génération best-effort du PDF du dossier — ne doit jamais faire échouer l'envoi
+  // du mail ni la validation du bien si elle échoue ou prend trop de temps.
+  let attachments: { filename: string; content: Buffer }[] | undefined
+  if (isValidated && dossierHtml) {
+    try {
+      const adresseComplete = `${adresse || ''}, ${cp || ''} ${ville || ''}`.trim()
+      const pdfHtml = buildDossierBienHtml({
+        logoUrl: 'https://closia.net/logo.png',
+        adresseComplete,
+        apporteurNom: apporteurNom || prenom || '',
+        type: type || null,
+        prix: prix || null,
+        surface: surface || null,
+        createdAt: createdAt || null,
+        statut: statut || null,
+        description: description || null,
+        dossierHtml,
+        photoUrl: photoUrl || null,
+      })
+      const pdfBuffer = await htmlToPdfBuffer(pdfHtml)
+      attachments = [{ filename: `dossier-closia-${(ville || 'bien').toLowerCase().replace(/[^a-z0-9]+/g, '-')}.pdf`, content: pdfBuffer }]
+    } catch (err) {
+      console.error('Erreur génération PDF dossier (mail envoyé sans pièce jointe):', err)
+    }
+  }
+
   try {
     await resend.emails.send({
       from: 'Closia <noreply@closia.net>',
       to: email,
       subject,
       html,
+      ...(attachments ? { attachments } : {}),
     })
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, pdfAttached: !!attachments })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
