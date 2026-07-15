@@ -14,12 +14,20 @@ export type DossierBienParams = {
   description: string | null
   dossierHtml: string
   photoUrl?: string | null
+  cadastreUrl?: string | null
 }
 
 export function buildDossierBienHtml(p: DossierBienParams): string {
   const prixTexte = p.prix ? Number(p.prix).toLocaleString('fr-FR') + ' €' : '—'
   const surfaceTexte = p.surface ? `${p.surface} m²` : '—'
   const dateTexte = p.createdAt ? new Date(p.createdAt).toLocaleDateString('fr-FR') : '—'
+  const cadastreExt = p.cadastreUrl ? p.cadastreUrl.split('.').pop()?.toLowerCase().split('?')[0] : ''
+  const cadastreIsImage = !!cadastreExt && ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(cadastreExt)
+  const cadastreBlockHtml = !p.cadastreUrl
+    ? `<div class="media-placeholder">Non fourni</div>`
+    : cadastreIsImage
+      ? `<div class="media-photo"><img src="${p.cadastreUrl}" alt="Plan cadastral"/></div>`
+      : `<div class="media-doc-link">📄 Document cadastral fourni<br/><a href="${p.cadastreUrl}" target="_blank">Voir le fichier</a></div>`
 
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -44,6 +52,8 @@ export function buildDossierBienHtml(p: DossierBienParams): string {
     .media-block-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#c29a6b;margin-bottom:6px;font-weight:700}
     .media-photo img{width:100%;height:220px;object-fit:cover;border-radius:8px;border:1px solid #e8e2d5;display:block}
     .media-placeholder{height:220px;display:flex;align-items:center;justify-content:center;background:#f7f5f0;border:1px dashed #d8d2c5;border-radius:8px;color:#9ca3af;font-size:11px;text-transform:uppercase;letter-spacing:1px;text-align:center;padding:12px}
+    .media-doc-link{height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fdf6ea;border:1px solid #e8c87a;border-radius:8px;color:#92660b;font-size:12px;text-align:center;padding:12px;gap:8px}
+    .media-doc-link a{color:#92660b;font-weight:700;text-decoration:underline}
     /* INFO STRIP */
     .info-strip{background:#f7f5f0;border-bottom:1px solid #e8e2d5;padding:24px 56px}
     .info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
@@ -129,7 +139,7 @@ export function buildDossierBienHtml(p: DossierBienParams): string {
   </div>
   <div>
     <div class="media-block-label">Plan cadastral</div>
-    <div class="media-placeholder">Non fourni</div>
+    ${cadastreBlockHtml}
   </div>
 </div>
 

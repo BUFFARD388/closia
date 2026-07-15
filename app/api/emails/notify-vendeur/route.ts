@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   const {
     email, prenom, type, ville, decision, message,
     // Champs additionnels transmis lors d'une validation, pour générer le PDF du dossier
-    dossierHtml, adresse, cp, prix, surface, createdAt, statut, description, apporteurNom, photoUrl,
+    dossierHtml, adresse, cp, prix, surface, createdAt, statut, description, apporteurNom, photoUrl, cadastreUrl,
   } = await req.json()
 
   const isValidated = decision === 'validate'
@@ -80,6 +80,7 @@ export async function POST(req: Request) {
         description: description || null,
         dossierHtml,
         photoUrl: photoUrl || null,
+        cadastreUrl: cadastreUrl || null,
       })
       const pdfBuffer = await htmlToPdfBuffer(pdfHtml)
       attachments = [{ filename: `dossier-closia-${(ville || 'bien').toLowerCase().replace(/[^a-z0-9]+/g, '-')}.pdf`, content: pdfBuffer }]

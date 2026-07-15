@@ -87,6 +87,7 @@ export default function DashboardAdmin() {
   const [brouillonRefus, setBrouillonRefus] = useState('')
   const [potentielSynthetise, setPotentielSynthetise] = useState('')
   const [dossierBienHtml, setDossierBienHtml] = useState('')
+  const [uploadingCadastre, setUploadingCadastre] = useState(false)
   const [editingLead, setEditingLead] = useState<any | null>(null)
   const [editPotentiel, setEditPotentiel] = useState('')
   const [editDescription, setEditDescription] = useState('')
@@ -629,12 +630,34 @@ ${selectedAnalyse.description ? `
       description: selected.description,
       dossierHtml: dossierBienHtml,
       photoUrl: selected.photos_urls?.[0] || null,
+      cadastreUrl: selected.cadastre_url || null,
     })
 
     const w = window.open('', '_blank')!
     w.document.write(html)
     w.document.close()
     w.print()
+  }
+
+  async function uploadCadastreBien(file: File) {
+    if (!selected) return
+    setUploadingCadastre(true)
+    try {
+      const ext = file.name.split('.').pop()
+      const path = `biens/${selected.id}/cadastre/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const { error: uploadError } = await supabase.storage.from('closia-documents').upload(path, file)
+      if (uploadError) throw uploadError
+      const { data: urlData } = supabase.storage.from('closia-documents').getPublicUrl(path)
+      const publicUrl = urlData.publicUrl
+      const { error: updateError } = await supabase.from('biens').update({ cadastre_url: publicUrl }).eq('id', selected.id)
+      if (updateError) throw updateError
+      setSelected((prev: any) => prev ? { ...prev, cadastre_url: publicUrl } : prev)
+      setBiens((prev: any[]) => prev.map(b => b.id === selected.id ? { ...b, cadastre_url: publicUrl } : b))
+    } catch (err: any) {
+      alert('Erreur upload du cadastre : ' + err.message)
+    } finally {
+      setUploadingCadastre(false)
+    }
   }
 
   async function loadLeadsLive() {
@@ -775,6 +798,7 @@ ${selectedAnalyse.description ? `
             description: selected.description,
             apporteurNom: `${apporteur.prenom} ${apporteur.nom}`,
             photoUrl: selected.photos_urls?.[0] || null,
+            cadastreUrl: selected.cadastre_url || null,
           }),
         })
       }
@@ -1399,6 +1423,28 @@ ${selectedAnalyse.description ? `
                   </div>
                 </div>
               )}
+
+              <div className="mb-6">
+                <p className="text-xs text-gray-500 uppercase tracking-widest mb-3">Plan cadastral</p>
+                {selected.cadastre_url ? (
+                  <div className="flex items-center gap-3 bg-white/5 rounded-lg p-3">
+                    <a href={selected.cadastre_url} target="_blank" rel="noreferrer" className="text-sm text-[#c29a6b] underline flex-1">
+                      Voir le document cadastral
+                    </a>
+                    <label className="text-xs text-gray-400 hover:text-white cursor-pointer">
+                      {uploadingCadastre ? 'Envoi…' : 'Remplacer'}
+                      <input type="file" accept="image/*,.pdf" className="hidden" disabled={uploadingCadastre}
+                        onChange={e => { const f = e.target.files?.[0]; if (f) uploadCadastreBien(f); e.target.value = '' }} />
+                    </label>
+                  </div>
+                ) : (
+                  <label className="flex items-center justify-center gap-2 border border-dashed border-white/20 rounded-lg p-3 text-sm text-gray-400 hover:text-white hover:border-[#c29a6b]/40 cursor-pointer transition-colors">
+                    {uploadingCadastre ? 'Envoi en cours…' : "Uploader le plan cadastral (l'apporteur ne l'a pas fourni)"}
+                    <input type="file" accept="image/*,.pdf" className="hidden" disabled={uploadingCadastre}
+                      onChange={e => { const f = e.target.files?.[0]; if (f) uploadCadastreBien(f); e.target.value = '' }} />
+                  </label>
+                )}
+              </div>
 
               <div className="grid grid-cols-3 gap-3 mb-6">
                 {[
