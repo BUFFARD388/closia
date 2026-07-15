@@ -276,7 +276,7 @@ ${complements ? `\n**Compléments apportés par Laurent après vérification ter
 ---DOSSIER---
 [Un dossier de synthèse complet et détaillé en HTML pur (pas de markdown), du niveau d'un rapport d'expertise professionnel, destiné à être imprimé/exporté en PDF et montré à l'apporteur ou au vendeur pour justifier ta décision de diffusion ou de refus. Base-toi en priorité sur les données automatiques collectées ci-dessus (PLU, risques, DVF, marché) et sur les compléments de Laurent s'il y en a — ne spécule jamais sur des informations non fournies.
 
-Ce dossier doit être structuré en 7 sections avec EXACTEMENT les composants HTML suivants :
+Ce dossier doit être structuré en 9 sections, aussi détaillé et étoffé qu'un rapport d'expertise professionnelle (ne sois pas laconique : développe chaque section en plusieurs phrases ou paragraphes, comme le ferait un expert immobilier senior), avec EXACTEMENT les composants HTML suivants :
 
 SECTION (chaque section encapsulée ainsi) :
 <div class="section-block">
@@ -290,18 +290,18 @@ BOÎTES D'ALERTE (à utiliser pour tout point important — donnée manquante, r
 <div class="box box-red"><div class="box-title">Risque</div>Texte.</div>
 <div class="box box-green"><div class="box-title">Point positif</div>Texte.</div>
 
-TABLEAUX (utilise-les dès que tu as 3 données comparables ou plus — zonage, transactions DVF, annonces, scénarios) :
+TABLEAUX (utilise-les largement — zonage/destinations autorisées, transactions DVF, annonces, critères de localisation, calculs de prix, scénarios de valorisation — dès que tu as 3 données comparables ou plus) :
 <table><thead><tr><th>Colonne 1</th><th>Colonne 2</th></tr></thead><tbody>
 <tr><td><strong>Label</strong></td><td>Valeur</td></tr>
 </tbody></table>
 
-ESTIMATION (toujours avec ces deux cartes, section 6) :
+ESTIMATION (toujours avec ces deux cartes, section 8) :
 <div class="estimation-grid">
   <div class="estimation-card low"><div class="estimation-card-label">Estimation basse</div><div class="estimation-card-value">XXX XXX €</div><div class="estimation-card-sub">Hypothèse prudente</div></div>
   <div class="estimation-card high"><div class="estimation-card-label">Estimation haute</div><div class="estimation-card-value">XXX XXX €</div><div class="estimation-card-sub">Conditions favorables</div></div>
 </div>
 
-CONCLUSION (section 7, après la box de verdict) :
+CONCLUSION (section 9, après la box de verdict) :
 <div class="conclusion-block">
   <h3>Recommandations Closia</h3>
   <div class="conclusion-rec">
@@ -311,26 +311,30 @@ CONCLUSION (section 7, après la box de verdict) :
 </div>
 <div class="disclaimer">Ce dossier constitue une aide à la décision basée sur les informations disponibles à la date de génération. Il ne constitue pas une expertise immobilière certifiée.</div>
 
-Les 7 sections, dans cet ordre :
+Les 9 sections, dans cet ordre :
 
-1. SYNTHÈSE DU BIEN — tableau d'identification (type, adresse, surface, prix, prix/m², situation) puis un paragraphe de présentation.
+1. SYNTHÈSE DU BIEN — tableau d'identification (type, adresse, surface, prix, prix/m², situation, apporteur) puis un paragraphe de présentation détaillé reprenant la description transmise.
 
-2. CONTEXTE URBANISTIQUE (PLU) — reprends la donnée PLU collectée automatiquement (zonage, prescriptions). Si elle indique "non disponible" ou "non numérisé", tu NE DOIS PAS spéculer sur la constructibilité : alerte avec une box-gold ou box-red que le zonage doit être vérifié en mairie avant tout engagement. Si des compléments de Laurent contredisent ou précisent la donnée automatique, ils priment.
+2. CONTEXTE URBANISTIQUE (PLU) — section technique et approfondie. Reprends la donnée PLU collectée automatiquement (zonage, prescriptions/servitudes) : décris la nature de la zone, les destinations probablement autorisées/interdites pour ce type de zonage, les règles de densité et hauteur usuelles. Présente si possible un tableau destinations/autorisation. Signale toute servitude, périmètre ABF, risque inondation, zone bruit détectés. Si la donnée PLU indique "non disponible" ou "non numérisé", tu NE DOIS PAS spéculer sur la constructibilité précise : alerte avec une box-gold ou box-red que le zonage doit être vérifié en mairie avant tout engagement, et recommande le dépôt d'un certificat d'urbanisme si pertinent. Si des compléments de Laurent contredisent ou précisent la donnée automatique, ils priment.
 
-3. LOCALISATION ET DYNAMIQUE DE MARCHÉ — présente les transactions DVF et les annonces comparables (Castorus) collectées, sous forme de tableau si tu as au moins 3 points de comparaison. Si ces données automatiques sont vides ou insuffisantes pour ce secteur précis, complète avec ta connaissance générale du marché immobilier de la commune et de son bassin de vie (profil, dynamique, prix au m² usuels par type de bien) — précise alors clairement, dans une box-gold, qu'il s'agit d'une estimation basée sur ta connaissance du marché et non de transactions DVF vérifiées. Conclus sur la liquidité et l'attractivité du secteur pour un acheteur pro.
+3. LOCALISATION ET DYNAMIQUE DE MARCHÉ — profil de la commune (population approximative, attractivité, position géographique, accès transports, réputation), puis dynamique du marché immobilier local (demande, liquidité, profils d'acquéreurs dominants pour ce type de bien). Présente un tableau d'appréciation par critère (accessibilité routière, transports en commun, commerces et services, cadre environnemental, image du secteur…). Conclus sur la liquidité et l'attractivité du secteur pour un acheteur professionnel.
 
-4. RISQUES ET POINTS DE VIGILANCE — risques naturels/technologiques collectés (Géorisques) + tout point de vigilance mentionné par Laurent ou déductible du dossier (amiante, mitoyenneté, servitude, donnée manquante…). Utilise box-red pour un point bloquant, box-gold pour une vigilance mineure, box-green s'il n'y a aucun point notable.
+4. RISQUES ET CONTRAINTES — risques naturels et technologiques collectés (Géorisques) + tout point de vigilance mentionné par Laurent ou déductible du dossier (amiante, mitoyenneté, servitude, PMR, DPE, donnée manquante…). Présente un tableau des contraintes avec impact financier estimé si pertinent (ex. désamiantage, mise aux normes). Utilise box-red pour un point bloquant, box-gold pour une vigilance mineure, box-green s'il n'y a aucun point notable.
 
-5. POTENTIEL DE VALORISATION — développe le ou les leviers de valorisation (division, changement d'usage, rénovation, surélévation…) sous forme de scénarios. Présente-les en tableau si tu identifies au moins 2 scénarios distincts (colonnes : Scénario / Faisabilité / Commentaire).
+5. RÉFÉRENCES DE MARCHÉ — présente les transactions DVF et les annonces comparables (Castorus) collectées, sous forme de tableau (adresse/commune, surface, prix, prix/m², observations). Si ces données automatiques sont vides ou insuffisantes pour ce secteur précis, complète avec ta connaissance générale du marché immobilier de la commune et des communes comparables proches (fourchettes de prix/m² usuelles par type de bien) — précise alors clairement, dans une box-gold, qu'il s'agit d'une estimation basée sur ta connaissance du marché et non de transactions DVF vérifiées.
 
-6. FOURCHETTE DE PRIX ESTIMÉE — à partir des données DVF/marché collectées, estime une fourchette basse/haute avec le composant estimation-grid : NE LAISSE JAMAIS cette section sans chiffres. Si les données automatiques (DVF/Castorus) sont vides ou insuffisantes pour ce secteur précis, appuie-toi sur ta connaissance générale du marché immobilier français (type de bien, commune, secteur comparable) pour proposer une fourchette raisonnable et argumentée — dans ce cas, ajoute juste avant l'estimation-grid une box-gold précisant explicitement que cette fourchette est une estimation basée sur la connaissance générale du marché, faute de données DVF/Castorus disponibles pour ce secteur, et qu'elle devra être affinée par une étude de marché complémentaire avant toute négociation.
+6. COHÉRENCE DU PRIX DEMANDÉ — calcule le prix au m² du bien tel que demandé, compare-le à la fourchette de marché de la section 5, dans un tableau de calcul (surface × prix/m² = valeur, avec ajustements justifiés : localisation, état, contraintes). Indique l'écart en % et en valeur absolue entre le prix demandé et l'estimation de marché. Conclus explicitement : prix cohérent / légèrement surévalué / surévalué / sous-évalué.
 
-7. VERDICT CLOSIA — en ouverture de cette section, une box bien visible :
+7. POTENTIEL DE VALORISATION — développe le ou les leviers de valorisation (division, changement d'usage, rénovation, surélévation, promotion…) sous forme de scénarios. Présente-les en tableau (colonnes : Scénario / Faisabilité / Investissement estimé / Valeur cible / Commentaire) dès que tu identifies au moins 2 scénarios distincts. Indique le scénario recommandé en priorité et pourquoi.
+
+8. FOURCHETTE DE PRIX ESTIMÉE — synthèse chiffrée finale avec le composant estimation-grid : NE LAISSE JAMAIS cette section sans chiffres. Base-toi sur les sections 5 et 6 ; si les données automatiques (DVF/Castorus) sont vides ou insuffisantes, appuie-toi sur ta connaissance générale du marché immobilier français pour proposer une fourchette raisonnable et argumentée — dans ce cas, ajoute juste avant l'estimation-grid une box-gold précisant explicitement que cette fourchette est une estimation basée sur la connaissance générale du marché, faute de données DVF/Castorus disponibles pour ce secteur, et qu'elle devra être affinée par une étude de marché complémentaire avant toute négociation.
+
+9. VERDICT CLOSIA — en ouverture de cette section, une box bien visible :
    - box-green avec titre "Validé pour diffusion" si le bien doit être diffusé (potentiel réel, prix cohérent avec la fourchette estimée, dossier suffisamment documenté) — précise les typologies d'acheteurs pros pertinentes (marchand de biens, promoteur, foncière, investisseur).
    - box-red avec titre "Non retenu en l'état" si le bien ne doit pas être diffusé — précise clairement pourquoi et ce qu'il faudrait pour reconsidérer le dossier.
-   Puis le composant conclusion-block (3 à 5 recommandations numérotées et concrètes) et le disclaimer.
+   Puis le composant conclusion-block (4 à 6 recommandations numérotées et concrètes) et le disclaimer.
 
-Génère uniquement le HTML des 7 sections, sans balises html/head/body/style/script, rien avant ni après. N'utilise jamais de syntaxe markdown.]
+Génère uniquement le HTML des 9 sections, sans balises html/head/body/style/script, rien avant ni après. N'utilise jamais de syntaxe markdown. Sois riche et développé dans chaque section plutôt que synthétique : ce dossier doit donner une impression de rapport d'expertise complet, pas de fiche résumée.]
 `
 
     // Retry automatique si l'API est surchargée (529)
@@ -339,7 +343,7 @@ Génère uniquement le HTML des 7 sections, sans balises html/head/body/style/sc
       try {
         const message = await anthropic.messages.create({
           model: 'claude-opus-4-8',
-          max_tokens: 6000,
+          max_tokens: 12000,
           messages: [{ role: 'user', content: prompt }],
         })
         text = (message.content[0] as any).text as string
