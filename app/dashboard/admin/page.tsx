@@ -448,23 +448,31 @@ export default function DashboardAdmin() {
       return html
     }
 
-    // Découpe en sections numérotées
+    // Nouveau format : rapport HTML riche généré directement par l'IA (section-block/box/
+    // estimation-grid/conclusion-block). Ancien format : texte markdown-like ligne par ligne.
+    const isHtmlFormat = /<div\s+class="section-block"/.test(rapportTexte)
+
+    // Découpe en sections numérotées (ancien format uniquement)
     const allLines = rapportTexte.split('\n')
     const sections: { num: string; title: string; lines: string[] }[] = []
     let cur: { num: string; title: string; lines: string[] } | null = null
 
-    for (const line of allLines) {
-      const m = line.match(/^(\d+)[.)]\s+(.+)$/)
-      if (m) {
-        if (cur) sections.push(cur)
-        cur = { num: m[1], title: m[2].trim(), lines: [] }
-      } else if (cur) {
-        cur.lines.push(line)
+    if (!isHtmlFormat) {
+      for (const line of allLines) {
+        const m = line.match(/^(\d+)[.)]\s+(.+)$/)
+        if (m) {
+          if (cur) sections.push(cur)
+          cur = { num: m[1], title: m[2].trim(), lines: [] }
+        } else if (cur) {
+          cur.lines.push(line)
+        }
       }
+      if (cur) sections.push(cur)
     }
-    if (cur) sections.push(cur)
 
-    const sectionsHtml = sections.length > 0
+    const sectionsHtml = isHtmlFormat
+      ? rapportTexte
+      : sections.length > 0
       ? sections.map(s => `
           <div class="section-block">
             <div class="section-header">
@@ -521,6 +529,33 @@ export default function DashboardAdmin() {
     .section-body th{background:#1a1a2e;color:#fff;text-align:left;padding:8px 12px;font-size:11px;text-transform:uppercase;letter-spacing:0.5px}
     .section-body td{padding:7px 12px;border-bottom:1px solid #e8e2d5;color:#374151;vertical-align:top}
     .section-body tr:nth-child(even) td{background:#f7f5f0}
+    /* BOXES / ESTIMATION / CONCLUSION */
+    .box{border-radius:7px;padding:14px 18px;margin:12px 0;font-size:13px;line-height:1.7}
+    .box-title{font-weight:700;margin-bottom:5px;font-size:11.5px;text-transform:uppercase;letter-spacing:0.5px}
+    .box-blue{background:#eef4fb;border:1px solid #cfe0f3;color:#1f2937}
+    .box-gold{background:#fdf6ea;border:1px solid #e8c87a;color:#92660b}
+    .box-red{background:#fdf2f2;border:1px solid #f3c6c6;color:#b42318}
+    .box-green{background:#f1f8f0;border:1px solid #c3e0bd;color:#276022}
+    .estimation-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+    .estimation-card{border-radius:8px;padding:18px 20px;text-align:center;border:1.5px solid #e8e2d5}
+    .estimation-card.low{background:#f9f8f5;border-color:#e8e2d5}
+    .estimation-card.high{background:#1a1a2e;border-color:#1a1a2e}
+    .estimation-card-label{font-size:10px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#9ca3af;margin-bottom:6px}
+    .estimation-card.high .estimation-card-label{color:#c29a6b}
+    .estimation-card-value{font-family:Georgia,serif;font-size:26px;color:#1a1a2e;line-height:1}
+    .estimation-card.high .estimation-card-value{color:#fff}
+    .estimation-card-sub{font-size:11px;color:#9ca3af;margin-top:4px}
+    .estimation-card.high .estimation-card-sub{color:rgba(255,255,255,.5)}
+    .conclusion-block{background:#1a1a2e;border-radius:10px;padding:24px 28px;color:#fff;margin-top:12px;page-break-inside:avoid}
+    .conclusion-block h3{font-size:13px;text-transform:uppercase;letter-spacing:2px;color:#c29a6b;font-weight:700;margin-bottom:14px}
+    .conclusion-rec{display:flex;flex-direction:column;gap:8px}
+    .conclusion-rec-item{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:10px 14px;display:flex;gap:12px;align-items:flex-start}
+    .conclusion-rec-num{background:#c29a6b;color:#1a1a2e;font-size:11px;font-weight:800;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+    .conclusion-rec-text{font-size:12.5px;color:#e5e7eb;line-height:1.6}
+    .conclusion-rec-text strong{color:#fff}
+    .conclusion-quote{border-left:3px solid #c29a6b;padding:10px 16px;margin-top:16px;background:rgba(255,255,255,.04);border-radius:0 6px 6px 0;font-style:italic;font-size:12.5px;color:#cbd5e1;line-height:1.7}
+    .disclaimer{margin-top:20px;padding:12px 16px;background:#f7f5f0;border-radius:6px;font-size:11px;color:#6b7280;line-height:1.6;border:1px solid #e8e2d5;font-style:italic}
+    .box,.estimation-grid,.conclusion-block{page-break-inside:avoid}
     /* FOOTER */
     .footer{padding:16px 56px;background:#f7f5f0;border-top:1px solid #e8e2d5;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#9ca3af}
     .footer-brand{font-weight:600;color:#c29a6b;letter-spacing:2px;font-size:12px}

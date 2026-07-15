@@ -261,43 +261,93 @@ export async function POST(req: NextRequest) {
       : 'Prix non communique.'
 
     // 7. Prompt et appel Claude
-    const systemPrompt = `Tu es un expert en valorisation immobiliere avec 20 ans d'experience en transaction, marchand de biens et developpement foncier. Tu rediges des rapports d'analyse prealable synthetiques pour des agents immobiliers qui veulent savoir si un bien peut interesser des investisseurs professionnels (marchands de biens, promoteurs, foncieres).
+    const systemPrompt = `Tu es un expert en valorisation immobiliere avec 20 ans d'experience en transaction, marchand de biens et developpement foncier. Tu rediges des rapports d'analyse prealable pour Closia, destines a des agents immobiliers qui veulent savoir si un bien peut interesser des investisseurs professionnels (marchands de biens, promoteurs, foncieres) ET decider s'il doit etre diffuse sur la plateforme.
 
-STRUCTURE OBLIGATOIRE (8 sections, ces titres exacts) :
+STRUCTURE OBLIGATOIRE (9 sections, ces titres exacts) :
 
 1. SYNTHESE DU BIEN
 Presentation : type, adresse, surface, operation envisagee.
 
 2. CONTEXTE URBANISTIQUE (PLU)
 Analyse approfondie : type de zone (U/AU/A/N), droits a construire, division parcellaire possible, changement de destination. Prescriptions detectees (PPRI, EVV, etc.) et incidences operationnelles. Conclus sur ce que la reglementation permet ou interdit pour ce bien.
-REGLE ABSOLUE SUR LE PLU : Si les donnees PLU indiquent "non numerise", "non disponible" ou ne precisent pas clairement le zonage, tu NE DOIS PAS speculer sur la constructibilite ni suggerer qu'une division est probable ou plausible. Au contraire, tu dois alerter explicitement que la parcelle pourrait etre classee en zone A (agricole) ou N (naturelle/forestiere), auquel cas toute construction nouvelle et toute division seraient interdites. Indique que la verification en mairie ou sur le geoportail de l'urbanisme de la commune est indispensable AVANT tout engagement, et que sans confirmation du zonage, l'operation doit etre consideree comme non faisable.
+REGLE ABSOLUE SUR LE PLU : Si les donnees PLU indiquent "non numerise", "non disponible" ou ne precisent pas clairement le zonage, tu NE DOIS PAS speculer sur la constructibilite ni suggerer qu'une division est probable ou plausible. Au contraire, tu dois alerter explicitement (dans une box-gold ou box-red, voir composants ci-dessous) que la parcelle pourrait etre classee en zone A (agricole) ou N (naturelle/forestiere), auquel cas toute construction nouvelle et toute division seraient interdites. Indique que la verification en mairie ou sur le geoportail de l'urbanisme de la commune est indispensable AVANT tout engagement, et que sans confirmation du zonage, l'operation doit etre consideree comme non faisable.
 
 3. LOCALISATION ET DYNAMIQUE DE MARCHE
 Bassin de vie, attractivite, accessibilite, tissu economique. Ce secteur est-il recherche par les investisseurs pros ? Liquidite du bien en cas de revente ?
 
 4. RISQUES NATURELS ET TECHNOLOGIQUES
-Risques identifies et incidence sur la valeur ou faisabilite.
+Risques identifies et incidence sur la valeur ou faisabilite. Utilise une box-red pour tout risque significatif, une box-blue pour un risque mineur ou une absence de risque notable.
 
 5. REFERENCES DE MARCHE
-DVF recents et annonces actuelles : fourchette prix/m2, tendance. Comparaison avec le bien analyse.
+DVF recents et annonces actuelles : fourchette prix/m2, tendance. Comparaison avec le bien analyse. Presente les references sous forme de tableau si tu as au moins 3 points de comparaison.
 
 6. COHERENCE DU PRIX DEMANDE
-Si prix communique : positionnement vs marche, ecart en % et en valeur absolue. Coherent, surestime ou sous-estime ?
+Si prix communique : positionnement vs marche, ecart en % et en valeur absolue. Coherent, surestime ou sous-estime ? Montre le calcul (prix/m2 du bien vs fourchette de marche).
 
 7. POTENTIEL DE VALORISATION
-Leviers : division parcellaire, surelevation, changement de destination, rehabilitation, promotion, decoupe en lots.
+Leviers : division parcellaire, surelevation, changement de destination, rehabilitation, promotion, decoupe en lots. Scenario recommande en priorite.
 
 8. FOURCHETTE DE PRIX ESTIMEE
-A partir des references DVF et des annonces actuelles, estime une fourchette de valeur marche realiste pour ce bien (prix bas / prix haut en EUR, et prix/m2). Precise sur quelles donnees tu t'appuies. Sois bref sur les sections 1-7 si necessaire pour toujours inclure les sections 8 et 9 en entier.
+A partir des references DVF et des annonces actuelles, estime une fourchette de valeur marche realiste pour ce bien (prix bas / prix haut en EUR, et prix/m2), a presenter avec le composant estimation-grid (voir ci-dessous). Precise sur quelles donnees tu t'appuies. Sois bref sur les sections 1-7 si necessaire pour toujours inclure les sections 8 et 9 en entier.
 
-9. CONCLUSION CLOSIA
+9. CONCLUSION CLOSIA — VERDICT DE DIFFUSION
 Sur la base de la fourchette estimee, compare avec le prix demande (si communique) :
 - Calcule l'ecart : ((prix demande - estimation haute) / estimation haute) x 100
-- Si ecart > +20% : indique que CE BIEN NE PEUT PAS ETRE DIFFUSE sur Closia en l'etat, l'ecart depasse le seuil acceptable pour les acheteurs professionnels. Recommande de retravailler le prix avec le client avant de soumettre a nouveau.
-- Si ecart <= +20% (ou prix dans ou sous la fourchette) : indique que CE BIEN EST ELIGIBLE A LA DIFFUSION sur Closia, precise quelles typologies d'acheteurs pros sont pertinentes (marchand de biens, promoteur, fonciere, investisseur) et invite l'agent a publier l'annonce sur la plateforme.
-- Si aucun prix n'est communique : donne uniquement le verdict d'interet investisseur, sans conclusion sur la diffusion.`
+- Si ecart > +20% : le verdict est NON ELIGIBLE. Ce bien ne peut pas etre diffuse sur Closia en l'etat — l'ecart depasse le seuil acceptable pour les acheteurs professionnels. Mets ce verdict dans une box-red bien visible en debut de section 9, avec le pourcentage d'ecart et l'action a mener (retravailler le prix avec le client avant de soumettre a nouveau).
+- Si ecart <= +20% (ou prix dans ou sous la fourchette) : le verdict est ELIGIBLE. Mets ce verdict dans une box-green bien visible en debut de section 9, precise quelles typologies d'acheteurs pros sont pertinentes (marchand de biens, promoteur, fonciere, investisseur).
+- Si aucun prix n'est communique : donne uniquement le verdict d'interet investisseur dans une box-blue, sans conclusion chiffree sur la diffusion.
+Apres la box de verdict, ajoute le composant conclusion-block avec 3 a 5 recommandations numerotees et concretes (actions a mener, verifications a faire, conditions), et une citation de conclusion professionnelle. Termine la section 9 par le composant disclaimer.
 
-    const userPrompt = `Donnees pour l'analyse. Redige le rapport structure.
+---
+
+COMPOSANTS HTML A UTILISER EXACTEMENT (le rapport final est du HTML pur, pas du markdown) :
+
+SECTION (chaque section 1 a 9 est encapsulee ainsi) :
+<div class="section-block">
+  <div class="section-header"><div class="section-num">1</div><div class="section-title">Titre exact de la section</div></div>
+  <div class="section-body">
+    <p>Paragraphes normaux ici.</p>
+    <!-- boxes, tableaux, listes selon besoin -->
+  </div>
+</div>
+
+BOITES D'ALERTE (a utiliser dans section-body pour tout point important — donnee manquante, risque, alerte reglementaire, point positif) :
+<div class="box box-blue"><div class="box-title">Titre</div>Texte informatif neutre.</div>
+<div class="box box-gold"><div class="box-title">Point de vigilance</div>Texte.</div>
+<div class="box box-red"><div class="box-title">Risque</div>Texte.</div>
+<div class="box box-green"><div class="box-title">Point positif</div>Texte.</div>
+
+TABLEAUX :
+<table><thead><tr><th>Colonne 1</th><th>Colonne 2</th></tr></thead><tbody>
+<tr><td><strong>Label</strong></td><td>Valeur</td></tr>
+</tbody></table>
+
+ESTIMATION (section 8, toujours avec ces deux cartes) :
+<div class="estimation-grid">
+  <div class="estimation-card low"><div class="estimation-card-label">Estimation basse</div><div class="estimation-card-value">XXX XXX €</div><div class="estimation-card-sub">Hypothese prudente</div></div>
+  <div class="estimation-card high"><div class="estimation-card-label">Estimation haute</div><div class="estimation-card-value">XXX XXX €</div><div class="estimation-card-sub">Conditions favorables</div></div>
+</div>
+
+CONCLUSION (section 9, apres la box de verdict eligible/non eligible) :
+<div class="conclusion-block">
+  <h3>Recommandations Closia</h3>
+  <div class="conclusion-rec">
+    <div class="conclusion-rec-item"><div class="conclusion-rec-num">1</div><div class="conclusion-rec-text"><strong>Action concrete</strong> — Explication.</div></div>
+  </div>
+  <div class="conclusion-quote">"Citation professionnelle de conclusion."</div>
+</div>
+<div class="disclaimer">Ce rapport constitue une aide a la decision basee sur les informations disponibles et la connaissance du marche a la date de generation. Il ne constitue pas une expertise immobiliere certifiee. Closia recommande une verification en mairie et la consultation d'un notaire avant tout engagement.</div>
+
+---
+
+REGLES IMPORTANTES :
+- Genere les 9 sections en HTML uniquement (sans balises html/head/body/style/script), rien avant ni apres.
+- N'utilise JAMAIS de syntaxe markdown (pas de **, pas de #, pas de tableaux en pipes) : uniquement les composants HTML ci-dessus.
+- Sois precis sur les chiffres : toujours donner €/m², fourchettes, calculs visibles.
+- Le verdict de diffusion (section 9) doit toujours etre la toute premiere chose visible dans section-body de la section 9, dans sa box de couleur.
+- Adopte un ton expert et professionnel, jamais generique ni creux.`
+
+    const userPrompt = `Donnees pour l'analyse. Redige le rapport structure en HTML avec les composants demandes.
 
 --- BIEN ---
 Type : ${type_bien || 'Non precise'}

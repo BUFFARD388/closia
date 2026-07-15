@@ -60,7 +60,57 @@ function renderLines(lines: string[]): string {
   return html
 }
 
+// Styles pour le nouveau format HTML riche (section-block/box/estimation-grid/conclusion-block),
+// scopés sous .rapport-riche pour ne pas affecter le reste de l'email. Rendu correctement par
+// Gmail, Apple Mail, Outlook.com/nouveau Outlook — dégradation gracieuse ailleurs (le contenu
+// reste lisible même sans le style, comme pour les blocs flex déjà utilisés dans cet email).
+const RAPPORT_RICHE_STYLE = `
+  .rapport-riche .section-block{margin-bottom:28px}
+  .rapport-riche .section-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid rgba(194,154,107,0.2)}
+  .rapport-riche .section-num{background:#c29a6b;color:#0b1220;width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+  .rapport-riche .section-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#fff}
+  .rapport-riche .section-body{font-size:14px;line-height:1.8;color:#d1d5db}
+  .rapport-riche .section-body p{margin:0 0 9px}
+  .rapport-riche .section-body ul{padding-left:18px;margin:0 0 9px}
+  .rapport-riche .section-body li{margin-bottom:5px}
+  .rapport-riche .section-body strong{color:#fff}
+  .rapport-riche table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
+  .rapport-riche th{background:#1e293b;color:#c29a6b;text-align:left;padding:7px 10px;font-size:10px;text-transform:uppercase;letter-spacing:0.5px}
+  .rapport-riche td{padding:6px 10px;border-bottom:1px solid rgba(255,255,255,0.06);color:#d1d5db;vertical-align:top}
+  .rapport-riche .box{border-radius:7px;padding:14px 18px;margin:12px 0;font-size:13px;line-height:1.7}
+  .rapport-riche .box-title{font-weight:700;margin-bottom:5px;font-size:11px;text-transform:uppercase;letter-spacing:0.5px}
+  .rapport-riche .box-blue{background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.3);color:#93c5fd}
+  .rapport-riche .box-gold{background:rgba(194,154,107,0.1);border:1px solid rgba(194,154,107,0.35);color:#e8c87a}
+  .rapport-riche .box-red{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);color:#fca5a5}
+  .rapport-riche .box-green{background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.3);color:#86efac}
+  .rapport-riche .estimation-grid{display:flex;gap:14px;margin:14px 0}
+  .rapport-riche .estimation-card{flex:1;border-radius:8px;padding:18px 20px;text-align:center;border:1.5px solid rgba(255,255,255,0.1)}
+  .rapport-riche .estimation-card.low{background:rgba(255,255,255,0.03)}
+  .rapport-riche .estimation-card.high{background:#c29a6b;border-color:#c29a6b}
+  .rapport-riche .estimation-card-label{font-size:10px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#9ca3af;margin-bottom:6px}
+  .rapport-riche .estimation-card.high .estimation-card-label{color:rgba(11,18,32,0.65)}
+  .rapport-riche .estimation-card-value{font-family:Georgia,serif;font-size:24px;color:#fff;line-height:1}
+  .rapport-riche .estimation-card.high .estimation-card-value{color:#0b1220}
+  .rapport-riche .estimation-card-sub{font-size:11px;color:#9ca3af;margin-top:4px}
+  .rapport-riche .estimation-card.high .estimation-card-sub{color:rgba(11,18,32,0.6)}
+  .rapport-riche .conclusion-block{background:rgba(255,255,255,0.04);border:1px solid rgba(194,154,107,0.25);border-radius:10px;padding:22px 24px;margin-top:12px}
+  .rapport-riche .conclusion-block h3{font-size:12px;text-transform:uppercase;letter-spacing:2px;color:#c29a6b;font-weight:700;margin:0 0 14px}
+  .rapport-riche .conclusion-rec-item{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:10px 14px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start}
+  .rapport-riche .conclusion-rec-num{background:#c29a6b;color:#0b1220;font-size:11px;font-weight:800;width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+  .rapport-riche .conclusion-rec-text{font-size:12.5px;color:#e5e7eb;line-height:1.6}
+  .rapport-riche .conclusion-rec-text strong{color:#fff}
+  .rapport-riche .conclusion-quote{border-left:3px solid #c29a6b;padding:10px 16px;margin-top:16px;background:rgba(255,255,255,0.03);border-radius:0 6px 6px 0;font-style:italic;font-size:12.5px;color:#cbd5e1;line-height:1.7}
+  .rapport-riche .disclaimer{margin-top:20px;padding:12px 16px;background:rgba(255,255,255,0.03);border-radius:6px;font-size:11px;color:#6b7280;line-height:1.6;border:1px solid rgba(255,255,255,0.08);font-style:italic}
+`
+
 function formatRapportHtml(texte: string): string {
+  // Nouveau format : HTML riche généré directement par l'IA (section-block/box/estimation-grid/
+  // conclusion-block) — on l'insère tel quel dans un wrapper scopé. Ancien format : texte
+  // markdown-like, parsé ligne par ligne comme avant (compatibilité rapports déjà envoyés).
+  if (/<div\s+class="section-block"/.test(texte)) {
+    return `<style>${RAPPORT_RICHE_STYLE}</style><div class="rapport-riche">${texte}</div>`
+  }
+
   const allLines = texte.split('\n')
   const sections: { num: string; title: string; lines: string[] }[] = []
   let cur: { num: string; title: string; lines: string[] } | null = null
