@@ -95,6 +95,13 @@ export default function DashboardAdmin() {
   const [sendingTestBien, setSendingTestBien] = useState(false)
   const [testResultBien, setTestResultBien] = useState('')
   const [uploadingCadastre, setUploadingCadastre] = useState(false)
+  const [adresseBienEdit, setAdresseBienEdit] = useState('')
+  const [cpBienEdit, setCpBienEdit] = useState('')
+  const [villeBienEdit, setVilleBienEdit] = useState('')
+  const [savingAdresseBien, setSavingAdresseBien] = useState(false)
+  const [uploadingPhotoBienAdd, setUploadingPhotoBienAdd] = useState(false)
+  const [uploadingPhotoBienIndex, setUploadingPhotoBienIndex] = useState<number | null>(null)
+  const [deletingPhotoBienIndex, setDeletingPhotoBienIndex] = useState<number | null>(null)
   const [editingLead, setEditingLead] = useState<any | null>(null)
   const [editPotentiel, setEditPotentiel] = useState('')
   const [editDescription, setEditDescription] = useState('')
@@ -667,6 +674,98 @@ ${selectedAnalyse.description ? `
     }
   }
 
+  // Adresse/CP/Ville du bien — modifiables côté admin (erreur de saisie possible du
+  // vendeur, ou correction avant diffusion). Le vendeur n'a pas la main dessus une fois
+  // le bien soumis.
+  async function sauvegarderAdresseBien() {
+    if (!selected || !adresseBienEdit.trim() || !cpBienEdit.trim() || !villeBienEdit.trim()) return
+    setSavingAdresseBien(true)
+    try {
+      const payload = { adresse: adresseBienEdit.trim(), cp: cpBienEdit.trim(), ville: villeBienEdit.trim() }
+      const { error } = await supabase.from('biens').update(payload).eq('id', selected.id)
+      if (error) throw error
+      setSelected((prev: any) => prev ? { ...prev, ...payload } : prev)
+      setBiens((prev: any[]) => prev.map(b => b.id === selected.id ? { ...b, ...payload } : b))
+    } catch (err: any) {
+      alert("Erreur lors de la sauvegarde de l'adresse : " + err.message)
+    } finally {
+      setSavingAdresseBien(false)
+    }
+  }
+
+  // Photos du bien — ajout, remplacement et suppression individuels côté admin. Le
+  // vendeur ne peut plus les modifier une fois le dossier soumis.
+  async function ajouterPhotoBien(file: File) {
+    if (!selected) return
+    setUploadingPhotoBienAdd(true)
+    try {
+      const ext = file.name.split('.').pop()
+      const path = `biens/${selected.id}/photos/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const { error: uploadError } = await supabase.storage.from('closia-documents').upload(path, file)
+      if (uploadError) throw uploadError
+      const { data: urlData } = supabase.storage.from('closia-documents').getPublicUrl(path)
+      const newPhotos = [...(selected.photos_urls || []), urlData.publicUrl]
+      const { error: updateError } = await supabase.from('biens').update({ photos_urls: newPhotos }).eq('id', selected.id)
+      if (updateError) throw updateError
+      setSelected((prev: any) => prev ? { ...prev, photos_urls: newPhotos } : prev)
+      setBiens((prev: any[]) => prev.map(b => b.id === selected.id ? { ...b, photos_urls: newPhotos } : b))
+    } catch (err: any) {
+      alert("Erreur lors de l'ajout de la photo : " + err.message)
+    } finally {
+      setUploadingPhotoBienAdd(false)
+    }
+  }
+
+  async function remplacerPhotoBien(file: File, index: number) {
+    if (!selected) return
+    setUploadingPhotoBienIndex(index)
+    try {
+      const ancienneUrl = selected.photos_urls?.[index]
+      const ext = file.name.split('.').pop()
+      const path = `biens/${selected.id}/photos/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const { error: uploadError } = await supabase.storage.from('closia-documents').upload(path, file)
+      if (uploadError) throw uploadError
+      const { data: urlData } = supabase.storage.from('closia-documents').getPublicUrl(path)
+      const newPhotos = [...(selected.photos_urls || [])]
+      newPhotos[index] = urlData.publicUrl
+      const { error: updateError } = await supabase.from('biens').update({ photos_urls: newPhotos }).eq('id', selected.id)
+      if (updateError) throw updateError
+      setSelected((prev: any) => prev ? { ...prev, photos_urls: newPhotos } : prev)
+      setBiens((prev: any[]) => prev.map(b => b.id === selected.id ? { ...b, photos_urls: newPhotos } : b))
+      // Nettoyage best-effort de l'ancienne photo — ne bloque pas le remplacement en cas d'échec.
+      if (ancienneUrl) {
+        const parts = ancienneUrl.split('/closia-documents/')
+        if (parts[1]) supabase.storage.from('closia-documents').remove([parts[1]]).catch(() => {})
+      }
+    } catch (err: any) {
+      alert('Erreur lors du remplacement de la photo : ' + err.message)
+    } finally {
+      setUploadingPhotoBienIndex(null)
+    }
+  }
+
+  async function supprimerPhotoBien(index: number) {
+    if (!selected) return
+    if (!confirm('Supprimer cette photo ?')) return
+    setDeletingPhotoBienIndex(index)
+    try {
+      const url = selected.photos_urls?.[index]
+      const newPhotos = (selected.photos_urls || []).filter((_: string, i: number) => i !== index)
+      const { error: updateError } = await supabase.from('biens').update({ photos_urls: newPhotos }).eq('id', selected.id)
+      if (updateError) throw updateError
+      setSelected((prev: any) => prev ? { ...prev, photos_urls: newPhotos } : prev)
+      setBiens((prev: any[]) => prev.map(b => b.id === selected.id ? { ...b, photos_urls: newPhotos } : b))
+      if (url) {
+        const parts = url.split('/closia-documents/')
+        if (parts[1]) supabase.storage.from('closia-documents').remove([parts[1]]).catch(() => {})
+      }
+    } catch (err: any) {
+      alert('Erreur lors de la suppression de la photo : ' + err.message)
+    } finally {
+      setDeletingPhotoBienIndex(null)
+    }
+  }
+
   async function sauvegarderAdresseAnalyse() {
     if (!selectedAnalyse || !adresseAnalyseEdit.trim()) return
     setSavingAdresseAnalyse(true)
@@ -741,6 +840,9 @@ ${selectedAnalyse.description ? `
     setDossierBienHtml(bien.dossier_html || '')
     setTestResultBien('')
     setDureeDiffusion(72)
+    setAdresseBienEdit(bien.adresse || '')
+    setCpBienEdit(bien.cp || '')
+    setVilleBienEdit(bien.ville || '')
   }
 
   async function analyserBienIA() {
@@ -1619,22 +1721,64 @@ ${selectedAnalyse.description ? `
                 </button>
               </div>
 
-              {selected.photos_urls?.length > 0 && (
-                <div className="mb-6">
-                  <p className="text-xs text-gray-500 uppercase tracking-widest mb-3">Photos ({selected.photos_urls.length})</p>
-                  <div className="grid grid-cols-3 gap-2">
+              {/* Adresse / CP / Ville — modifiables (erreur de saisie possible côté
+                  vendeur ; celui-ci ne peut plus les modifier une fois le dossier soumis). */}
+              <div className="mb-6">
+                <p className="text-xs text-gray-500 uppercase tracking-widest mb-2">Adresse du bien</p>
+                <div className="flex flex-col gap-2">
+                  <input className="input text-sm" value={adresseBienEdit}
+                    onChange={e => setAdresseBienEdit(e.target.value)} placeholder="Adresse…" />
+                  <div className="flex items-center gap-2">
+                    <input className="input text-sm w-28" value={cpBienEdit}
+                      onChange={e => setCpBienEdit(e.target.value)} placeholder="Code postal" />
+                    <input className="input flex-1 text-sm" value={villeBienEdit}
+                      onChange={e => setVilleBienEdit(e.target.value)} placeholder="Ville" />
+                    <button onClick={sauvegarderAdresseBien}
+                      disabled={
+                        savingAdresseBien || !adresseBienEdit.trim() || !cpBienEdit.trim() || !villeBienEdit.trim() ||
+                        (adresseBienEdit.trim() === selected.adresse && cpBienEdit.trim() === selected.cp && villeBienEdit.trim() === selected.ville)
+                      }
+                      className="text-xs px-4 py-3 rounded-lg bg-[#c29a6b] hover:bg-[#b8895a] text-black font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex-shrink-0 flex items-center gap-1.5">
+                      {savingAdresseBien ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Enregistrer'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Photos — ajout, remplacement et suppression individuels (le vendeur ne
+                  peut plus les modifier une fois le dossier soumis). */}
+              <div className="mb-6">
+                <p className="text-xs text-gray-500 uppercase tracking-widest mb-3">Photos ({selected.photos_urls?.length || 0})</p>
+                {selected.photos_urls?.length > 0 && (
+                  <div className="grid grid-cols-3 gap-2 mb-2">
                     {selected.photos_urls.map((url: string, i: number) => (
                       <div key={i} className="relative group">
                         <img src={url} alt={`Photo ${i + 1}`} className="w-full h-24 object-cover rounded-lg" />
-                        <a href={url} download target="_blank" rel="noreferrer"
-                          className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
-                          <Download className="w-5 h-5 text-white" />
-                        </a>
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 rounded-lg">
+                          <a href={url} download target="_blank" rel="noreferrer"
+                            title="Télécharger" className="p-1.5 rounded-md bg-white/10 hover:bg-white/20 text-white">
+                            <Download className="w-4 h-4" />
+                          </a>
+                          <label title="Remplacer" className="p-1.5 rounded-md bg-white/10 hover:bg-white/20 text-white cursor-pointer">
+                            {uploadingPhotoBienIndex === i ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImageIcon className="w-4 h-4" />}
+                            <input type="file" accept="image/*" className="hidden" disabled={uploadingPhotoBienIndex === i}
+                              onChange={e => { const f = e.target.files?.[0]; if (f) remplacerPhotoBien(f, i); e.target.value = '' }} />
+                          </label>
+                          <button title="Supprimer" onClick={() => supprimerPhotoBien(i)} disabled={deletingPhotoBienIndex === i}
+                            className="p-1.5 rounded-md bg-red-500/20 hover:bg-red-500/30 text-red-300">
+                            {deletingPhotoBienIndex === i ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
+                )}
+                <label className="flex items-center justify-center gap-2 border border-dashed border-white/20 rounded-lg p-3 text-sm text-gray-400 hover:text-white hover:border-[#c29a6b]/40 cursor-pointer transition-colors">
+                  {uploadingPhotoBienAdd ? 'Envoi en cours…' : 'Ajouter une photo'}
+                  <input type="file" accept="image/*" className="hidden" disabled={uploadingPhotoBienAdd}
+                    onChange={e => { const f = e.target.files?.[0]; if (f) ajouterPhotoBien(f); e.target.value = '' }} />
+                </label>
+              </div>
 
               <div className="mb-6">
                 <p className="text-xs text-gray-500 uppercase tracking-widest mb-3">Plan cadastral</p>
