@@ -7,12 +7,24 @@
 import chromium from '@sparticuz/chromium'
 import puppeteer from 'puppeteer-core'
 
+// Depuis @sparticuz/chromium v149, `defaultViewport` et le type booléen de
+// `headless` ont été retirés de l'API — il faut désormais fournir son propre
+// viewport et utiliser puppeteer.defaultArgs() (voir la doc officielle du package).
+const VIEWPORT = {
+  deviceScaleFactor: 1,
+  hasTouch: false,
+  height: 1080,
+  isLandscape: true,
+  isMobile: false,
+  width: 1920,
+}
+
 export async function htmlToPdfBuffer(html: string): Promise<Buffer> {
   const browser = await puppeteer.launch({
-    args: chromium.args,
-    defaultViewport: chromium.defaultViewport,
+    args: await puppeteer.defaultArgs({ args: chromium.args, headless: 'shell' }),
+    defaultViewport: VIEWPORT,
     executablePath: await chromium.executablePath(),
-    headless: true,
+    headless: 'shell',
   })
 
   try {
