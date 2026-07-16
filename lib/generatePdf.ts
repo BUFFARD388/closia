@@ -36,7 +36,11 @@ export async function htmlToPdfBuffer(html: string): Promise<Buffer> {
     const pdf = await page.pdf({
       format: 'A4',
       printBackground: true,
-      margin: { top: '0', bottom: '0', left: '0', right: '0' },
+      // Marge haute pour éviter que le contenu (titres de section, etc.) ne touche
+      // le bord de page quand une section démarre en haut d'une nouvelle page.
+      // Gauche/droite/bas restent à 0 pour préserver le bandeau de couverture et le
+      // pied de page en pleine largeur.
+      margin: { top: '1.5cm', bottom: '0.8cm', left: '0', right: '0' },
     })
     return Buffer.from(pdf)
   } finally {
