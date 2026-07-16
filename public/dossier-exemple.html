@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Exemple de dossier d'analyse — Closia</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,Helvetica,sans-serif;color:#1a1a2e;background:#f7f5f0;font-size:13.5px;line-height:1.75}
+.wrap{max-width:900px;margin:0 auto;background:#fff}
+/* BANNIÈRE EXEMPLE */
+.ribbon{background:#1a1a2e;color:#fff;text-align:center;padding:10px 20px;font-size:12px;letter-spacing:.5px}
+.ribbon strong{color:#c29a6b}
+/* HEADER */
+.cover{background:linear-gradient(135deg,#0b1220 0%,#1b2a4a 100%);padding:40px 56px 36px;color:#fff;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.cover-logo{height:44px;margin-bottom:16px;display:block}
+.cover-title{font-size:20px;font-weight:600;color:#fff;margin-bottom:6px}
+.cover-sub{font-size:11px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:1.5px}
+.cover-badge{background:rgba(194,154,107,.12);border:1px solid rgba(194,154,107,.35);border-radius:6px;padding:10px 18px;text-align:center}
+.cover-badge-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.5);margin-bottom:4px}
+.cover-badge-date{font-size:14px;font-weight:600;color:#c29a6b}
+/* INFO STRIP */
+.info-strip{background:#f7f5f0;border-bottom:1px solid #e8e2d5;padding:24px 56px}
+.info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.info-item{background:#fff;border:1px solid #e8e2d5;border-radius:8px;padding:12px 14px}
+.info-item.wide{grid-column:1/-1}
+.info-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#9ca3af;margin-bottom:3px}
+.info-value{font-size:13px;font-weight:600;color:#1a1a2e}
+/* CONTENT */
+.content{padding:36px 56px 48px}
+.section-block{margin-bottom:32px}
+.section-header{display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #f0ebe0}
+.section-num{background:#c29a6b;color:#fff;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.section-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#1a1a2e}
+.section-body{color:#374151;font-size:13.5px;line-height:1.8}
+.section-body p{margin-bottom:9px}
+.section-body ul{padding-left:18px;margin-bottom:9px}
+.section-body li{margin-bottom:5px}
+.section-body strong{color:#1a1a2e;font-weight:600}
+.section-body table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
+.section-body th{background:#1a1a2e;color:#fff;text-align:left;padding:8px 12px;font-size:11px;text-transform:uppercase;letter-spacing:0.5px}
+.section-body td{padding:7px 12px;border-bottom:1px solid #e8e2d5;color:#374151;vertical-align:top}
+.section-body tr:nth-child(even) td{background:#f7f5f0}
+.box{border-radius:7px;padding:14px 18px;margin:12px 0;font-size:13px;line-height:1.7}
+.box-title{font-weight:700;margin-bottom:5px;font-size:11.5px;text-transform:uppercase;letter-spacing:0.5px}
+.box-blue{background:#eef4fb;border:1px solid #cfe0f3;color:#1f2937}
+.box-gold{background:#fdf6ea;border:1px solid #e8c87a;color:#92660b}
+.box-red{background:#fdf2f2;border:1px solid #f3c6c6;color:#b42318}
+.box-green{background:#f1f8f0;border:1px solid #c3e0bd;color:#276022}
+.estimation-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+.estimation-card{border-radius:8px;padding:18px 20px;text-align:center;border:1.5px solid #e8e2d5}
+.estimation-card.low{background:#f9f8f5;border-color:#e8e2d5}
+.estimation-card.high{background:#1a1a2e;border-color:#1a1a2e}
+.estimation-card-label{font-size:10px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#9ca3af;margin-bottom:6px}
+.estimation-card.high .estimation-card-label{color:#c29a6b}
+.estimation-card-value{font-family:Georgia,serif;font-size:26px;color:#1a1a2e;line-height:1}
+.estimation-card.high .estimation-card-value{color:#fff}
+.estimation-card-sub{font-size:11px;color:#9ca3af;margin-top:4px}
+.estimation-card.high .estimation-card-sub{color:rgba(255,255,255,.5)}
+.conclusion-block{background:#1a1a2e;border-radius:10px;padding:24px 28px;color:#fff;margin-top:12px}
+.conclusion-block h3{font-size:13px;text-transform:uppercase;letter-spacing:2px;color:#c29a6b;font-weight:700;margin-bottom:14px}
+.conclusion-rec{display:flex;flex-direction:column;gap:8px}
+.conclusion-rec-item{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:10px 14px;display:flex;gap:12px;align-items:flex-start}
+.conclusion-rec-num{background:#c29a6b;color:#1a1a2e;font-size:11px;font-weight:800;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.conclusion-rec-text{font-size:12.5px;color:#e5e7eb;line-height:1.6}
+.conclusion-rec-text strong{color:#fff}
+.disclaimer{margin-top:20px;padding:12px 16px;background:#f7f5f0;border-radius:6px;font-size:11px;color:#6b7280;line-height:1.6;border:1px solid #e8e2d5;font-style:italic}
+/* FOOTER / CTA */
+.footer{padding:16px 56px;background:#f7f5f0;border-top:1px solid #e8e2d5;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#9ca3af;flex-wrap:wrap;gap:8px}
+.footer-brand{font-weight:600;color:#c29a6b;letter-spacing:2px;font-size:12px}
+.cta{padding:32px 56px 48px;background:#0b1220;text-align:center}
+.cta h3{color:#fff;font-family:Georgia,serif;font-size:20px;font-weight:400;margin-bottom:10px}
+.cta p{color:rgba(255,255,255,.5);font-size:13px;margin-bottom:20px}
+.cta a{display:inline-block;background:#c29a6b;color:#000;font-weight:700;padding:12px 28px;border-radius:8px;text-decoration:none;font-size:13px;text-transform:uppercase;letter-spacing:1px}
+@media(max-width:640px){.cover,.info-strip,.content,.footer,.cta{padding-left:20px;padding-right:20px}.info-grid{grid-template-columns:1fr}.estimation-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="ribbon">📄 <strong>Exemple illustratif</strong> — dossier type transmis à l'acheteur après achat d'un lead. Données et localisation anonymisées à titre pédagogique.</div>
+
+<div class="cover">
+  <div>
+    <img src="/logo.png" class="cover-logo" onerror="this.style.display='none'"/>
+    <div class="cover-title">Dossier d'analyse et de valorisation</div>
+    <div class="cover-sub">Exemple type — Terrain constructible, première couronne sud de Bordeaux Métropole</div>
+  </div>
+  <div class="cover-badge">
+    <div class="cover-badge-label">Type de dossier</div>
+    <div class="cover-badge-date">Terrain à promotion résidentielle</div>
+  </div>
+</div>
+
+<div class="info-strip">
+  <div class="info-grid">
+    <div class="info-item"><div class="info-label">Type de bien</div><div class="info-value">Terrain constructible et viabilisé</div></div>
+    <div class="info-item"><div class="info-label">Surface</div><div class="info-value">≈ 2 500 m²</div></div>
+    <div class="info-item"><div class="info-label">Prix indicatif</div><div class="info-value">≈ 850 000 €</div></div>
+    <div class="info-item"><div class="info-label">Configuration</div><div class="info-value">Parcelle en longueur (≈22 m × 113 m)</div></div>
+    <div class="info-item"><div class="info-label">Secteur</div><div class="info-value">Première couronne sud, métropole bordelaise</div></div>
+    <div class="info-item"><div class="info-label">Cible d'acquéreur</div><div class="info-value">Promoteurs résidentiels, bailleurs sociaux</div></div>
+  </div>
+</div>
+
+<div class="content">
+
+  <div class="section-block">
+    <div class="section-header"><div class="section-num">1</div><div class="section-title">Synthèse du bien</div></div>
+    <div class="section-body">
+      <p>Le bien analysé est un terrain constructible et viabilisé d'environ 2 500 m², présentant une configuration atypique tout en longueur, sur lequel est actuellement implantée une maison d'habitation. Il est situé dans une commune de première couronne sud de la métropole bordelaise, dans un secteur urbain dense soumis au PLU de la métropole.</p>
+      <p>Le potentiel identifié est celui d'une opération de promotion résidentielle collective. L'analyse et la vérification terrain menées par Closia permettent de préciser ce potentiel : une surface de plancher (SDP) estimée à environ 1 500 m², une hauteur autorisée de 12 m, ainsi que des obligations réglementaires spécifiques — mixité sociale (≥ 20 % de logements sociaux) et typologie imposée (≥ 70 % de logements familiaux de type T4). La cible privilégiée est constituée de promoteurs résidentiels et de bailleurs sociaux actifs en première couronne d'une métropole attractive.</p>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <div class="section-header"><div class="section-num">2</div><div class="section-title">Contexte urbanistique (PLU)</div></div>
+    <div class="section-body">
+      <p>La parcelle est classée en zone urbaine mixte, avec une hauteur maximale autorisée de 12 mètres et une configuration réglementaire permettant un découpage en deux bandes constructibles successives depuis la voie de desserte. Cette lecture du zonage permet d'envisager un programme collectif structuré en deux corps de bâtiment.</p>
+      <table>
+        <thead><tr><th>Critère réglementaire</th><th>Donnée applicable</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Zonage</strong></td><td>Zone urbaine mixte, secteur dense</td></tr>
+          <tr><td><strong>Hauteur maximale</strong></td><td>12 m</td></tr>
+          <tr><td><strong>Configuration constructible</strong></td><td>Double bande constructible</td></tr>
+          <tr><td><strong>Mixité sociale</strong></td><td>≥ 20 % de logements sociaux (SRU)</td></tr>
+          <tr><td><strong>Typologie imposée</strong></td><td>≥ 70 % de logements T4 (habitat familial)</td></tr>
+        </tbody>
+      </table>
+      <div class="box box-gold"><div class="box-title">Point de vigilance</div>Les servitudes de mixité sociale et de typologie familiale doivent être intégrées dès le montage du bilan promoteur : elles réduisent la part de logements à prix libre et doivent être anticipées dans le prix de sortie moyen au m².</div>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <div class="section-header"><div class="section-num">3</div><div class="section-title">Localisation et dynamique de marché</div></div>
+    <div class="section-body">
+      <p>Le secteur bénéficie de la dynamique de la métropole bordelaise : proximité des axes de rocade, desserte en transports en commun, bassin d'emploi actif et pression démographique soutenue sur la première couronne. Ce type de commune est structurellement recherché par les promoteurs résidentiels pour des opérations de taille intermédiaire, en raison de la rareté du foncier disponible en zone déjà urbanisée.</p>
+      <table>
+        <thead><tr><th>Critère</th><th>Appréciation</th></tr></thead>
+        <tbody>
+          <tr><td>Accessibilité routière</td><td>Bonne — accès rapide à la rocade bordelaise</td></tr>
+          <tr><td>Transports en commun</td><td>Correcte — desserte bus, projet de renforcement à proximité</td></tr>
+          <tr><td>Commerces et services</td><td>Bonne — centralité de proximité</td></tr>
+          <tr><td>Image du secteur</td><td>Résidentiel qualitatif, recherché par les familles</td></tr>
+        </tbody>
+      </table>
+      <p>La liquidité du bien, en cas de revente en bloc à un promoteur ou un bailleur social, est jugée bonne compte tenu de la rareté de ce type d'assiette foncière en secteur déjà urbanisé.</p>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <div class="section-header"><div class="section-num">4</div><div class="section-title">Risques et contraintes</div></div>
+    <div class="section-body">
+      <p>Aucun risque naturel ou technologique majeur n'est identifié dans le périmètre rapproché. Les contraintes principales relèvent du montage opérationnel plutôt que du risque physique.</p>
+      <table>
+        <thead><tr><th>Contrainte</th><th>Impact</th></tr></thead>
+        <tbody>
+          <tr><td>Présence d'une maison existante</td><td>Coût de déconstruction à intégrer au bilan</td></tr>
+          <tr><td>Servitude de mixité sociale</td><td>Réduction du prix de sortie moyen pondéré</td></tr>
+          <tr><td>Double bande constructible</td><td>Complexité de phasage, à valider en étude de faisabilité</td></tr>
+        </tbody>
+      </table>
+      <div class="box box-green"><div class="box-title">Point positif</div>Aucun risque bloquant identifié à ce stade. Une étude de sol et une étude de faisabilité technique restent recommandées avant toute acquisition ferme.</div>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <div class="section-header"><div class="section-num">5</div><div class="section-title">Références de marché</div></div>
+    <div class="section-body">
+      <p>Sur ce type de secteur de première couronne bordelaise, les programmes résidentiels collectifs neufs se commercialisent usuellement entre 3 200 et 3 600 €/m² habitable selon la qualité de prestation et l'exposition. Ces ordres de grandeur permettent de reconstituer un chiffre d'affaires prévisionnel de programme et d'en déduire une charge foncière acceptable.</p>
+      <div class="box box-gold"><div class="box-title">Méthodologie</div>Cette fourchette est une estimation basée sur la connaissance générale du marché de la première couronne bordelaise, à affiner par une étude de commercialisation dédiée avant toute négociation ferme.</div>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <div class="section-header"><div class="section-num">6</div><div class="section-title">Cohérence du prix demandé</div></div>
+    <div class="section-body">
+      <table>
+        <thead><tr><th>Élément de calcul</th><th>Valeur</th></tr></thead>
+        <tbody>
+          <tr><td>SDP potentielle</td><td>≈ 1 500 m²</td></tr>
+          <tr><td>Prix de vente moyen estimé</td><td>≈ 3 400 €/m² habitable</td></tr>
+          <tr><td>Chiffre d'affaires programme estimé</td><td>≈ 5 100 000 €</td></tr>
+          <tr><td>Charge foncière cible (15–18 % du CA)</td><td>≈ 765 000 – 918 000 €</td></tr>
+          <tr><td>Prix demandé</td><td>850 000 €</td></tr>
+        </tbody>
+      </table>
+      <p>Le prix demandé se situe dans la fourchette de charge foncière cible usuellement pratiquée par les promoteurs (15 à 18 % du chiffre d'affaires prévisionnel). <strong>Conclusion : prix cohérent</strong> avec le marché et le potentiel de SDP identifié, sous réserve de confirmation de la SDP exacte par une étude de faisabilité.</p>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <div class="section-header"><div class="section-num">7</div><div class="section-title">Potentiel de valorisation</div></div>
+    <div class="section-body">
+      <table>
+        <thead><tr><th>Scénario</th><th>Faisabilité</th><th>Commentaire</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Promotion résidentielle collective</strong></td><td>Élevée</td><td>Scénario recommandé — cohérent avec le zonage et la demande locale de logements familiaux</td></tr>
+          <tr><td>Vente à un bailleur social</td><td>Moyenne</td><td>Pertinent compte tenu de l'obligation de mixité sociale intégrée au zonage</td></tr>
+          <tr><td>Revente en l'état</td><td>Faible</td><td>Ne valorise pas le potentiel constructible réel du foncier</td></tr>
+        </tbody>
+      </table>
+      <p>Le scénario de promotion résidentielle collective est recommandé en priorité, avec une attention particulière portée au phasage en double bande constructible et à l'intégration des quotas de logements sociaux et familiaux dès la conception.</p>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <div class="section-header"><div class="section-num">8</div><div class="section-title">Fourchette de prix estimée</div></div>
+    <div class="section-body">
+      <div class="box box-gold"><div class="box-title">Méthodologie</div>Fourchette établie à partir de la charge foncière cible du secteur (section 6), faute de transactions foncières strictement comparables disponibles pour ce type d'assiette — à affiner par une étude de faisabilité complémentaire avant négociation.</div>
+      <div class="estimation-grid">
+        <div class="estimation-card low"><div class="estimation-card-label">Estimation basse</div><div class="estimation-card-value">750 000 €</div><div class="estimation-card-sub">Hypothèse prudente</div></div>
+        <div class="estimation-card high"><div class="estimation-card-label">Estimation haute</div><div class="estimation-card-value">950 000 €</div><div class="estimation-card-sub">Conditions favorables</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <div class="section-header"><div class="section-num">9</div><div class="section-title">Verdict Closia</div></div>
+    <div class="section-body">
+      <div class="box box-green"><div class="box-title">Validé pour diffusion</div>Potentiel réel de promotion résidentielle, prix cohérent avec la fourchette estimée, dossier suffisamment documenté. Pertinent pour : promoteurs résidentiels, bailleurs sociaux, foncières actives en première couronne métropolitaine.</div>
+      <div class="conclusion-block">
+        <h3>Recommandations Closia</h3>
+        <div class="conclusion-rec">
+          <div class="conclusion-rec-item"><div class="conclusion-rec-num">1</div><div class="conclusion-rec-text"><strong>Lancer une étude de faisabilité</strong> — confirmer la SDP exacte et le phasage en double bande avant toute offre ferme.</div></div>
+          <div class="conclusion-rec-item"><div class="conclusion-rec-num">2</div><div class="conclusion-rec-text"><strong>Intégrer les quotas réglementaires au bilan</strong> — mixité sociale et typologie T4 dès le montage financier.</div></div>
+          <div class="conclusion-rec-item"><div class="conclusion-rec-num">3</div><div class="conclusion-rec-text"><strong>Chiffrer la déconstruction</strong> de la maison existante avant intégration au budget travaux.</div></div>
+          <div class="conclusion-rec-item"><div class="conclusion-rec-num">4</div><div class="conclusion-rec-text"><strong>Vérifier en mairie</strong> les prescriptions complémentaires éventuelles avant dépôt de permis.</div></div>
+        </div>
+      </div>
+      <div class="disclaimer">Ce dossier constitue une aide à la décision basée sur les informations disponibles à la date de génération. Il ne constitue pas une expertise immobilière certifiée. Exemple à visée pédagogique : données anonymisées et arrondies, non représentatives d'une transaction en cours.</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="cta">
+  <h3>C'est le niveau de détail de chaque dossier Closia</h3>
+  <p>Étude urbanistique, étude de marché, cohérence de prix, scénarios de valorisation et fourchette de prix — avant même de savoir si la vente se fera.</p>
+  <a href="https://closia.net">Découvrir les dossiers disponibles</a>
+</div>
+
+<div class="footer">
+  <div class="footer-brand">CLOSIA</div>
+  <div>contact@closia.net · 06 87 76 33 40 · closia.net</div>
+</div>
+
+</div>
+</body>
+</html>

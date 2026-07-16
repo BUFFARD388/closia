@@ -325,7 +325,13 @@ export default function DashboardVendeur() {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-2xl font-bold">Mes biens</h1>
-              <p className="text-gray-400 text-sm mt-1">{biens.length} bien{biens.length > 1 ? 's' : ''} soumis</p>
+              <p className="text-gray-400 text-sm mt-1">
+                {biens.length} bien{biens.length > 1 ? 's' : ''} soumis
+                <span className="mx-2 text-gray-700">·</span>
+                <a href="/dossier-exemple.html" target="_blank" rel="noreferrer" className="text-[#c29a6b] hover:underline">
+                  Voir un exemple de dossier d'analyse ↗
+                </a>
+              </p>
             </div>
             <button onClick={() => { setShowModal(true); setStep(1) }} className="btn-primary">
               <Plus className="w-4 h-4" /> Soumettre un bien

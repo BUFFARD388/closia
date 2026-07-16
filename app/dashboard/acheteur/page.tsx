@@ -391,8 +391,14 @@ export default function DashboardAcheteur() {
                           <li>· Fourchette de prix estimée</li>
                           <li>· Risques et contraintes identifiés</li>
                         </ul>
-                        <div className="mt-2.5 pt-2.5 border-t border-white/5 flex items-center gap-1 text-xs text-gold-500 font-medium">
-                          <Lock className="w-3 h-3" /> Détail complet après achat
+                        <div className="mt-2.5 pt-2.5 border-t border-white/5 flex items-center justify-between gap-2">
+                          <span className="flex items-center gap-1 text-xs text-gold-500 font-medium">
+                            <Lock className="w-3 h-3" /> Détail complet après achat
+                          </span>
+                          <a href="/dossier-exemple.html" target="_blank" rel="noreferrer"
+                            className="text-xs text-gray-400 hover:text-white underline underline-offset-2">
+                            Voir un exemple ↗
+                          </a>
                         </div>
                       </div>
 
