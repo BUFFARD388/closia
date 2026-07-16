@@ -12,9 +12,9 @@ import { buildDossierBienHtml } from '@/lib/dossierBienTemplate'
 
 // ── Grille de prix ──────────────────────────────────────────
 function getPrix(prixBien: number) {
-  if (prixBien < 300000) return { exclu: 490, deux: 290, trois: 190 }
-  if (prixBien <= 1000000) return { exclu: 890, deux: 490, trois: 320 }
-  return { exclu: 1490, deux: 790, trois: 520 }
+  if (prixBien < 300000) return { exclu: 890, deux: 520, trois: 350 }
+  if (prixBien <= 1000000) return { exclu: 1290, deux: 730, trois: 490 }
+  return { exclu: 1690, deux: 990, trois: 650 }
 }
 
 function getPrixLabel(prixBien: number, nbAcheteurs: number) {

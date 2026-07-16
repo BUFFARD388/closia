@@ -7,9 +7,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 function getPrix(prixBien: number, mode: 'exclusif' | 'partage', nbAcheteurs: number) {
   let grille
-  if (prixBien < 300000) grille = { exclu: 490, deux: 290, trois: 190 }
-  else if (prixBien <= 1000000) grille = { exclu: 890, deux: 490, trois: 320 }
-  else grille = { exclu: 1490, deux: 790, trois: 520 }
+  if (prixBien < 300000) grille = { exclu: 890, deux: 520, trois: 350 }
+  else if (prixBien <= 1000000) grille = { exclu: 1290, deux: 730, trois: 490 }
+  else grille = { exclu: 1690, deux: 990, trois: 650 }
 
   if (mode === 'exclusif') return grille.exclu
   if (nbAcheteurs <= 1) return grille.exclu

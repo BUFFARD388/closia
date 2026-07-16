@@ -15,6 +15,11 @@ export type DossierBienParams = {
   dossierHtml: string
   photoUrl?: string | null
   cadastreUrl?: string | null
+  // 'interne' (défaut) : document de screening à usage Closia/apporteur.
+  // 'acheteur' : même contenu, habillage adapté pour l'acheteur qui vient de payer le
+  // lead — c'est le livrable qui matérialise la valeur de l'étude (PLU, marché,
+  // valorisation) au-delà du simple contact apporteur.
+  audience?: 'interne' | 'acheteur'
 }
 
 export function buildDossierBienHtml(p: DossierBienParams): string {
@@ -29,11 +34,16 @@ export function buildDossierBienHtml(p: DossierBienParams): string {
       ? `<div class="media-photo"><img src="${p.cadastreUrl}" alt="Plan cadastral"/></div>`
       : `<div class="media-doc-link">📄 Document cadastral fourni<br/><a href="${p.cadastreUrl}" target="_blank">Voir le fichier</a></div>`
 
+  const isAcheteur = p.audience === 'acheteur'
+  const titrePage = isAcheteur ? `Dossier d'analyse — ${p.adresseComplete}` : `Dossier de synthèse — ${p.adresseComplete}`
+  const coverTitle = isAcheteur ? "Dossier d'analyse et de valorisation" : 'Dossier de synthèse — Screening du bien'
+  const coverSub = isAcheteur ? 'Document confidentiel — remis à l\'acheteur' : 'Document interne — Usage exclusif Closia'
+
   return `<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8"/>
-  <title>Dossier de synthèse — ${p.adresseComplete}</title>
+  <title>${titrePage}</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:Arial,Helvetica,sans-serif;color:#1a1a2e;background:#fff;font-size:13.5px;line-height:1.75}
@@ -121,8 +131,8 @@ export function buildDossierBienHtml(p: DossierBienParams): string {
   <div class="cover-left">
     <img src="${p.logoUrl}" class="cover-logo" onerror="this.style.display='none';document.getElementById('logo-text').style.display='block'"/>
     <div id="logo-text" class="cover-logo-text" style="display:none">CLOSIA</div>
-    <div class="cover-title">Dossier de synthèse — Screening du bien</div>
-    <div class="cover-sub">Document interne — Usage exclusif Closia</div>
+    <div class="cover-title">${coverTitle}</div>
+    <div class="cover-sub">${coverSub}</div>
   </div>
   <div class="cover-badge">
     <div class="cover-badge-label">Généré le</div>

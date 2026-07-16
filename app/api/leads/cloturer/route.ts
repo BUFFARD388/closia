@@ -16,9 +16,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 function getPrixPartage(prixBien: number, nbAcheteurs: number): number {
   let grille
-  if (prixBien < 300000) grille = { un: 490, deux: 290, trois: 190 }
-  else if (prixBien <= 1000000) grille = { un: 890, deux: 490, trois: 320 }
-  else grille = { un: 1490, deux: 790, trois: 520 }
+  if (prixBien < 300000) grille = { un: 890, deux: 520, trois: 350 }
+  else if (prixBien <= 1000000) grille = { un: 1290, deux: 730, trois: 490 }
+  else grille = { un: 1690, deux: 990, trois: 650 }
 
   if (nbAcheteurs <= 1) return grille.un
   if (nbAcheteurs === 2) return grille.deux

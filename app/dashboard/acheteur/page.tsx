@@ -7,12 +7,13 @@ import {
   ShoppingCart, Star, X, CheckCircle, Lock, Users, Zap, Loader2
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { buildDossierBienHtml } from '@/lib/dossierBienTemplate'
 
 // ── Grille de prix ──────────────────────────────────────────
 function getPrix(prixBien: number) {
-  if (prixBien < 300000) return { exclu: 490, deux: 290, trois: 190 }
-  if (prixBien <= 1000000) return { exclu: 890, deux: 490, trois: 320 }
-  return { exclu: 1490, deux: 790, trois: 520 }
+  if (prixBien < 300000) return { exclu: 890, deux: 520, trois: 350 }
+  if (prixBien <= 1000000) return { exclu: 1290, deux: 730, trois: 490 }
+  return { exclu: 1690, deux: 990, trois: 650 }
 }
 
 function heuresRestantes(dateExpiration: string) {
@@ -155,6 +156,32 @@ export default function DashboardAcheteur() {
     }
     return true
   })
+
+  // Dossier d'analyse complet (étude PLU, marché, valorisation, fourchette de prix)
+  // remis à l'acheteur une fois l'achat confirmé — c'est le livrable qui matérialise
+  // la valeur au-delà du simple contact apporteur.
+  const voirDossierComplet = (bien: any) => {
+    if (!bien?.dossier_html) return
+    const html = buildDossierBienHtml({
+      logoUrl: window.location.origin + '/logo.png',
+      adresseComplete: `${bien.adresse || ''}, ${bien.cp || ''} ${bien.ville || ''}`.trim(),
+      apporteurNom: bien.profiles ? `${bien.profiles.prenom} ${bien.profiles.nom}` : '',
+      type: bien.type,
+      prix: bien.prix,
+      surface: bien.surface,
+      createdAt: bien.created_at,
+      statut: bien.statut,
+      description: bien.description,
+      dossierHtml: bien.dossier_html,
+      photoUrl: bien.photos_urls?.[0] || null,
+      cadastreUrl: bien.cadastre_url || null,
+      audience: 'acheteur',
+    })
+    const w = window.open('', '_blank')
+    if (!w) return
+    w.document.write(html)
+    w.document.close()
+  }
 
   const openBuy = (lead: any) => {
     setSelectedLead(lead)
@@ -352,13 +379,20 @@ export default function DashboardAcheteur() {
                         </div>
                       )}
 
-                      {/* Analyse complète verrouillée */}
-                      <div className="bg-navy-700/50 rounded-lg p-3 mb-4 relative overflow-hidden">
-                        <p className="text-xs text-gray-400 blur-sm select-none line-clamp-2">{lead.description || 'Analyse complète disponible après achat.'}</p>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-xs text-gold-500 font-medium flex items-center gap-1">
-                            <Lock className="w-3 h-3" /> Analyse complète après achat
-                          </span>
+                      {/* Contenu du dossier — la table des matières est volontairement laissée
+                          visible (générique, pas de contenu propre au bien) pour matérialiser
+                          la valeur de l'étude avant achat : ce n'est pas qu'un contact. */}
+                      <div className="bg-navy-700/50 rounded-lg p-3 mb-4">
+                        <p className="text-xs text-gray-500 uppercase tracking-widest mb-2">Contenu du dossier</p>
+                        <ul className="space-y-1 text-xs text-gray-400">
+                          <li>· Étude urbanistique (PLU, constructibilité, servitudes)</li>
+                          <li>· Étude de marché (comparables, cohérence de prix)</li>
+                          <li>· Scénarios de valorisation</li>
+                          <li>· Fourchette de prix estimée</li>
+                          <li>· Risques et contraintes identifiés</li>
+                        </ul>
+                        <div className="mt-2.5 pt-2.5 border-t border-white/5 flex items-center gap-1 text-xs text-gold-500 font-medium">
+                          <Lock className="w-3 h-3" /> Détail complet après achat
                         </div>
                       </div>
 
@@ -440,6 +474,18 @@ export default function DashboardAcheteur() {
                                   <p className="text-xs text-gray-400">Coordonnées en cours de chargement…</p>
                                 )}
                               </div>
+
+                              {/* Dossier d'analyse complet — étude PLU, marché, valorisation, fourchette
+                                  de prix : c'est le livrable qui justifie le prix payé, au-delà du
+                                  simple contact apporteur. */}
+                              {bien.dossier_html && (
+                                <button
+                                  onClick={() => voirDossierComplet(bien)}
+                                  className="w-full flex items-center justify-center gap-2 text-sm px-4 py-3 rounded-xl bg-[#c29a6b] hover:bg-[#b8895a] text-black font-semibold transition-colors"
+                                >
+                                  📄 Voir le dossier d'analyse complet
+                                </button>
+                              )}
 
                               {/* Détails du bien */}
                               <div className="bg-white/5 border border-white/10 rounded-xl p-4">
