@@ -92,9 +92,13 @@ export default function RapportView({ analyse }: { analyse: any }) {
   const { preamble, sections } = isHtmlFormat ? { preamble: '', sections: [] as { num: string; title: string; body: string }[] } : parseRapport(analyse.rapport)
   const date = new Date(analyse.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
 
-  // Première photo transmise par le demandeur
+  // Photo de couverture : priorité à la photo principale choisie manuellement par
+  // Laurent en admin (analyse.photo_principale_url) — sinon, à défaut, la première
+  // photo transmise par le demandeur parmi les fichiers joints.
   const photos: { name: string; url: string }[] = Array.isArray(analyse.fichiers) ? analyse.fichiers : []
-  const coverPhoto = photos.find(f => /\.(jpe?g|png|webp|gif|heic|avif)$/i.test(f.name)) || photos[0]
+  const coverPhoto = analyse.photo_principale_url
+    ? { name: 'photo-principale', url: analyse.photo_principale_url }
+    : photos.find(f => /\.(jpe?g|png|webp|gif|heic|avif)$/i.test(f.name)) || photos[0]
 
   return (
     <>

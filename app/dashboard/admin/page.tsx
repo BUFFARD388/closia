@@ -67,6 +67,9 @@ export default function DashboardAdmin() {
   const [sent, setSent] = useState(false)
   const [analyses, setAnalyses] = useState<any[]>([])
   const [selectedAnalyse, setSelectedAnalyse] = useState<any | null>(null)
+  const [adresseAnalyseEdit, setAdresseAnalyseEdit] = useState('')
+  const [savingAdresseAnalyse, setSavingAdresseAnalyse] = useState(false)
+  const [uploadingPhotoAnalyse, setUploadingPhotoAnalyse] = useState(false)
   const [rapport, setRapport] = useState('')
   const [savingRapport, setSavingRapport] = useState(false)
   const [sendingRapport, setSendingRapport] = useState(false)
@@ -664,6 +667,46 @@ ${selectedAnalyse.description ? `
     }
   }
 
+  async function sauvegarderAdresseAnalyse() {
+    if (!selectedAnalyse || !adresseAnalyseEdit.trim()) return
+    setSavingAdresseAnalyse(true)
+    try {
+      const { error } = await supabase.from('analyses').update({ adresse: adresseAnalyseEdit.trim() }).eq('id', selectedAnalyse.id)
+      if (error) throw error
+      setSelectedAnalyse((prev: any) => prev ? { ...prev, adresse: adresseAnalyseEdit.trim() } : prev)
+      setAnalyses((prev: any[]) => prev.map(a => a.id === selectedAnalyse.id ? { ...a, adresse: adresseAnalyseEdit.trim() } : a))
+    } catch (err: any) {
+      alert("Erreur lors de la sauvegarde de l'adresse : " + err.message)
+    } finally {
+      setSavingAdresseAnalyse(false)
+    }
+  }
+
+  // Remplace la photo de couverture du rapport (analyse.photo_principale_url), qui
+  // prime sur la sélection automatique parmi les fichiers transmis par le client —
+  // utile quand ce dernier a joint une photo non pertinente (carte de visite, etc.)
+  // en premier document.
+  async function uploadPhotoPrincipaleAnalyse(file: File) {
+    if (!selectedAnalyse) return
+    setUploadingPhotoAnalyse(true)
+    try {
+      const ext = file.name.split('.').pop()
+      const path = `analyses/${selectedAnalyse.id}/photo-principale/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const { error: uploadError } = await supabase.storage.from('closia-documents').upload(path, file)
+      if (uploadError) throw uploadError
+      const { data: urlData } = supabase.storage.from('closia-documents').getPublicUrl(path)
+      const publicUrl = urlData.publicUrl
+      const { error: updateError } = await supabase.from('analyses').update({ photo_principale_url: publicUrl }).eq('id', selectedAnalyse.id)
+      if (updateError) throw updateError
+      setSelectedAnalyse((prev: any) => prev ? { ...prev, photo_principale_url: publicUrl } : prev)
+      setAnalyses((prev: any[]) => prev.map(a => a.id === selectedAnalyse.id ? { ...a, photo_principale_url: publicUrl } : a))
+    } catch (err: any) {
+      alert('Erreur upload de la photo principale : ' + err.message)
+    } finally {
+      setUploadingPhotoAnalyse(false)
+    }
+  }
+
   async function loadLeadsLive() {
     setLoadingLive(true)
     const { data } = await supabase
@@ -1197,7 +1240,7 @@ ${selectedAnalyse.description ? `
                         <span>{a.tel}</span>
                       </div>
                     </div>
-                    <button onClick={() => { setSelectedAnalyse(a); setRapport(a.rapport || ''); setRapportEnvoye(false) }}
+                    <button onClick={() => { setSelectedAnalyse(a); setRapport(a.rapport || ''); setRapportEnvoye(false); setAdresseAnalyseEdit(a.adresse || '') }}
                       className="btn-primary text-xs !py-2 !px-4 flex-shrink-0">
                       Voir <ChevronRight className="w-3.5 h-3.5" />
                     </button>
@@ -1858,11 +1901,24 @@ ${selectedAnalyse.description ? `
               <div className="flex items-start justify-between mb-6">
                 <div>
                   <h2 className="text-xl font-bold">Analyse préalable — {selectedAnalyse.nom}</h2>
-                  <p className="text-sm text-gray-400 mt-1">{selectedAnalyse.adresse}</p>
                 </div>
                 <button onClick={() => setSelectedAnalyse(null)} className="text-gray-400 hover:text-white">
                   <X className="w-5 h-5" />
                 </button>
+              </div>
+
+              {/* Adresse — modifiable (erreur de saisie possible côté client) */}
+              <div className="mb-6">
+                <p className="text-xs text-gray-500 uppercase tracking-widest mb-2">Adresse du bien</p>
+                <div className="flex items-center gap-2">
+                  <input className="input flex-1 text-sm" value={adresseAnalyseEdit}
+                    onChange={e => setAdresseAnalyseEdit(e.target.value)} placeholder="Adresse du bien…" />
+                  <button onClick={sauvegarderAdresseAnalyse}
+                    disabled={savingAdresseAnalyse || !adresseAnalyseEdit.trim() || adresseAnalyseEdit.trim() === selectedAnalyse.adresse}
+                    className="text-xs px-4 py-3 rounded-lg bg-[#c29a6b] hover:bg-[#b8895a] text-black font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex-shrink-0 flex items-center gap-1.5">
+                    {savingAdresseAnalyse ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Enregistrer'}
+                  </button>
+                </div>
               </div>
 
               {/* Infos client */}
@@ -1921,6 +1977,29 @@ ${selectedAnalyse.description ? `
                   </div>
                 </div>
               )}
+
+              {/* Photo principale du rapport — prime sur la sélection automatique parmi
+                  les fichiers transmis (utile si le client a mis une photo non pertinente,
+                  ex. carte de visite, en premier document). */}
+              <div className="mb-6">
+                <p className="text-xs text-gray-500 uppercase tracking-widest mb-3">Photo principale du rapport</p>
+                {selectedAnalyse.photo_principale_url ? (
+                  <div className="flex items-center gap-3">
+                    <img src={selectedAnalyse.photo_principale_url} alt="Photo principale" className="w-24 h-16 object-cover rounded-lg border border-white/10" />
+                    <label className="text-xs px-3 py-2 rounded-lg border border-white/20 text-gray-300 hover:text-white hover:border-white/40 cursor-pointer transition-colors flex items-center gap-1.5">
+                      {uploadingPhotoAnalyse ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Envoi…</> : 'Remplacer'}
+                      <input type="file" accept="image/*" className="hidden" disabled={uploadingPhotoAnalyse}
+                        onChange={e => { const f = e.target.files?.[0]; if (f) uploadPhotoPrincipaleAnalyse(f); e.target.value = '' }} />
+                    </label>
+                  </div>
+                ) : (
+                  <label className="flex items-center justify-center gap-2 border border-dashed border-white/20 rounded-lg p-3 text-sm text-gray-400 hover:text-white hover:border-[#c29a6b]/40 cursor-pointer transition-colors">
+                    {uploadingPhotoAnalyse ? 'Envoi en cours…' : 'Choisir une photo principale (remplace la sélection automatique)'}
+                    <input type="file" accept="image/*" className="hidden" disabled={uploadingPhotoAnalyse}
+                      onChange={e => { const f = e.target.files?.[0]; if (f) uploadPhotoPrincipaleAnalyse(f); e.target.value = '' }} />
+                  </label>
+                )}
+              </div>
 
               {/* Rédaction du rapport */}
               <div className="border-t border-white/10 pt-6 mb-6">
