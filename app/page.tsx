@@ -120,7 +120,7 @@ export default function LandingPage() {
               Off-market réservé aux professionnels
             </p>
             <h1 className="text-3xl sm:text-5xl font-bold leading-tight mb-6 text-white">
-              Des opportunités immobilières filtrées par un expert
+              Des opportunités immobilières analysées par un expert
             </h1>
             <p className="text-base text-gray-400 leading-relaxed mb-12 max-w-xl">
               Pas un portail. Pas un algorithme. Opportunités réservées aux professionnels qui créent de la valeur.
