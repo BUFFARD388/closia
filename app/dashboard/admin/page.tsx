@@ -735,6 +735,43 @@ ${selectedAnalyse.description ? `
     if (!selected || !reponse.trim()) return
     setSending(true)
     try {
+      // Le dossier IA (dossierBienHtml) est nécessaire pour joindre le PDF au mail du
+      // vendeur, que ce soit une validation ou un refus. S'il n'a pas encore été généré
+      // (oubli du bouton "Analyser avec IA", ou état perdu suite à un changement de
+      // fiche), on le génère maintenant plutôt que de laisser partir un mail sans
+      // pièce jointe.
+      let dossierHtmlToSend = dossierBienHtml
+      if (!dossierHtmlToSend) {
+        const resAnalyse = await fetch('/api/biens/analyser-dossier', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: selected.type,
+            prix: selected.prix,
+            surface: selected.surface,
+            ville: selected.ville,
+            cp: selected.cp,
+            adresse: selected.adresse,
+            situation: selected.situation,
+            description: selected.description,
+            potentiel: selected.potentiel,
+            apporteur: apporteur ? `${apporteur.prenom} ${apporteur.nom}` : '',
+            complements: complementsBien,
+          }),
+        })
+        const dataAnalyse = await resAnalyse.json()
+        if (dataAnalyse.error || !dataAnalyse.dossier_html) {
+          throw new Error("Dossier IA introuvable : impossible de générer le PDF à joindre au mail du vendeur (" + (dataAnalyse.error || 'réponse vide') + ')')
+        }
+        dossierHtmlToSend = dataAnalyse.dossier_html
+        setDossierBienHtml(dossierHtmlToSend)
+        setScreeningBien(dataAnalyse.screening || '')
+        setPotentielSynthetise(dataAnalyse.potentiel_synthetise || '')
+        if (dataAnalyse.screening) {
+          await supabase.from('biens').update({ screening_ia: dataAnalyse.screening }).eq('id', selected.id)
+        }
+      }
+
       if (decision === 'validate') {
         const now = new Date()
         const expiration = new Date(now.getTime() + 72 * 3600 * 1000)
@@ -745,17 +782,12 @@ ${selectedAnalyse.description ? `
           date_expiration: expiration.toISOString(),
         }).eq('id', selected.id)
       } else {
-        if (selected.photos_urls?.length > 0) {
-          const paths = selected.photos_urls.map((url: string) => {
-            const parts = url.split('/closia-documents/')
-            return parts[1] || ''
-          }).filter(Boolean)
-          if (paths.length > 0) await supabase.storage.from('closia-documents').remove(paths)
-        }
+        // La suppression des photos est différée après l'envoi du mail (voir plus bas) :
+        // le PDF du dossier de refus doit pouvoir encore accéder à la photo du bien au
+        // moment de sa génération par puppeteer.
         await supabase.from('biens').update({
           statut: 'rejected',
           reponse_admin: reponse,
-          photos_urls: [],
         }).eq('id', selected.id)
       }
       // Notifier les acheteurs si validation
@@ -774,9 +806,11 @@ ${selectedAnalyse.description ? `
         }).catch(console.warn) // non bloquant
       }
 
-      // Envoyer email au vendeur
+      // Envoyer email au vendeur — si la validation implique un dossier PDF, l'échec
+      // de génération/attache doit bloquer explicitement (voir notify-vendeur/route.ts)
+      // plutôt que de laisser partir un mail sans pièce jointe sans que personne le sache.
       if (apporteur?.email) {
-        await fetch('/api/emails/notify-vendeur', {
+        const resNotify = await fetch('/api/emails/notify-vendeur', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -786,9 +820,9 @@ ${selectedAnalyse.description ? `
             ville: selected.ville,
             decision,
             message: reponse,
-            // Champs additionnels utilisés uniquement en cas de validation, pour joindre
-            // le PDF du dossier de synthèse au mail envoyé au vendeur.
-            dossierHtml: decision === 'validate' ? dossierBienHtml : undefined,
+            // Dossier de synthèse utilisé pour joindre le PDF au mail envoyé au vendeur,
+            // que ce soit une validation ou un refus.
+            dossierHtml: dossierHtmlToSend,
             adresse: selected.adresse,
             cp: selected.cp,
             prix: selected.prix,
@@ -801,6 +835,24 @@ ${selectedAnalyse.description ? `
             cadastreUrl: selected.cadastre_url || null,
           }),
         })
+        const dataNotify = await resNotify.json().catch(() => ({}))
+        if (!resNotify.ok) {
+          throw new Error(dataNotify.error || "Le mail au vendeur n'a pas pu être envoyé.")
+        }
+        if (!dataNotify.pdfAttached) {
+          throw new Error(`Le mail de ${decision === 'validate' ? 'validation' : 'refus'} n'a pas été envoyé : le PDF du dossier n'a pas pu être joint.`)
+        }
+      }
+
+      // Nettoyage du storage après refus — une fois le mail (et son PDF avec la photo)
+      // bien parti, on peut supprimer les fichiers sans risque.
+      if (decision === 'reject' && selected.photos_urls?.length > 0) {
+        const paths = selected.photos_urls.map((url: string) => {
+          const parts = url.split('/closia-documents/')
+          return parts[1] || ''
+        }).filter(Boolean)
+        if (paths.length > 0) await supabase.storage.from('closia-documents').remove(paths)
+        await supabase.from('biens').update({ photos_urls: [] }).eq('id', selected.id)
       }
 
       await loadBiens()

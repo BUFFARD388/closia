@@ -42,6 +42,7 @@ export async function POST(req: Request) {
         <p style="color: #d1d5db;">Vous trouverez en pièce jointe le dossier de synthèse ayant justifié cette diffusion.</p>
       ` : `
         <p style="color: #d1d5db;">Après analyse, votre dossier n'a pas pu être retenu pour diffusion.</p>
+        <p style="color: #d1d5db;">Vous trouverez en pièce jointe le dossier de synthèse ayant justifié cette décision.</p>
       `}
 
       ${message ? `
@@ -62,31 +63,41 @@ export async function POST(req: Request) {
     </div>
   `
 
-  // Génération best-effort du PDF du dossier — ne doit jamais faire échouer l'envoi
-  // du mail ni la validation du bien si elle échoue ou prend trop de temps.
+  // Le PDF du dossier est obligatoire pour un mail de validation OU de refus : on ne
+  // l'envoie jamais sans pièce jointe en silence. Si le dossier IA est manquant ou si
+  // la génération du PDF échoue, on bloque explicitement (le dashboard admin peut alors
+  // réessayer) plutôt que de laisser partir un mail incomplet sans que personne le sache.
   let attachments: { filename: string; content: Buffer }[] | undefined
-  if (isValidated && dossierHtml) {
-    try {
-      const adresseComplete = `${adresse || ''}, ${cp || ''} ${ville || ''}`.trim()
-      const pdfHtml = buildDossierBienHtml({
-        logoUrl: 'https://closia.net/logo.png',
-        adresseComplete,
-        apporteurNom: apporteurNom || prenom || '',
-        type: type || null,
-        prix: prix || null,
-        surface: surface || null,
-        createdAt: createdAt || null,
-        statut: statut || null,
-        description: description || null,
-        dossierHtml,
-        photoUrl: photoUrl || null,
-        cadastreUrl: cadastreUrl || null,
-      })
-      const pdfBuffer = await htmlToPdfBuffer(pdfHtml)
-      attachments = [{ filename: `dossier-closia-${(ville || 'bien').toLowerCase().replace(/[^a-z0-9]+/g, '-')}.pdf`, content: pdfBuffer }]
-    } catch (err) {
-      console.error('Erreur génération PDF dossier (mail envoyé sans pièce jointe):', err)
-    }
+  if (!dossierHtml) {
+    return NextResponse.json(
+      { error: "Dossier IA manquant : le PDF n'a pas pu être généré, mail non envoyé." },
+      { status: 400 }
+    )
+  }
+  try {
+    const adresseComplete = `${adresse || ''}, ${cp || ''} ${ville || ''}`.trim()
+    const pdfHtml = buildDossierBienHtml({
+      logoUrl: 'https://closia.net/logo.png',
+      adresseComplete,
+      apporteurNom: apporteurNom || prenom || '',
+      type: type || null,
+      prix: prix || null,
+      surface: surface || null,
+      createdAt: createdAt || null,
+      statut: statut || null,
+      description: description || null,
+      dossierHtml,
+      photoUrl: photoUrl || null,
+      cadastreUrl: cadastreUrl || null,
+    })
+    const pdfBuffer = await htmlToPdfBuffer(pdfHtml)
+    attachments = [{ filename: `dossier-closia-${(ville || 'bien').toLowerCase().replace(/[^a-z0-9]+/g, '-')}.pdf`, content: pdfBuffer }]
+  } catch (err: any) {
+    console.error('Erreur génération PDF dossier (mail non envoyé):', err)
+    return NextResponse.json(
+      { error: `Échec de la génération du PDF du dossier : ${err?.message || 'erreur inconnue'}. Mail non envoyé.` },
+      { status: 500 }
+    )
   }
 
   try {

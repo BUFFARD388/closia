@@ -23,18 +23,27 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true, sent: 0 })
     }
 
-    // Récupérer les emails via auth admin
-    const { data: { users } } = await supabase.auth.admin.listUsers({ perPage: 1000 })
+    // Récupérer tous les emails via auth admin (pagination complète)
+    let allUsers: any[] = []
+    let page = 1
+    while (true) {
+      const { data: { users }, error } = await supabase.auth.admin.listUsers({ perPage: 1000, page })
+      if (error || !users || users.length === 0) break
+      allUsers = allUsers.concat(users)
+      if (users.length < 1000) break
+      page++
+    }
 
     const userEmailMap = new Map<string, string>(
-      users.map(u => [u.id, u.email ?? ''] as [string, string])
+      allUsers.map(u => [u.id, u.email ?? ''] as [string, string])
     )
 
     // Filtrer par zones (ville, département ou zones vides = tous)
     const departement = cp?.substring(0, 2) || ''
     const acheteursCibles = profiles.filter(p => {
-      if (!p.zones || p.zones.trim() === '') return true // pas de filtre = reçoit tout
-      const zones = p.zones.toLowerCase()
+      const zonesStr = (p.zones ?? '').trim()
+      if (!zonesStr) return true // null, vide ou espaces = reçoit tout
+      const zones = zonesStr.toLowerCase()
       return (
         zones.includes(ville?.toLowerCase()) ||
         zones.includes(departement) ||

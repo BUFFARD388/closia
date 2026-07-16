@@ -3,4 +3,12 @@ node_modules/
 .vercel/
 .env.local
 .vercel
-".env.local" 
+".env.local"
+.env*
+
+# Application distincte (valorimmo.app), possède son propre dépôt Git —
+# ne doit jamais être suivie dans le dépôt closia.
+valorimmo/
+
+# Cache TypeScript, ne doit pas être versionné
+tsconfig.tsbuildinfo
