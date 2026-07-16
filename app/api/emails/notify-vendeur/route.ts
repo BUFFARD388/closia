@@ -13,9 +13,13 @@ export async function POST(req: Request) {
     email, prenom, type, ville, decision, message,
     // Champs additionnels transmis lors d'une validation, pour générer le PDF du dossier
     dossierHtml, adresse, cp, prix, surface, createdAt, statut, description, apporteurNom, photoUrl, cadastreUrl,
+    // Durée de diffusion choisie par Laurent (par tranche de 24h) — 72h par défaut
+    // pour compatibilité si jamais non transmise.
+    dureeHeures,
   } = await req.json()
 
   const isValidated = decision === 'validate'
+  const duree = dureeHeures || 72
 
   const subject = isValidated
     ? `✅ Votre bien a été validé et est en diffusion — Closia`
@@ -37,7 +41,7 @@ export async function POST(req: Request) {
       </div>
 
       ${isValidated ? `
-        <p style="color: #d1d5db;">Votre dossier a été analysé et validé par notre équipe. Votre bien est maintenant <strong style="color: #c29a6b;">diffusé auprès des acheteurs professionnels</strong> de notre réseau pour une durée de 72h.</p>
+        <p style="color: #d1d5db;">Votre dossier a été analysé et validé par notre équipe. Votre bien est maintenant <strong style="color: #c29a6b;">diffusé auprès des acheteurs professionnels</strong> de notre réseau pour une durée de ${duree}h.</p>
         <p style="color: #d1d5db;">Vous serez notifié dès qu'un acheteur se positionne.</p>
         <p style="color: #d1d5db;">Vous trouverez en pièce jointe le dossier de synthèse ayant justifié cette diffusion.</p>
       ` : `

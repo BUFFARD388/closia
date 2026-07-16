@@ -11,7 +11,8 @@ const supabase = createClient(
 
 export async function POST(req: Request) {
   try {
-    const { bienId, type, ville, cp, prix, surface } = await req.json()
+    const { bienId, type, ville, cp, prix, surface, dureeHeures } = await req.json()
+    const duree = dureeHeures || 72
 
     // Récupérer tous les acheteurs avec leurs zones
     const { data: profiles } = await supabase
@@ -99,7 +100,7 @@ export async function POST(req: Request) {
 
             <div style="background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:14px;margin-bottom:28px;">
               <p style="color:#fca5a5;font-size:13px;margin:0;text-align:center;">
-                ⏱ Disponible <strong>72h uniquement</strong> — Accès limité à 3 acheteurs maximum
+                ⏱ Disponible <strong>${duree}h uniquement</strong> — Accès limité à 3 acheteurs maximum
               </p>
             </div>
 

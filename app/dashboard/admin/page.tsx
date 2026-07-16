@@ -87,6 +87,7 @@ export default function DashboardAdmin() {
   const [brouillonRefus, setBrouillonRefus] = useState('')
   const [potentielSynthetise, setPotentielSynthetise] = useState('')
   const [dossierBienHtml, setDossierBienHtml] = useState('')
+  const [dureeDiffusion, setDureeDiffusion] = useState(72)
   const [testEmailBien, setTestEmailBien] = useState('laurentbuffard69250@gmail.com')
   const [sendingTestBien, setSendingTestBien] = useState(false)
   const [testResultBien, setTestResultBien] = useState('')
@@ -696,6 +697,7 @@ ${selectedAnalyse.description ? `
     setComplementsBien(bien.complements_bien || '')
     setDossierBienHtml(bien.dossier_html || '')
     setTestResultBien('')
+    setDureeDiffusion(72)
   }
 
   async function analyserBienIA() {
@@ -817,6 +819,7 @@ ${selectedAnalyse.description ? `
           apporteurNom: apporteur ? `${apporteur.prenom} ${apporteur.nom}` : '',
           photoUrl: selected.photos_urls?.[0] || null,
           cadastreUrl: selected.cadastre_url || null,
+          dureeHeures: dureeDiffusion,
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -881,7 +884,7 @@ ${selectedAnalyse.description ? `
 
       if (decision === 'validate') {
         const now = new Date()
-        const expiration = new Date(now.getTime() + 72 * 3600 * 1000)
+        const expiration = new Date(now.getTime() + dureeDiffusion * 3600 * 1000)
         await supabase.from('biens').update({
           statut: 'diffuse',
           reponse_admin: reponse,
@@ -909,6 +912,7 @@ ${selectedAnalyse.description ? `
             cp: selected.cp,
             prix: selected.prix,
             surface: selected.surface,
+            dureeHeures: dureeDiffusion,
           }),
         }).catch(console.warn) // non bloquant
       }
@@ -940,6 +944,7 @@ ${selectedAnalyse.description ? `
             apporteurNom: `${apporteur.prenom} ${apporteur.nom}`,
             photoUrl: selected.photos_urls?.[0] || null,
             cadastreUrl: selected.cadastre_url || null,
+            dureeHeures: dureeDiffusion,
           }),
         })
         const dataNotify = await resNotify.json().catch(() => ({}))
@@ -1772,7 +1777,7 @@ ${selectedAnalyse.description ? `
                     <CheckCircle className="w-10 h-10 text-[#c29a6b] mx-auto mb-3" />
                     <p className="font-semibold mb-1">Décision enregistrée</p>
                     <p className="text-sm text-gray-400">
-                      {decision === 'reject' ? 'Bien refusé. Photos et documents supprimés.' : 'Bien validé et mis en diffusion pour 72h.'}
+                      {decision === 'reject' ? 'Bien refusé. Photos et documents supprimés.' : `Bien validé et mis en diffusion pour ${dureeDiffusion}h.`}
                     </p>
                     <button onClick={() => setSelected(null)} className="btn-primary mt-6 justify-center">Fermer</button>
                   </div>
@@ -1791,6 +1796,22 @@ ${selectedAnalyse.description ? `
                     </div>
                     {decision && (
                       <div className="space-y-3">
+                        {decision === 'validate' && (
+                          <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl p-3">
+                            <span className="text-xs text-gray-400 uppercase tracking-widest">Durée de diffusion</span>
+                            <div className="flex items-center gap-3">
+                              <button type="button" onClick={() => setDureeDiffusion(d => Math.max(24, d - 24))}
+                                className="w-8 h-8 rounded-lg border border-white/15 text-gray-300 hover:border-[#c29a6b]/50 hover:text-[#c29a6b] transition-colors flex items-center justify-center font-bold">
+                                −
+                              </button>
+                              <span className="text-sm font-semibold text-white w-12 text-center">{dureeDiffusion}h</span>
+                              <button type="button" onClick={() => setDureeDiffusion(d => d + 24)}
+                                className="w-8 h-8 rounded-lg border border-white/15 text-gray-300 hover:border-[#c29a6b]/50 hover:text-[#c29a6b] transition-colors flex items-center justify-center font-bold">
+                                +
+                              </button>
+                            </div>
+                          </div>
+                        )}
                         <textarea className="input min-h-[120px] resize-none rounded-xl" value={reponse} onChange={e => setReponse(e.target.value)}
                           placeholder={decision === 'validate' ? "Message de validation à l'apporteur…" : "Motif de refus à transmettre à l'apporteur…"} />
 

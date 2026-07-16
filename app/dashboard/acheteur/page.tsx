@@ -602,7 +602,7 @@ export default function DashboardAcheteur() {
                               <Users className="w-4 h-4 text-blue-400" /> Accès partagé
                               {acheteurs.length >= 3 && <span className="text-xs text-red-400">(complet)</span>}
                             </div>
-                            <p className="text-xs text-gray-400">Prix calculé à la clôture des 72h selon le nombre d'acheteurs.</p>
+                            <p className="text-xs text-gray-400">Prix calculé à la clôture de la diffusion selon le nombre d'acheteurs.</p>
                           </div>
                           <div className="text-right flex-shrink-0">
                             <div className="text-white font-black text-2xl">{grille.trois}–{grille.exclu} €</div>
@@ -624,13 +624,13 @@ export default function DashboardAcheteur() {
                         <div className="mt-3 space-y-2">
                           <div className="flex items-start gap-2 bg-[#1a0e00] border border-orange-500/30 rounded-lg p-3">
                             <span className="text-orange-400 flex-shrink-0 text-sm">⚠</span>
-                            <p className="text-xs text-orange-300">Si un acheteur choisit l'exclusivité durant les 72h, il est prioritaire et vous perdez l'accès sans frais.</p>
+                            <p className="text-xs text-orange-300">Si un acheteur choisit l'exclusivité durant la diffusion, il est prioritaire et vous perdez l'accès sans frais.</p>
                           </div>
                           <div className="flex items-start gap-2 bg-[#0a0a1a] border border-blue-500/20 rounded-lg p-3">
                             <span className="text-blue-400 flex-shrink-0 text-sm">ℹ</span>
                             <p className="text-xs text-blue-300">
                               <strong className="text-white">Prix garanti selon le nombre d'acheteurs à la clôture.</strong>{' '}
-                              Si vous êtes le seul inscrit à la fin des 72h, le prix sera de <strong className="text-white">{grille.exclu} €</strong> (tarif 1 acheteur).
+                              Si vous êtes le seul inscrit à la fin de la diffusion, le prix sera de <strong className="text-white">{grille.exclu} €</strong> (tarif 1 acheteur).
                             </p>
                           </div>
                         </div>
