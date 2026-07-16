@@ -29,7 +29,10 @@ export async function htmlToPdfBuffer(html: string): Promise<Buffer> {
 
   try {
     const page = await browser.newPage()
-    await page.setContent(html, { waitUntil: 'networkidle0', timeout: 20000 })
+    // 'networkidle0' n'existe plus dans les types de setContent() des versions
+    // récentes de puppeteer-core ('load' | 'domcontentloaded' uniquement) — 'load'
+    // attend que les ressources (images, logo, photo du bien) aient fini de charger.
+    await page.setContent(html, { waitUntil: 'load', timeout: 20000 })
     const pdf = await page.pdf({
       format: 'A4',
       printBackground: true,
