@@ -211,9 +211,14 @@ export default function LandingPage() {
                   <p>→ Un accès filtré par type, zone ou prix</p>
                   <p>→ Des opportunités fraîches, jamais diffusées</p>
                 </div>
-                <Link href="/auth/register?role=acheteur" className="inline-flex items-center text-xs tracking-widest uppercase bg-[#c29a6b] text-black font-semibold px-6 py-3 hover:bg-[#b8911f] transition-all duration-300 rounded-lg">
-                  Rejoindre — Inscription gratuite
-                </Link>
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+                  <Link href="/auth/register?role=acheteur" className="inline-flex items-center text-xs tracking-widest uppercase bg-[#c29a6b] text-black font-semibold px-6 py-3 hover:bg-[#b8911f] transition-all duration-300 rounded-lg">
+                    Rejoindre — Inscription gratuite
+                  </Link>
+                  <a href="/dossier-exemple.html" target="_blank" rel="noreferrer" className="text-xs text-gray-400 hover:text-white underline underline-offset-2">
+                    Voir un exemple de dossier ↗
+                  </a>
+                </div>
               </div>
             </div>
 
@@ -276,6 +281,9 @@ export default function LandingPage() {
                 </Link>
                 <a href="#analyse" className="inline-flex items-center text-xs tracking-widest uppercase border border-[#c29a6b]/40 text-[#c29a6b] font-semibold px-6 py-3 hover:bg-[#c29a6b]/10 transition-all duration-300 rounded-lg">
                   Demander une analyse préalable
+                </a>
+                <a href="/dossier-exemple.html" target="_blank" rel="noreferrer" className="text-xs text-gray-400 hover:text-white underline underline-offset-2">
+                  Voir un exemple de dossier ↗
                 </a>
               </div>
             </div>
