@@ -102,6 +102,9 @@ export default function DashboardAdmin() {
   const [uploadingPhotoBienAdd, setUploadingPhotoBienAdd] = useState(false)
   const [uploadingPhotoBienIndex, setUploadingPhotoBienIndex] = useState<number | null>(null)
   const [deletingPhotoBienIndex, setDeletingPhotoBienIndex] = useState<number | null>(null)
+  const [prenomApporteurEdit, setPrenomApporteurEdit] = useState('')
+  const [nomApporteurEdit, setNomApporteurEdit] = useState('')
+  const [savingApporteurNom, setSavingApporteurNom] = useState(false)
   const [editingLead, setEditingLead] = useState<any | null>(null)
   const [editPotentiel, setEditPotentiel] = useState('')
   const [editDescription, setEditDescription] = useState('')
@@ -693,6 +696,28 @@ ${selectedAnalyse.description ? `
     }
   }
 
+  // Prénom/nom de l'apporteur — modifiables côté admin (erreur de saisie possible lors
+  // de son inscription). Corrige la fiche profil (table profiles), utilisée notamment
+  // dans le rapport/dossier envoyé aux acheteurs et au vendeur.
+  async function sauvegarderApporteurNom() {
+    if (!selected?.apporteur_id || !prenomApporteurEdit.trim() || !nomApporteurEdit.trim()) return
+    setSavingApporteurNom(true)
+    try {
+      const payload = { prenom: prenomApporteurEdit.trim(), nom: nomApporteurEdit.trim() }
+      const { error } = await supabase.from('profiles').update(payload).eq('id', selected.apporteur_id)
+      if (error) throw error
+      setApporteur((prev: any) => prev ? { ...prev, ...payload } : prev)
+      setSelected((prev: any) => prev ? { ...prev, profiles: prev.profiles ? { ...prev.profiles, ...payload } : prev.profiles } : prev)
+      setBiens((prev: any[]) => prev.map(b => b.apporteur_id === selected.apporteur_id && b.profiles
+        ? { ...b, profiles: { ...b.profiles, ...payload } }
+        : b))
+    } catch (err: any) {
+      alert("Erreur lors de la sauvegarde du nom de l'apporteur : " + err.message)
+    } finally {
+      setSavingApporteurNom(false)
+    }
+  }
+
   // Photos du bien — ajout, remplacement et suppression individuels côté admin. Le
   // vendeur ne peut plus les modifier une fois le dossier soumis.
   async function ajouterPhotoBien(file: File) {
@@ -843,6 +868,8 @@ ${selectedAnalyse.description ? `
     setAdresseBienEdit(bien.adresse || '')
     setCpBienEdit(bien.cp || '')
     setVilleBienEdit(bien.ville || '')
+    setPrenomApporteurEdit(bien.profiles?.prenom || '')
+    setNomApporteurEdit(bien.profiles?.nom || '')
   }
 
   async function analyserBienIA() {
@@ -1841,7 +1868,23 @@ ${selectedAnalyse.description ? `
               {apporteur && (
                 <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-6">
                   <p className="text-xs text-[#c29a6b] uppercase tracking-widest mb-3">Apporteur</p>
-                  <p className="font-medium text-sm">{apporteur.prenom} {apporteur.nom} — {apporteur.statut_pro || '—'}</p>
+                  {/* Prénom/nom modifiables — erreur de saisie possible du vendeur à
+                      l'inscription, corrigée ici plutôt que de bloquer le rapport. */}
+                  <div className="flex items-center gap-2 mb-1">
+                    <input className="input text-sm flex-1" value={prenomApporteurEdit}
+                      onChange={e => setPrenomApporteurEdit(e.target.value)} placeholder="Prénom" />
+                    <input className="input text-sm flex-1" value={nomApporteurEdit}
+                      onChange={e => setNomApporteurEdit(e.target.value)} placeholder="Nom" />
+                    <button onClick={sauvegarderApporteurNom}
+                      disabled={
+                        savingApporteurNom || !prenomApporteurEdit.trim() || !nomApporteurEdit.trim() ||
+                        (prenomApporteurEdit.trim() === apporteur.prenom && nomApporteurEdit.trim() === apporteur.nom)
+                      }
+                      className="text-xs px-3 py-3 rounded-lg bg-[#c29a6b] hover:bg-[#b8895a] text-black font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex-shrink-0 flex items-center gap-1.5">
+                      {savingApporteurNom ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Enregistrer'}
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500">{apporteur.statut_pro || '—'}</p>
                   {apporteur.tel && <p className="text-xs text-gray-400 mt-1">{apporteur.tel}</p>}
                 </div>
               )}
