@@ -268,7 +268,7 @@ ${complements ? `\n**Compléments apportés par Laurent après vérification ter
 [2 à 3 phrases courtes et percutantes destinées aux acheteurs professionnels. Synthétise le potentiel de valorisation du bien : type d'opération possible, gain estimé ou levier de valeur, profil d'acheteur idéal. Ton factuel et professionnel. Pas de prix, pas de nom de ville. Exemple : "Maison de ville sur grande parcelle permettant la création de 2 à 3 lots constructibles. Fort potentiel de revente après division et rénovation. Typique des opérations recherchées par les marchands de biens actifs en secteur tendu."]
 
 ---BROUILLON_VALIDATION---
-[Brouillon de message de validation à envoyer à l'apporteur. Ton professionnel, chaleureux. Confirmer la diffusion du bien, préciser que les acheteurs pros vont être notifiés sous 2h, indiquer la durée de diffusion de 72h. Signer "Laurent Buffard — Closia".]
+[Brouillon de message de validation à envoyer à l'apporteur. Ton professionnel, chaleureux. Confirmer la diffusion du bien, préciser que les acheteurs pros vont être notifiés sous 2h. Ne mentionne aucune durée précise de diffusion (en heures ou en jours) : cette information est ajoutée automatiquement ailleurs dans le message final et la durée choisie par Laurent peut varier d'un bien à l'autre. Signer "Laurent Buffard — Closia".]
 
 ---BROUILLON_REFUS---
 [Brouillon de message de refus à envoyer à l'apporteur. Ton professionnel et bienveillant. Expliquer brièvement pourquoi le bien ne correspond pas aux critères actuels de Closia (sans être trop précis si le dossier est incomplet). Encourager à soumettre un autre dossier. Signer "Laurent Buffard — Closia".]

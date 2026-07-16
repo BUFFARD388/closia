@@ -1777,7 +1777,7 @@ ${selectedAnalyse.description ? `
                     <CheckCircle className="w-10 h-10 text-[#c29a6b] mx-auto mb-3" />
                     <p className="font-semibold mb-1">Décision enregistrée</p>
                     <p className="text-sm text-gray-400">
-                      {decision === 'reject' ? 'Bien refusé. Photos et documents supprimés.' : `Bien validé et mis en diffusion pour ${dureeDiffusion}h.`}
+                      {decision === 'reject' ? 'Bien refusé. Photos et documents supprimés.' : `Bien validé et mis en diffusion pour ${dureeDiffusion / 24} jour${dureeDiffusion / 24 > 1 ? 's' : ''}.`}
                     </p>
                     <button onClick={() => setSelected(null)} className="btn-primary mt-6 justify-center">Fermer</button>
                   </div>
@@ -1804,7 +1804,9 @@ ${selectedAnalyse.description ? `
                                 className="w-8 h-8 rounded-lg border border-white/15 text-gray-300 hover:border-[#c29a6b]/50 hover:text-[#c29a6b] transition-colors flex items-center justify-center font-bold">
                                 −
                               </button>
-                              <span className="text-sm font-semibold text-white w-12 text-center">{dureeDiffusion}h</span>
+                              <span className="text-sm font-semibold text-white w-20 text-center">
+                                {dureeDiffusion / 24} jour{dureeDiffusion / 24 > 1 ? 's' : ''}
+                              </span>
                               <button type="button" onClick={() => setDureeDiffusion(d => d + 24)}
                                 className="w-8 h-8 rounded-lg border border-white/15 text-gray-300 hover:border-[#c29a6b]/50 hover:text-[#c29a6b] transition-colors flex items-center justify-center font-bold">
                                 +

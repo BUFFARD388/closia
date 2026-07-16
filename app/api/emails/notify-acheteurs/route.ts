@@ -13,6 +13,9 @@ export async function POST(req: Request) {
   try {
     const { bienId, type, ville, cp, prix, surface, dureeHeures } = await req.json()
     const duree = dureeHeures || 72
+    // Affichage en jours (plus lisible que "120h") — les durées sont toujours des
+    // multiples de 24h, sinon on retombe sur un affichage en heures.
+    const dureeTexte = duree % 24 === 0 ? `${duree / 24} jour${duree / 24 > 1 ? 's' : ''}` : `${duree}h`
 
     // Récupérer tous les acheteurs avec leurs zones
     const { data: profiles } = await supabase
@@ -100,7 +103,7 @@ export async function POST(req: Request) {
 
             <div style="background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:14px;margin-bottom:28px;">
               <p style="color:#fca5a5;font-size:13px;margin:0;text-align:center;">
-                ⏱ Disponible <strong>${duree}h uniquement</strong> — Accès limité à 3 acheteurs maximum
+                ⏱ Disponible <strong>${dureeTexte} uniquement</strong> — Accès limité à 3 acheteurs maximum
               </p>
             </div>
 

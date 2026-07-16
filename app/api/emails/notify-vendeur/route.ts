@@ -20,6 +20,9 @@ export async function POST(req: Request) {
 
   const isValidated = decision === 'validate'
   const duree = dureeHeures || 72
+  // Affichage en jours (plus lisible que "120h") — les durées sont toujours des
+  // multiples de 24h, sinon on retombe sur un affichage en heures.
+  const dureeTexte = duree % 24 === 0 ? `${duree / 24} jour${duree / 24 > 1 ? 's' : ''}` : `${duree}h`
 
   const subject = isValidated
     ? `✅ Votre bien a été validé et est en diffusion — Closia`
@@ -41,7 +44,7 @@ export async function POST(req: Request) {
       </div>
 
       ${isValidated ? `
-        <p style="color: #d1d5db;">Votre dossier a été analysé et validé par notre équipe. Votre bien est maintenant <strong style="color: #c29a6b;">diffusé auprès des acheteurs professionnels</strong> de notre réseau pour une durée de ${duree}h.</p>
+        <p style="color: #d1d5db;">Votre dossier a été analysé et validé par notre équipe. Votre bien est maintenant <strong style="color: #c29a6b;">diffusé auprès des acheteurs professionnels</strong> de notre réseau pour une durée de ${dureeTexte}.</p>
         <p style="color: #d1d5db;">Vous serez notifié dès qu'un acheteur se positionne.</p>
         <p style="color: #d1d5db;">Vous trouverez en pièce jointe le dossier de synthèse ayant justifié cette diffusion.</p>
       ` : `
