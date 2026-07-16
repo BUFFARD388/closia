@@ -87,6 +87,9 @@ export default function DashboardAdmin() {
   const [brouillonRefus, setBrouillonRefus] = useState('')
   const [potentielSynthetise, setPotentielSynthetise] = useState('')
   const [dossierBienHtml, setDossierBienHtml] = useState('')
+  const [testEmailBien, setTestEmailBien] = useState('laurentbuffard69250@gmail.com')
+  const [sendingTestBien, setSendingTestBien] = useState(false)
+  const [testResultBien, setTestResultBien] = useState('')
   const [uploadingCadastre, setUploadingCadastre] = useState(false)
   const [editingLead, setEditingLead] = useState<any | null>(null)
   const [editPotentiel, setEditPotentiel] = useState('')
@@ -692,6 +695,7 @@ ${selectedAnalyse.description ? `
     setBrouillonRefus(bien.brouillon_refus || '')
     setComplementsBien(bien.complements_bien || '')
     setDossierBienHtml(bien.dossier_html || '')
+    setTestResultBien('')
   }
 
   async function analyserBienIA() {
@@ -739,6 +743,89 @@ ${selectedAnalyse.description ? `
       alert('Erreur analyse IA : ' + err.message)
     } finally {
       setAnalysantBien(false)
+    }
+  }
+
+  // Envoie le mail de validation/refus tel qu'il partirait réellement (même template,
+  // même PDF joint) mais vers une adresse de test, sans jamais toucher au statut du
+  // bien, sans notifier les acheteurs, sans supprimer les photos. Permet à Laurent de
+  // vérifier le rendu avant l'envoi définitif à l'apporteur.
+  async function envoyerTestVendeur() {
+    if (!selected || !decision || !reponse.trim() || !testEmailBien.trim()) return
+    setSendingTestBien(true)
+    setTestResultBien('')
+    try {
+      let dossierHtmlToSend = dossierBienHtml
+      if (!dossierHtmlToSend) {
+        const resAnalyse = await fetch('/api/biens/analyser-dossier', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: selected.type,
+            prix: selected.prix,
+            surface: selected.surface,
+            ville: selected.ville,
+            cp: selected.cp,
+            adresse: selected.adresse,
+            situation: selected.situation,
+            description: selected.description,
+            potentiel: selected.potentiel,
+            apporteur: apporteur ? `${apporteur.prenom} ${apporteur.nom}` : '',
+            complements: complementsBien,
+          }),
+        })
+        const dataAnalyse = await resAnalyse.json()
+        if (dataAnalyse.error || !dataAnalyse.dossier_html) {
+          throw new Error("Dossier IA introuvable : impossible de générer le PDF (" + (dataAnalyse.error || 'réponse vide') + ')')
+        }
+        dossierHtmlToSend = dataAnalyse.dossier_html
+        setDossierBienHtml(dossierHtmlToSend)
+        setScreeningBien(dataAnalyse.screening || '')
+        setPotentielSynthetise(dataAnalyse.potentiel_synthetise || '')
+        setBrouillonValidation(dataAnalyse.brouillon_validation || '')
+        setBrouillonRefus(dataAnalyse.brouillon_refus || '')
+        if (dataAnalyse.screening) {
+          await supabase.from('biens').update({
+            screening_ia: dataAnalyse.screening,
+            potentiel_synthetise_ia: dataAnalyse.potentiel_synthetise || null,
+            brouillon_validation: dataAnalyse.brouillon_validation || null,
+            brouillon_refus: dataAnalyse.brouillon_refus || null,
+            dossier_html: dataAnalyse.dossier_html || null,
+            complements_bien: complementsBien || null,
+          }).eq('id', selected.id)
+        }
+      }
+
+      const res = await fetch('/api/emails/notify-vendeur', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: testEmailBien.trim(),
+          prenom: apporteur?.prenom || 'Test',
+          type: selected.type,
+          ville: selected.ville,
+          decision,
+          message: reponse,
+          dossierHtml: dossierHtmlToSend,
+          adresse: selected.adresse,
+          cp: selected.cp,
+          prix: selected.prix,
+          surface: selected.surface,
+          createdAt: selected.created_at,
+          statut: selected.statut,
+          description: selected.description,
+          apporteurNom: apporteur ? `${apporteur.prenom} ${apporteur.nom}` : '',
+          photoUrl: selected.photos_urls?.[0] || null,
+          cadastreUrl: selected.cadastre_url || null,
+        }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || "Échec de l'envoi du test.")
+      setTestResultBien(`✓ Test envoyé à ${testEmailBien.trim()}${data.pdfAttached ? ' (avec PDF joint)' : ''}`)
+    } catch (err: any) {
+      setTestResultBien('✗ ' + err.message)
+    } finally {
+      setSendingTestBien(false)
     }
   }
 
@@ -1706,6 +1793,21 @@ ${selectedAnalyse.description ? `
                       <div className="space-y-3">
                         <textarea className="input min-h-[120px] resize-none rounded-xl" value={reponse} onChange={e => setReponse(e.target.value)}
                           placeholder={decision === 'validate' ? "Message de validation à l'apporteur…" : "Motif de refus à transmettre à l'apporteur…"} />
+
+                        <div className="flex items-center gap-2">
+                          <input type="email" className="input flex-1 text-sm" value={testEmailBien}
+                            onChange={e => setTestEmailBien(e.target.value)}
+                            placeholder="Adresse pour tester l'email…" />
+                          <button onClick={envoyerTestVendeur} disabled={!reponse.trim() || !testEmailBien.trim() || sendingTestBien}
+                            className="text-xs px-4 py-3 rounded-xl border border-white/20 text-gray-300 hover:border-[#c29a6b]/50 hover:text-[#c29a6b] transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap flex items-center gap-2 flex-shrink-0">
+                            {sendingTestBien ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                            Envoyer un test
+                          </button>
+                        </div>
+                        {testResultBien && (
+                          <p className={`text-xs ${testResultBien.startsWith('✓') ? 'text-green-400' : 'text-red-400'}`}>{testResultBien}</p>
+                        )}
+
                         <button onClick={handleDecision} disabled={!reponse.trim() || sending}
                           className={`w-full justify-center flex items-center gap-2 py-3 rounded-xl text-sm font-semibold tracking-widest uppercase transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${decision === 'validate' ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-red-500 hover:bg-red-600 text-white'}`}>
                           {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
