@@ -348,7 +348,7 @@ export default function DashboardAcheteur() {
                       {lead.potentiel && (
                         <div className="bg-[#c29a6b]/8 border border-[#c29a6b]/25 rounded-lg p-3 mb-4">
                           <p className="text-xs text-[#c29a6b] uppercase tracking-widest font-medium mb-1.5">✦ Potentiel identifié</p>
-                          <p className="text-xs text-gray-300 leading-relaxed line-clamp-3">{lead.potentiel}</p>
+                          <p className="text-xs text-gray-300 leading-relaxed whitespace-pre-line">{lead.potentiel}</p>
                         </div>
                       )}
 
