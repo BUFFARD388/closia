@@ -683,12 +683,15 @@ ${selectedAnalyse.description ? `
     setDecision(null)
     setReponse('')
     setSent(false)
-    setScreeningBien('')
-    setPotentielSynthetise('')
-    setBrouillonValidation('')
-    setBrouillonRefus('')
-    setComplementsBien('')
-    setDossierBienHtml('')
+    // Recharge l'analyse IA déjà générée précédemment (persistée en base) plutôt que
+    // de tout réinitialiser à vide — évite d'avoir à relancer l'analyse à chaque
+    // réouverture du dossier.
+    setScreeningBien(bien.screening_ia || '')
+    setPotentielSynthetise(bien.potentiel_synthetise_ia || '')
+    setBrouillonValidation(bien.brouillon_validation || '')
+    setBrouillonRefus(bien.brouillon_refus || '')
+    setComplementsBien(bien.complements_bien || '')
+    setDossierBienHtml(bien.dossier_html || '')
   }
 
   async function analyserBienIA() {
@@ -719,9 +722,17 @@ ${selectedAnalyse.description ? `
       setBrouillonValidation(data.brouillon_validation)
       setBrouillonRefus(data.brouillon_refus)
       setDossierBienHtml(data.dossier_html || '')
-      // Sauvegarde persistante du screening en base
+      // Sauvegarde persistante de toute l'analyse IA en base — pour que rouvrir le
+      // dossier plus tard recharge tout (voir openDetail) sans avoir à relancer l'IA.
       if (data.screening && selected?.id) {
-        await supabase.from('biens').update({ screening_ia: data.screening }).eq('id', selected.id)
+        await supabase.from('biens').update({
+          screening_ia: data.screening,
+          potentiel_synthetise_ia: data.potentiel_synthetise || null,
+          brouillon_validation: data.brouillon_validation || null,
+          brouillon_refus: data.brouillon_refus || null,
+          dossier_html: data.dossier_html || null,
+          complements_bien: complementsBien || null,
+        }).eq('id', selected.id)
         await loadBiens()
       }
     } catch (err: any) {
@@ -767,8 +778,17 @@ ${selectedAnalyse.description ? `
         setDossierBienHtml(dossierHtmlToSend)
         setScreeningBien(dataAnalyse.screening || '')
         setPotentielSynthetise(dataAnalyse.potentiel_synthetise || '')
+        setBrouillonValidation(dataAnalyse.brouillon_validation || '')
+        setBrouillonRefus(dataAnalyse.brouillon_refus || '')
         if (dataAnalyse.screening) {
-          await supabase.from('biens').update({ screening_ia: dataAnalyse.screening }).eq('id', selected.id)
+          await supabase.from('biens').update({
+            screening_ia: dataAnalyse.screening,
+            potentiel_synthetise_ia: dataAnalyse.potentiel_synthetise || null,
+            brouillon_validation: dataAnalyse.brouillon_validation || null,
+            brouillon_refus: dataAnalyse.brouillon_refus || null,
+            dossier_html: dataAnalyse.dossier_html || null,
+            complements_bien: complementsBien || null,
+          }).eq('id', selected.id)
         }
       }
 
