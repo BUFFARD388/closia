@@ -155,7 +155,14 @@ export async function POST(req: NextRequest) {
       mode: 'payment',
       line_items: [
         {
-          price: 'price_1TgoDMLHXjRRnPppM5R0imMv',
+          price_data: {
+            currency: 'eur',
+            product_data: {
+              name: 'Analyse simple — Avis expert standard',
+              description: 'Analyse du potentiel de valorisation, lecture PLU, identification des risques, axes de création de valeur — rapport écrit sous 48h.',
+            },
+            unit_amount: 59000, // 590 € en centimes
+          },
           quantity: 1,
         },
       ],

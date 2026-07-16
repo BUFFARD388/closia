@@ -144,7 +144,17 @@ export async function POST(req: NextRequest) {
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
-      line_items: [{ price: 'price_1Th3rdLHXjRRnPppFlfmocGj', quantity: 1 }],
+      line_items: [{
+        price_data: {
+          currency: 'eur',
+          product_data: {
+            name: 'Dossier CUb — Certificat d\'Urbanisme Opérationnel',
+            description: 'CERFA 13410 complété, plans et insertion cadastrale, validation avant dépôt, dépôt officiel en mairie.',
+          },
+          unit_amount: 49000, // 490 € en centimes
+        },
+        quantity: 1,
+      }],
       metadata: { analyseId: analyse.id, type: 'cub' },
       allow_promotion_codes: true,
       customer_email: email,

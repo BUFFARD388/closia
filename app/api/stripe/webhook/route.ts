@@ -31,6 +31,11 @@ export async function POST(req: NextRequest) {
 
     // ── Paiement analyse préalable ──
     if (type === 'analyse' && analyseId) {
+      // Montant réellement facturé, lu directement sur la session Stripe plutôt que codé
+      // en dur — évite un nouveau décalage si le prix de l'analyse change un jour.
+      const montantAnalyse = typeof session.amount_total === 'number'
+        ? (session.amount_total / 100).toLocaleString('fr-FR')
+        : '590'
       // Récupérer les données de la demande
       const { data: analyse } = await supabase
         .from('analyses')
@@ -60,7 +65,7 @@ export async function POST(req: NextRequest) {
           subject: `✅ Analyse simple payée — ${analyse.nom}`,
           html: `
             <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:32px;background:#0b1220;color:#fff;border-radius:12px;">
-              <h2 style="color:#c29a6b;">✅ Paiement reçu — Analyse simple (150€)</h2>
+              <h2 style="color:#c29a6b;">✅ Paiement reçu — Analyse simple (${montantAnalyse}€)</h2>
               <div style="background:#111720;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:16px;margin:24px 0;">
                 <p style="color:#fff;margin:0 0 4px;"><strong>Nom :</strong> ${analyse.nom}</p>
                 <p style="color:#fff;margin:0 0 4px;"><strong>Email :</strong> ${analyse.email}</p>
@@ -87,7 +92,7 @@ export async function POST(req: NextRequest) {
               <img src="https://closia.net/logo.png" alt="Closia" style="height:48px;margin-bottom:32px;" />
               <h2 style="color:#c29a6b;">Paiement reçu — Votre analyse est lancée</h2>
               <p style="color:#9ca3af;">Bonjour ${analyse.nom},</p>
-              <p style="color:#d1d5db;">Votre paiement de <strong>150€</strong> a bien été reçu. Votre rapport d'analyse expert vous sera remis <strong>sous 72h</strong> à cette adresse email.</p>
+              <p style="color:#d1d5db;">Votre paiement de <strong>${montantAnalyse}€</strong> a bien été reçu. Votre rapport d'analyse expert vous sera remis <strong>sous 72h</strong> à cette adresse email.</p>
               <div style="background:#111720;border:1px solid rgba(194,154,107,0.3);border-radius:8px;padding:16px;margin:24px 0;">
                 <p style="color:#c29a6b;font-size:12px;margin:0 0 4px;text-transform:uppercase;">Bien concerné</p>
                 <p style="color:#fff;margin:0;">${analyse.adresse}</p>

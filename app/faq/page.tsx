@@ -27,7 +27,7 @@ const FAQS = [
   },
   {
     q: "Combien coûte l'accès à un lead pour un acheteur ?",
-    a: "Le prix dépend de la valeur du bien et du mode d'accès choisi. En lead exclusif : 490 € (bien < 300 000 €), 890 € (300k–1M €) ou 1 490 € (> 1M €). En lead partagé, les tarifs sont dégressifs selon le nombre d'acheteurs. L'inscription sur la plateforme est gratuite.",
+    a: "Le prix dépend de la valeur du bien et du mode d'accès choisi. En exclusif : 890 € (bien < 300 000 €), 1 290 € (300k–1M €) ou 1 690 € (> 1M €). En partagé, les tarifs sont dégressifs selon le nombre d'acheteurs. L'inscription sur la plateforme est gratuite.",
   },
   {
     q: "Qu'est-ce que le lead exclusif et le lead partagé ?",
@@ -35,7 +35,7 @@ const FAQS = [
   },
   {
     q: "Qu'est-ce que l'analyse préalable ?",
-    a: "C'est un service expert à 150 € HT : vous soumettez un bien avant même de l'inscrire sur la plateforme, et notre expert réalise une analyse complète (PLU, potentiel, faisabilité, risques) avec un rapport écrit remis sous 48h. Utile pour conforter votre position face à un vendeur ou accélérer la signature d'un mandat exclusif.",
+    a: "C'est un service expert à 590 € HT : vous soumettez un bien avant même de l'inscrire sur la plateforme, et notre expert réalise une analyse complète (PLU, potentiel, faisabilité, risques) avec un rapport écrit remis sous 48h. Utile pour conforter votre position face à un vendeur ou accélérer la signature d'un mandat exclusif.",
   },
   {
     q: "Comment est garantie la confidentialité ?",

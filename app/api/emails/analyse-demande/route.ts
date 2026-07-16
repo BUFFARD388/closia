@@ -51,10 +51,10 @@ export async function POST(req: Request) {
     await resend.emails.send({
       from: 'Closia <noreply@closia.net>',
       to: 'contact@closia.net',
-      subject: `${isSimple ? '📋 Analyse simple — 150€' : '📋 Devis analyse complexe'} — ${nom}`,
+      subject: `${isSimple ? '📋 Analyse simple — 590€' : '📋 Devis analyse complexe'} — ${nom}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 32px; background: #0b1220; color: #ffffff; border-radius: 12px;">
-          <h2 style="color: #c29a6b;">${isSimple ? '📋 Nouvelle demande d\'analyse simple (150€)' : '📋 Nouvelle demande de devis — analyse complexe'}</h2>
+          <h2 style="color: #c29a6b;">${isSimple ? '📋 Nouvelle demande d\'analyse simple (590€)' : '📋 Nouvelle demande de devis — analyse complexe'}</h2>
           <div style="background: #111720; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 16px; margin: 24px 0;">
             <p style="color: #fff; margin: 0 0 4px;"><strong>Nom :</strong> ${nom}</p>
             ${societe ? `<p style="color: #fff; margin: 0 0 4px;"><strong>Société :</strong> ${societe}</p>` : ''}

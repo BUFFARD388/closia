@@ -230,7 +230,7 @@ export async function POST(req: Request) {
               <p style="color:#fff;font-size:15px;font-weight:600;margin:0 0 6px;">Préparez votre dossier de Certificat d'Urbanisme Opérationnel</p>
               <p style="color:#9ca3af;font-size:12px;line-height:1.6;margin:0 0 16px;">Note descriptive rédigée, check-list des pièces et guide de dépôt en mairie — un dossier complet prêt à soumettre, livré sous 72h.</p>
               <a href="https://closia.net/cub" style="display:inline-block;background:#c29a6b;color:#000;font-weight:700;padding:10px 20px;border-radius:8px;text-decoration:none;font-size:12px;text-transform:uppercase;letter-spacing:1px;">
-                Demander mon dossier CUb — 290 € HT
+                Demander mon dossier CUb — 490 € HT
               </a>
             </div>
 

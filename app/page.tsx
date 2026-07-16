@@ -830,7 +830,7 @@ export default function LandingPage() {
                   <h3 className="text-xl font-bold text-white">Avis expert standard</h3>
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-black text-[#c29a6b]">390 €</p>
+                  <p className="text-3xl font-black text-[#c29a6b]">590 €</p>
                   <p className="text-xs text-gray-500">HT · paiement sécurisé</p>
                 </div>
               </div>
@@ -940,7 +940,7 @@ export default function LandingPage() {
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-xl font-bold">{analyseType === 'simple' ? 'Analyse simple — 390 €' : 'Demande de devis'}</h2>
+                  <h2 className="text-xl font-bold">{analyseType === 'simple' ? 'Analyse simple — 590 €' : 'Demande de devis'}</h2>
                   <p className="text-xs text-gray-500 mt-1">{analyseType === 'simple' ? 'Rapport expert sous 48h' : 'Réponse sous 24h'}</p>
                 </div>
                 <button onClick={() => { setAnalyseModal(false); setAnalyseSent(false); setAnalyseType(null) }} className="text-gray-400 hover:text-white">

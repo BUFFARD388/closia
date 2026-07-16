@@ -21,9 +21,9 @@ export default function CGV() {
               <p className="text-[#c29a6b] font-semibold text-sm mb-3">Lead Exclusif</p>
               <p className="text-gray-300 text-sm leading-relaxed mb-3">Accès immédiat et exclusif aux coordonnées de l'apporteur. Un seul acheteur par lead.</p>
               <div className="space-y-1 text-sm text-gray-400">
-                <p>→ Bien inférieur à 300 000 € : <strong className="text-white">490 € HT</strong></p>
-                <p>→ Bien entre 300 000 € et 1 000 000 € : <strong className="text-white">890 € HT</strong></p>
-                <p>→ Bien supérieur à 1 000 000 € : <strong className="text-white">1 490 € HT</strong></p>
+                <p>→ Bien inférieur à 300 000 € : <strong className="text-white">890 € HT</strong></p>
+                <p>→ Bien entre 300 000 € et 1 000 000 € : <strong className="text-white">1 290 € HT</strong></p>
+                <p>→ Bien supérieur à 1 000 000 € : <strong className="text-white">1 690 € HT</strong></p>
               </div>
             </div>
 
@@ -32,17 +32,17 @@ export default function CGV() {
               <p className="text-gray-300 text-sm leading-relaxed mb-3">Accès partagé entre 2 ou 3 acheteurs maximum. Prix calculé à la clôture du lead (diffusion de 3 à 10 jours selon le bien).</p>
               <div className="space-y-2 text-sm text-gray-400">
                 <p className="text-gray-300 font-medium">Bien inférieur à 300 000 € :</p>
-                <p className="pl-3">→ 2 acheteurs : <strong className="text-white">290 € HT</strong> / acheteur · 3 acheteurs : <strong className="text-white">190 € HT</strong> / acheteur</p>
+                <p className="pl-3">→ 2 acheteurs : <strong className="text-white">520 € HT</strong> / acheteur · 3 acheteurs : <strong className="text-white">350 € HT</strong> / acheteur</p>
                 <p className="text-gray-300 font-medium mt-2">Bien entre 300 000 € et 1 000 000 € :</p>
-                <p className="pl-3">→ 2 acheteurs : <strong className="text-white">490 € HT</strong> / acheteur · 3 acheteurs : <strong className="text-white">320 € HT</strong> / acheteur</p>
+                <p className="pl-3">→ 2 acheteurs : <strong className="text-white">730 € HT</strong> / acheteur · 3 acheteurs : <strong className="text-white">490 € HT</strong> / acheteur</p>
                 <p className="text-gray-300 font-medium mt-2">Bien supérieur à 1 000 000 € :</p>
-                <p className="pl-3">→ 2 acheteurs : <strong className="text-white">790 € HT</strong> / acheteur · 3 acheteurs : <strong className="text-white">520 € HT</strong> / acheteur</p>
+                <p className="pl-3">→ 2 acheteurs : <strong className="text-white">990 € HT</strong> / acheteur · 3 acheteurs : <strong className="text-white">650 € HT</strong> / acheteur</p>
               </div>
             </div>
 
             <div className="bg-[#111720] border border-white/10 rounded-xl p-5">
               <p className="text-white font-semibold text-sm mb-3">Analyse préalable simple</p>
-              <p className="text-gray-300 text-sm leading-relaxed">Analyse experte avec lecture PLU, potentiel de valorisation et rapport écrit sous 48h. Tarif : <strong className="text-white">150 € HT</strong>.</p>
+              <p className="text-gray-300 text-sm leading-relaxed">Analyse experte avec lecture PLU, potentiel de valorisation et rapport écrit sous 48h. Tarif : <strong className="text-white">590 € HT</strong>.</p>
             </div>
           </div>
         </section>
