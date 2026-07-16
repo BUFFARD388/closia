@@ -27,8 +27,8 @@ function timerColor(h: number) {
 }
 
 const TABS = [
-  { key: 'disponibles', label: 'Leads disponibles', icon: <Zap className="w-4 h-4" /> },
-  { key: 'achetes', label: 'Mes leads achetés', icon: <Star className="w-4 h-4" /> },
+  { key: 'disponibles', label: 'Dossiers disponibles', icon: <Zap className="w-4 h-4" /> },
+  { key: 'achetes', label: 'Mes dossiers achetés', icon: <Star className="w-4 h-4" /> },
 ]
 
 export default function DashboardAcheteur() {
@@ -298,11 +298,11 @@ export default function DashboardAcheteur() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-bold">
-              {tab === 'disponibles' ? 'Leads disponibles' : tab === 'achetes' ? 'Mes leads achetés' : 'Archivés'}
+              {tab === 'disponibles' ? 'Dossiers disponibles' : tab === 'achetes' ? 'Mes dossiers achetés' : 'Archivés'}
             </h1>
             <p className="text-gray-400 text-sm mt-1">
               {tab === 'disponibles' && `${filtered.length} opportunité${filtered.length > 1 ? 's' : ''} en ce moment`}
-              {tab === 'achetes' && `${leadsAchetes.length} lead${leadsAchetes.length > 1 ? 's' : ''} acheté${leadsAchetes.length > 1 ? 's' : ''}`}
+              {tab === 'achetes' && `${leadsAchetes.length} dossier${leadsAchetes.length > 1 ? 's' : ''} acheté${leadsAchetes.length > 1 ? 's' : ''}`}
             </p>
           </div>
         </div>
@@ -413,7 +413,7 @@ export default function DashboardAcheteur() {
                           <div className="text-center text-xs text-green-400 py-2 bg-green-500/10 rounded-xl">✓ Vous êtes déjà positionné</div>
                         ) : (
                           <button onClick={() => openBuy(lead)} className="btn-primary w-full justify-center text-sm !py-2.5">
-                            <ShoppingCart className="w-4 h-4" /> Acheter ce lead
+                            <ShoppingCart className="w-4 h-4" /> Acheter le dossier complet
                           </button>
                         )}
                       </div>
@@ -424,7 +424,7 @@ export default function DashboardAcheteur() {
                 {filtered.length === 0 && (
                   <div className="col-span-3 text-center py-16 text-gray-500">
                     <Filter className="w-8 h-8 mx-auto mb-3" />
-                    {leads.length === 0 ? 'Aucun lead en diffusion pour le moment.' : 'Aucun lead ne correspond à vos filtres.'}
+                    {leads.length === 0 ? 'Aucun dossier en diffusion pour le moment.' : 'Aucun dossier ne correspond à vos filtres.'}
                   </div>
                 )}
               </div>
@@ -535,7 +535,7 @@ export default function DashboardAcheteur() {
                                 return (
                                   <>
                                     <div className="flex items-center justify-between mb-2">
-                                      <p className="text-xs text-blue-300 font-semibold">⏳ Lead partagé — en attente de clôture</p>
+                                      <p className="text-xs text-blue-300 font-semibold">⏳ Dossier partagé — en attente de clôture</p>
                                       {!expired && (
                                         <span className={`text-xs font-bold flex items-center gap-1 ${timerColor(h)}`}>
                                           <Clock className="w-3 h-3" /> {Math.floor(h)}h {Math.floor((h % 1) * 60)}min restantes
@@ -567,7 +567,7 @@ export default function DashboardAcheteur() {
             {leadsAchetes.length === 0 && (
               <div className="text-center py-16 text-gray-500">
                 <ShoppingCart className="w-8 h-8 mx-auto mb-3" />
-                Vous n'avez pas encore acheté de lead.
+                Vous n'avez pas encore acheté de dossier.
               </div>
             )}
           </div>
@@ -581,7 +581,7 @@ export default function DashboardAcheteur() {
           <div className="bg-[#0f1926] border border-white/20 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold">Acheter ce lead</h2>
+                <h2 className="text-xl font-bold">Acheter le dossier complet</h2>
                 <button onClick={() => setSelectedLead(null)} className="text-gray-400 hover:text-white"><X className="w-5 h-5" /></button>
               </div>
 
@@ -721,7 +721,7 @@ export default function DashboardAcheteur() {
                       <>
                         <div className="bg-[#060d1a] border border-blue-500/30 rounded-xl p-5 mb-6">
                           <p className="text-sm font-semibold text-white mb-2">⏳ Inscription sans paiement</p>
-                          <p className="text-xs text-gray-400">Aucun paiement aujourd'hui. À la clôture du lead, vous recevrez votre prix final.</p>
+                          <p className="text-xs text-gray-400">Aucun paiement aujourd'hui. À la clôture du dossier, vous recevrez votre prix final.</p>
                         </div>
                         <button onClick={handleBuy}
                           className="w-full justify-center inline-flex items-center text-xs tracking-widest uppercase bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-3.5 rounded-xl transition-colors">
@@ -741,7 +741,7 @@ export default function DashboardAcheteur() {
                   <h3 className="text-xl font-bold mb-2">Bien exemple</h3>
                   <p className="text-gray-400 text-sm mb-6 leading-relaxed">
                     Ce dossier est un exemple de démonstration.<br />
-                    Les vrais leads seront disponibles très prochainement — vous serez notifié par email dès la première diffusion.
+                    Les vrais dossiers seront disponibles très prochainement — vous serez notifié par email dès la première diffusion.
                   </p>
                   <button onClick={() => setSelectedLead(null)}
                     className="w-full justify-center inline-flex items-center text-xs tracking-widest uppercase bg-[#c29a6b] text-black font-semibold px-6 py-3.5 rounded-xl hover:bg-[#b8911f] transition-colors">
@@ -765,7 +765,7 @@ export default function DashboardAcheteur() {
                   </p>
                   <button onClick={() => { setSelectedLead(null); setTab('achetes') }}
                     className="w-full justify-center inline-flex items-center text-xs tracking-widest uppercase bg-[#c29a6b] text-black font-semibold px-6 py-3.5 rounded-xl hover:bg-[#b8911f] transition-colors">
-                    Voir mes leads
+                    Voir mes dossiers
                   </button>
                 </div>
               )}
