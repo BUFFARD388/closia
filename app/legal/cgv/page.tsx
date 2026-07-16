@@ -29,7 +29,7 @@ export default function CGV() {
 
             <div className="bg-[#111720] border border-white/10 rounded-xl p-5">
               <p className="text-white font-semibold text-sm mb-3">Lead Partagé</p>
-              <p className="text-gray-300 text-sm leading-relaxed mb-3">Accès partagé entre 2 ou 3 acheteurs maximum. Prix calculé à la clôture du lead (72h).</p>
+              <p className="text-gray-300 text-sm leading-relaxed mb-3">Accès partagé entre 2 ou 3 acheteurs maximum. Prix calculé à la clôture du lead (diffusion de 3 à 10 jours selon le bien).</p>
               <div className="space-y-2 text-sm text-gray-400">
                 <p className="text-gray-300 font-medium">Bien inférieur à 300 000 € :</p>
                 <p className="pl-3">→ 2 acheteurs : <strong className="text-white">290 € HT</strong> / acheteur · 3 acheteurs : <strong className="text-white">190 € HT</strong> / acheteur</p>

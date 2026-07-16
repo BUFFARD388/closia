@@ -199,7 +199,7 @@ export async function POST(req: Request) {
               <p style="color:#c29a6b;font-size:13px;font-weight:700;margin:0 0 8px;text-transform:uppercase;letter-spacing:1px;">Prochaine étape</p>
               <p style="color:#d1d5db;font-size:14px;line-height:1.7;margin:0 0 18px;">
                 Si cette analyse confirme votre intérêt, vous pouvez soumettre ce bien sur Closia.<br/>
-                Diffusion confidentielle · Réponse marché sous 72h · Aucune commission pour l'apporteur.
+                Diffusion confidentielle · Réponse marché en 3 à 10 jours · Aucune commission pour l'apporteur.
               </p>
               <a href="https://closia.net/auth/register?role=vendeur"
                 style="display:inline-block;background:#c29a6b;color:#000;font-weight:700;padding:12px 28px;border-radius:8px;text-decoration:none;font-size:13px;text-transform:uppercase;letter-spacing:1px;">

@@ -19,7 +19,7 @@ const FAQS = [
   },
   {
     q: "Comment fonctionne le processus de dépôt d'un bien ?",
-    a: "Vous soumettez votre dossier via le formulaire vendeur. Notre expert l'analyse sous 48h (lecture PLU, potentiel de valorisation, cohérence prix, risques). Si le bien est retenu, il est diffusé pendant 72h auprès de l'ensemble des acheteurs inscrits et sélectionnés sur la plateforme. Parmi ceux qui se positionnent, 3 acheteurs maximum peuvent acheter le lead. Vous recevez un retour dans tous les cas.",
+    a: "Vous soumettez votre dossier via le formulaire vendeur. Notre expert l'analyse sous 48h (lecture PLU, potentiel de valorisation, cohérence prix, risques). Si le bien est retenu, il est diffusé pendant 3 à 10 jours auprès de l'ensemble des acheteurs inscrits et sélectionnés sur la plateforme. Parmi ceux qui se positionnent, 3 acheteurs maximum peuvent acheter le lead. Vous recevez un retour dans tous les cas.",
   },
   {
     q: "Combien cela coûte-t-il pour l'apporteur ?",
@@ -39,10 +39,10 @@ const FAQS = [
   },
   {
     q: "Comment est garantie la confidentialité ?",
-    a: "Les biens ne sont jamais diffusés publiquement. L'accès est limité à des acheteurs professionnels vérifiés et sélectionnés. Les coordonnées du vendeur ne sont transmises qu'après paiement validé. Chaque dossier disparaît automatiquement à expiration du délai de 72h. Aucune capture ni redistribution n'est autorisée.",
+    a: "Les biens ne sont jamais diffusés publiquement. L'accès est limité à des acheteurs professionnels vérifiés et sélectionnés. Les coordonnées du vendeur ne sont transmises qu'après paiement validé. Chaque dossier disparaît automatiquement à expiration du délai de diffusion (3 à 10 jours selon le bien). Aucune capture ni redistribution n'est autorisée.",
   },
   {
-    q: "Que se passe-t-il si aucun acheteur ne se positionne en 72h ?",
+    q: "Que se passe-t-il si aucun acheteur ne se positionne durant la diffusion ?",
     a: "Le lead expire et le dossier est retiré de la diffusion. L'apporteur est informé. Selon le potentiel du bien, une nouvelle diffusion peut être envisagée après requalification.",
   },
   {

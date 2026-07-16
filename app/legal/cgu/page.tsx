@@ -43,7 +43,7 @@ export default function CGU() {
         <section>
           <h2 className="text-sm font-semibold text-[#c29a6b] uppercase tracking-widest mb-4">4. Fonctionnement de la plateforme</h2>
           <p className="text-gray-300 leading-relaxed text-sm">
-            Les biens soumis font l'objet d'une analyse experte par Closia avant toute diffusion. Closia se réserve le droit d'accepter ou de refuser tout dossier. En cas de validation, le bien est diffusé pendant 72 heures maximum auprès d'un nombre limité d'acheteurs professionnels qualifiés.
+            Les biens soumis font l'objet d'une analyse experte par Closia avant toute diffusion. Closia se réserve le droit d'accepter ou de refuser tout dossier. En cas de validation, le bien est diffusé pendant une durée de 3 à 10 jours selon son potentiel, auprès d'un nombre limité d'acheteurs professionnels qualifiés.
           </p>
           <p className="text-gray-300 leading-relaxed text-sm mt-3">
             L'acheteur qui débloque un lead accède aux coordonnées complètes de l'apporteur et prend contact directement avec lui. Closia n'intervient pas dans la négociation ni dans la transaction.

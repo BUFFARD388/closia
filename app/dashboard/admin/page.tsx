@@ -1243,6 +1243,11 @@ ${selectedAnalyse.description ? `
               <div className="space-y-4">
                 {leadsLive.map(lead => {
                   const h = heuresRestantes(lead.date_expiration)
+                  // Durée totale réelle de diffusion pour ce bien (variable selon le choix
+                  // fait à la validation) — 72h de secours si les dates sont incohérentes.
+                  const dureeTotale = lead.date_diffusion && lead.date_expiration
+                    ? Math.round((new Date(lead.date_expiration).getTime() - new Date(lead.date_diffusion).getTime()) / 3600000)
+                    : 72
                   const acheteurs = lead.achats?.filter((ac: any) => ac.statut !== 'annule') || []
                   const exclusifPris = acheteurs.some((ac: any) => ac.mode === 'exclusif')
                   const grille = getPrix(lead.prix)
@@ -1290,11 +1295,11 @@ ${selectedAnalyse.description ? `
                           <div>
                             <div className="flex justify-between text-xs text-gray-500 mb-1">
                               <span>Temps écoulé</span>
-                              <span>{Math.floor(72 - h)}h / 72h</span>
+                              <span>{Math.floor(dureeTotale - h)}h / {dureeTotale}h</span>
                             </div>
                             <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
                               <div className={`h-full rounded-full ${h < 24 ? 'bg-red-400' : h < 48 ? 'bg-orange-400' : 'bg-green-400'}`}
-                                style={{ width: `${((72 - h) / 72) * 100}%` }} />
+                                style={{ width: `${((dureeTotale - h) / dureeTotale) * 100}%` }} />
                             </div>
                           </div>
                         </div>

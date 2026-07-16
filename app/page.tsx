@@ -203,7 +203,7 @@ export default function LandingPage() {
               </div>
               <h2 className="text-2xl font-bold leading-snug mb-6">Seuls les dossiers qui méritent<br />votre attention arrivent jusqu'à vous.</h2>
               <p className="text-sm text-gray-400 leading-relaxed mb-6">Les professionnels de la valorisation immobilière passent un temps considérable à écarter des dossiers qui n'auraient jamais dû leur parvenir. Chaque heure perdue sur un bien sans potentiel est une opportunité manquée ailleurs.</p>
-              <p className="text-sm text-gray-300 leading-relaxed mb-10">Sur Closia, chaque bien a été lu, analysé et validé par un expert avant d'être diffusé. Vous ne recevez que des dossiers à potentiel, en off-market strict, disponibles <strong className="text-white">72h</strong> — jamais vus sur le marché ouvert.</p>
+              <p className="text-sm text-gray-300 leading-relaxed mb-10">Sur Closia, chaque bien a été lu, analysé et validé par un expert avant d'être diffusé. Vous ne recevez que des dossiers à potentiel, en off-market strict, en diffusion de <strong className="text-white">3 à 10 jours</strong> — jamais vus sur le marché ouvert.</p>
               <div className="border-t border-[#c29a6b]/15 pt-8">
                 <p className="text-xs text-gray-600 mb-4 tracking-widest uppercase">Ce que vous gagnez</p>
                 <div className="space-y-2 text-sm text-gray-400 mb-8">
@@ -247,7 +247,7 @@ export default function LandingPage() {
                 {[
                   { n: '01', titre: 'Analyse expert sous 48h', desc: "Potentiel, risques, axes de valorisation, faisabilité, cohérence prix. Vous gagnez en crédibilité — et vous signez votre mandat exclusif plus facilement." },
                   { n: '02', titre: 'Réseau national d\'acheteurs pros', desc: "Marchands de biens, promoteurs, foncières, lotisseurs. Des acheteurs actifs que vous n'avez pas dans votre réseau." },
-                  { n: '03', titre: 'Réponse marché en 72h', desc: "Vous pouvez annoncer à votre vendeur : \"Vous aurez une réponse marché en 72h.\" C'est un argument massif pour signer." },
+                  { n: '03', titre: 'Réponse marché en 3 à 10 jours', desc: "Vous pouvez annoncer à votre vendeur : \"Vous aurez une réponse marché en 3 à 10 jours.\" C'est un argument massif pour signer." },
                   { n: '04', titre: 'Confidentialité totale', desc: "Aucune diffusion publique, aucune fuite, aucun bruit. Vous gardez le contrôle. Le dossier reste propre." },
                 ].map((p) => (
                   <div key={p.n} className="flex gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-all group">
@@ -263,7 +263,7 @@ export default function LandingPage() {
               {/* Pitch synthèse */}
               <div className="border-l-2 border-white/20 pl-5 mb-8">
                 <p className="text-sm text-gray-300 italic leading-relaxed">
-                  "Closia est votre support expert pour les biens à potentiel. Vous déposez. Nous analysons. Le marché répond en 72h."
+                  "Closia est votre support expert pour les biens à potentiel. Vous déposez. Nous analysons. Le marché répond en 3 à 10 jours."
                 </p>
               </div>
 
@@ -365,7 +365,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
               { val: '100 %', label: 'dossiers qualifiés par un expert', gold: true },
-              { val: '72h', label: 'délai de disponibilité garanti', gold: false },
+              { val: '3-10 j', label: 'diffusion selon le potentiel du bien', gold: false },
               { val: '20 ans', label: "d'expérience terrain", gold: false },
               { val: '0', label: 'biens standards, jamais.', gold: false },
             ].map((s, i) => (
@@ -496,8 +496,8 @@ export default function LandingPage() {
               },
               {
                 n: '02',
-                title: 'Analyse & diffusion 72h',
-                desc: "Lecture métier, axes de valorisation, risques urbains. Si le bien est retenu, il est diffusé 72h en exclusivité auprès de 3 acheteurs pro maximum.",
+                title: 'Analyse & diffusion 3 à 10 jours',
+                desc: "Lecture métier, axes de valorisation, risques urbains. Si le bien est retenu, il est diffusé de 3 à 10 jours en exclusivité auprès de 3 acheteurs pro maximum.",
                 detail: 'Max 3 acheteurs',
               },
               {
@@ -592,7 +592,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
               { val: '< 48h', label: 'Délai de réponse', sub: 'après soumission' },
-              { val: '72h', label: 'Diffusion max', sub: 'off-market strict' },
+              { val: '3-10 j', label: 'Diffusion', sub: 'off-market strict' },
               { val: '3 max', label: 'Acheteurs / lead', sub: 'concurrence maîtrisée' },
               { val: 'Gratuit', label: 'Pour l\'apporteur', sub: 'aucune commission' },
             ].map((s, i) => (
@@ -658,7 +658,7 @@ export default function LandingPage() {
                 {[
                   ['Qualification expert', 'Analyse métier sous 24–48h.'],
                   ['Valorisation précise', 'Potentiel, risques, axes de création de valeur.'],
-                  ['Diffusion confidentielle', "72h auprès d'acheteurs pro uniquement."],
+                  ['Diffusion confidentielle', "3 à 10 jours auprès d'acheteurs pro uniquement."],
                   ['Choix exclusif ou co-exclusif', 'Max 3 acheteurs.'],
                   ['Aucun engagement vendeur', 'Aucun frais, aucune commission.'],
                 ].map(([bold, rest]) => (

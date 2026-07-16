@@ -44,7 +44,7 @@ export async function POST(req: Request) {
       ` : `
         <div style="background: rgba(96,165,250,0.1); border: 1px solid rgba(96,165,250,0.3); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
           <p style="color: #60a5fa; font-weight: bold; margin: 0 0 8px;">⏳ Liste d'attente</p>
-          <p style="color: #d1d5db; margin: 0; font-size: 14px;">Votre inscription est confirmée. À la clôture du lead (72h), vous recevrez un email avec le prix final à régler et les coordonnées de l'apporteur.</p>
+          <p style="color: #d1d5db; margin: 0; font-size: 14px;">Votre inscription est confirmée. À la clôture du lead (diffusion de 3 à 10 jours selon le bien), vous recevrez un email avec le prix final à régler et les coordonnées de l'apporteur.</p>
         </div>
       `}
 
