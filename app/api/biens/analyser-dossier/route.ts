@@ -276,6 +276,8 @@ ${complements ? `\n**Compléments apportés par Laurent après vérification ter
 ---DOSSIER---
 [Un dossier de synthèse complet et détaillé en HTML pur (pas de markdown), du niveau d'un rapport d'expertise professionnel, destiné à être imprimé/exporté en PDF et montré à l'apporteur ou au vendeur pour justifier ta décision de diffusion ou de refus. Base-toi en priorité sur les données automatiques collectées ci-dessus (PLU, risques, DVF, marché) et sur les compléments de Laurent s'il y en a — ne spécule jamais sur des informations non fournies.
 
+**Règle d'attribution obligatoire, à respecter dans toutes les sections :** distingue toujours précisément la source de chaque information. Le potentiel déclaré par l'apporteur (champ « Potentiel identifié par l'apporteur » ci-dessus) doit rester présenté de façon neutre et prudente, sans lui prêter des précisions qu'il n'a pas fournies. À l'inverse, toute analyse technique, réglementaire ou chiffrée détaillée (zonage précis, SDP, hauteur, obligations type mixité sociale/typologie, découpage en bandes constructibles, etc.) qui provient des compléments de vérification terrain de Laurent doit être explicitement attribuée à Laurent Buffard (« l'analyse de Laurent Buffard », « la vérification terrain de Laurent Buffard »), et jamais présentée comme émanant de l'apporteur. Ne fais jamais dire à l'apporteur plus que ce qu'il a réellement transmis.
+
 Ce dossier doit être structuré en 9 sections, aussi détaillé et étoffé qu'un rapport d'expertise professionnelle (ne sois pas laconique : développe chaque section en plusieurs phrases ou paragraphes, comme le ferait un expert immobilier senior), avec EXACTEMENT les composants HTML suivants :
 
 SECTION (chaque section encapsulée ainsi) :
@@ -313,7 +315,7 @@ CONCLUSION (section 9, après la box de verdict) :
 
 Les 9 sections, dans cet ordre :
 
-1. SYNTHÈSE DU BIEN — tableau d'identification (type, adresse, surface, prix, prix/m², situation, apporteur) puis un paragraphe de présentation détaillé reprenant la description transmise.
+1. SYNTHÈSE DU BIEN — tableau d'identification (type, adresse, surface, prix, prix/m², situation, apporteur) puis un paragraphe de présentation factuelle du bien (sans attribution) reprenant la description transmise. Si un potentiel de valorisation précis est développé dans ce paragraphe (type d'opération, surface de plancher, hauteur, obligations réglementaires, découpage en bandes...), applique la règle d'attribution obligatoire ci-dessus : ce niveau de détail vient presque toujours des compléments de vérification terrain de Laurent et doit lui être attribué explicitement, pas à l'apporteur.
 
 2. CONTEXTE URBANISTIQUE (PLU) — section technique et approfondie. Reprends la donnée PLU collectée automatiquement (zonage, prescriptions/servitudes) : décris la nature de la zone, les destinations probablement autorisées/interdites pour ce type de zonage, les règles de densité et hauteur usuelles. Présente si possible un tableau destinations/autorisation. Signale toute servitude, périmètre ABF, risque inondation, zone bruit détectés. Si la donnée PLU indique "non disponible" ou "non numérisé", tu NE DOIS PAS spéculer sur la constructibilité précise : alerte avec une box-gold ou box-red que le zonage doit être vérifié en mairie avant tout engagement, et recommande le dépôt d'un certificat d'urbanisme si pertinent. Si des compléments de Laurent contredisent ou précisent la donnée automatique, ils priment.
 
