@@ -26,6 +26,26 @@ function timerColor(h: number) {
   return 'text-green-400'
 }
 
+// Un achat exclusif ne doit bloquer le lead pour tout le monde que s'il est confirmé
+// (payé) ou en cours de paiement récent. Sans ce garde-fou, un acheteur qui clique
+// "Acheter en exclusif" puis ferme l'onglet sans finaliser le paiement Stripe (pas de
+// clic sur "Annuler") laisse une réservation 'reserve' orpheline en base — le lead
+// resterait alors invisible pour tous les autres acheteurs jusqu'à la fin de la
+// diffusion, sans aucun mécanisme de nettoyage automatique. Passé ce délai, on
+// considère la tentative abandonnée et on ne bloque plus le lead.
+const RESERVATION_EXPIRE_MIN = 45
+function estAchatExclusifBloquant(achats: any[] | undefined | null) {
+  return (achats || []).some((a: any) => {
+    if (a.mode !== 'exclusif' || a.statut === 'annule') return false
+    if (a.statut === 'confirme') return true
+    if (a.statut === 'reserve' && a.created_at) {
+      const ageMin = (Date.now() - new Date(a.created_at).getTime()) / 60000
+      return ageMin < RESERVATION_EXPIRE_MIN
+    }
+    return false
+  })
+}
+
 const TABS = [
   { key: 'disponibles', label: 'Dossiers disponibles', icon: <Zap className="w-4 h-4" /> },
   { key: 'achetes', label: 'Mes dossiers achetés', icon: <Star className="w-4 h-4" /> },
@@ -146,8 +166,7 @@ export default function DashboardAcheteur() {
   const filtered = leads.filter(l => {
     if (achetesIds.has(l.id)) return false // masquer les leads déjà achetés
     // masquer les leads achetés en exclusivité par quelqu'un d'autre
-    const achatsActifs = l.achats?.filter((a: any) => a.statut !== 'annule') || []
-    if (achatsActifs.some((a: any) => a.mode === 'exclusif')) return false
+    if (estAchatExclusifBloquant(l.achats)) return false
     if (prixMax && l.prix > parseInt(prixMax)) return false
     if (typeFilter !== 'Tous' && l.type !== typeFilter) return false
     if (search) {
@@ -252,6 +271,29 @@ export default function DashboardAcheteur() {
     window.location.href = url
   }
 
+  // Relance le paiement Stripe pour une réservation exclusif restée bloquée sur
+  // 'reserve' (onglet fermé avant la fin du paiement, session Stripe expirée...).
+  // Réutilise l'achat déjà créé plutôt que d'en recréer un nouveau.
+  const reprendrePaiement = async (achat: any) => {
+    if (!achat.biens) return
+    const res = await fetch('/api/stripe/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        bienId: achat.bien_id,
+        bienType: achat.biens.type,
+        bienVille: achat.biens.ville,
+        prixBien: achat.biens.prix,
+        mode: 'exclusif',
+        nbAcheteurs: 1,
+        achatId: achat.id,
+      }),
+    })
+    const { url, error: stripeError } = await res.json()
+    if (stripeError) { alert('Erreur Stripe : ' + stripeError); return }
+    window.location.href = url
+  }
+
   return (
     <div className="min-h-screen flex">
       {/* Sidebar */}
@@ -343,7 +385,7 @@ export default function DashboardAcheteur() {
                 {filtered.map(lead => {
                   const h = heuresRestantes(lead.date_expiration)
                   const acheteurs = lead.achats?.filter((a: any) => a.statut !== 'annule') || []
-                  const exclusifPris = acheteurs.some((a: any) => a.mode === 'exclusif')
+                  const exclusifPris = estAchatExclusifBloquant(lead.achats)
                   const grille = getPrix(lead.prix)
                   const dejaPositionne = acheteurs.some((a: any) => a.acheteur_id === userId)
 
@@ -531,13 +573,28 @@ export default function DashboardAcheteur() {
                             </div>
                           ) : achat.mode === 'exclusif' ? (
                             <div className="mt-4 bg-orange-500/5 border border-orange-500/20 rounded-xl p-4">
-                              <p className="text-xs text-orange-300">Paiement en cours de confirmation…</p>
+                              <p className="text-xs text-orange-300 mb-3">
+                                Paiement non finalisé. Si vous avez fermé la page Stripe avant la fin, cliquez ci-dessous pour reprendre le paiement.
+                              </p>
+                              <button
+                                onClick={() => reprendrePaiement(achat)}
+                                className="w-full text-sm px-4 py-2.5 rounded-xl bg-[#c29a6b] hover:bg-[#b8895a] text-black font-semibold transition-colors"
+                              >
+                                Reprendre le paiement
+                              </button>
                             </div>
                           ) : (
                             <div className="mt-4 bg-blue-500/5 border border-blue-500/20 rounded-xl p-4">
                               {(() => {
                                 const h = achat.biens?.date_expiration ? heuresRestantes(achat.biens.date_expiration) : 0
                                 const expired = h <= 0
+                                // Durée totale réelle de la diffusion (3 ou 10 jours selon le bien,
+                                // choisi par l'admin) — évite de figer la barre de progression sur
+                                // 72h alors qu'une diffusion à 10 jours (240h) donnerait une barre
+                                // fausse (déjà "pleine" alors qu'il reste des jours).
+                                const dureeTotale = achat.biens?.date_diffusion && achat.biens?.date_expiration
+                                  ? Math.max(1, (new Date(achat.biens.date_expiration).getTime() - new Date(achat.biens.date_diffusion).getTime()) / 3600000)
+                                  : 72
                                 return (
                                   <>
                                     <div className="flex items-center justify-between mb-2">
@@ -555,7 +612,7 @@ export default function DashboardAcheteur() {
                                     {!expired && (
                                       <div className="mt-2 h-1 bg-white/10 rounded-full overflow-hidden">
                                         <div className="h-full rounded-full bg-blue-400 transition-all"
-                                          style={{ width: `${Math.min(100, ((72 - h) / 72) * 100)}%` }} />
+                                          style={{ width: `${Math.min(100, Math.max(0, ((dureeTotale - h) / dureeTotale) * 100))}%` }} />
                                       </div>
                                     )}
                                   </>
@@ -601,7 +658,7 @@ export default function DashboardAcheteur() {
               {payStep === 'choose' && (() => {
                 const grille = getPrix(selectedLead.prix)
                 const acheteurs = selectedLead.achats?.filter((a: any) => a.statut !== 'annule') || []
-                const exclusifPris = acheteurs.some((a: any) => a.mode === 'exclusif')
+                const exclusifPris = estAchatExclusifBloquant(selectedLead.achats)
 
                 return (
                   <>
