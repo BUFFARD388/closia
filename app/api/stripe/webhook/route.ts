@@ -160,6 +160,112 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true })
     }
 
+    // ── Paiement dossier CUb (490 €) ──
+    // Paiement immédiat à la soumission (voir /api/stripe/cub-checkout). Contrairement à
+    // l'analyse simple, ce type n'était jusqu'ici PAS géré par le webhook du tout : le
+    // statut restait bloqué sur 'pending' et Laurent n'était jamais notifié qu'un paiement
+    // était arrivé (le dashboard admin n'affiche "Payée — à traiter" que pour statut='payee').
+    if (type === 'cub' && analyseId) {
+      try {
+        const montantCub = typeof session.amount_total === 'number'
+          ? (session.amount_total / 100).toLocaleString('fr-FR')
+          : '490'
+
+        const { data: cubAnalyse, error: cubFetchError } = await supabase
+          .from('analyses')
+          .select('*')
+          .eq('id', analyseId)
+          .single()
+
+        if (cubFetchError) {
+          console.error('Webhook cub : échec de récupération de la demande', analyseId, cubFetchError)
+        }
+
+        if (cubAnalyse) {
+          await supabase.from('analyses').update({ statut: 'payee' }).eq('id', analyseId)
+
+          // Notifier l'admin que le paiement est arrivé — c'est le seul signal qui déclenche
+          // la préparation du dossier CERFA côté Laurent.
+          await resend.emails.send({
+            from: 'Closia <noreply@closia.net>',
+            to: 'contact@closia.net',
+            subject: `✅ Dossier CUb payé (${montantCub}€) — ${cubAnalyse.nom}`,
+            html: `
+              <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:32px;background:#0b1220;color:#fff;border-radius:12px;">
+                <h2 style="color:#c29a6b;">✅ Paiement CUb reçu (${montantCub}€)</h2>
+                <div style="background:#111720;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:16px;margin:24px 0;">
+                  <p style="color:#fff;margin:0 0 4px;"><strong>Nom :</strong> ${cubAnalyse.nom}</p>
+                  <p style="color:#fff;margin:0 0 4px;"><strong>Email :</strong> ${cubAnalyse.email}</p>
+                  <p style="color:#fff;margin:0;"><strong>Adresse :</strong> ${cubAnalyse.adresse}</p>
+                </div>
+                <p style="color:#6b7280;font-size:12px;">À traiter dans le dashboard admin — onglet "Dossiers CUb".</p>
+              </div>
+            `,
+          }).catch(console.warn)
+
+          // Confirmation au client que le paiement est bien reçu (le mail "demande enregistrée"
+          // envoyé à la soumission ne confirmait pas le paiement, qui suit juste après).
+          await resend.emails.send({
+            from: 'Laurent Buffard — Closia <noreply@closia.net>',
+            to: cubAnalyse.email,
+            subject: 'Paiement confirmé — préparation de votre dossier CUb en cours',
+            html: `
+              <div style="font-family:Arial,Helvetica,sans-serif;max-width:600px;margin:0 auto;background:#0b1220;color:#fff;border-radius:12px;overflow:hidden;">
+                <div style="background:linear-gradient(135deg,#0b1220 0%,#1b2a4a 100%);padding:40px 48px 32px;border-bottom:1px solid rgba(194,154,107,0.3);">
+                  <img src="https://closia.net/logo.png" alt="Closia" style="height:44px;margin-bottom:24px;display:block;" />
+                  <p style="font-size:18px;font-weight:600;color:#fff;margin:0 0 6px;">Paiement confirmé ✓</p>
+                  <p style="font-size:12px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:1.5px;margin:0;">Certificat d'Urbanisme Opérationnel</p>
+                </div>
+                <div style="padding:36px 48px;">
+                  <p style="color:#9ca3af;margin:0 0 16px;">Bonjour ${cubAnalyse.nom},</p>
+                  <p style="color:#d1d5db;line-height:1.75;margin:0 0 24px;">
+                    Votre paiement de <strong style="color:#fff;">${montantCub} € HT</strong> a bien été reçu pour le dossier concernant
+                    <strong style="color:#fff;">${cubAnalyse.adresse}</strong>. Je prépare votre dossier CERFA et vous recontacte
+                    <strong style="color:#fff;">sous 48h</strong> pour validation avant dépôt en mairie.
+                  </p>
+                </div>
+                <div style="padding:20px 48px;border-top:1px solid rgba(255,255,255,0.08);text-align:center;">
+                  <p style="color:#6b7280;font-size:11px;margin:0;">Laurent Buffard · Fondateur Closia</p>
+                  <p style="color:#6b7280;font-size:11px;margin:4px 0;">contact@closia.net · 06 87 76 33 40</p>
+                  <a href="https://closia.net" style="color:#c29a6b;font-size:11px;">closia.net</a>
+                </div>
+              </div>
+            `,
+          }).catch(console.warn)
+        } else {
+          console.error('Webhook cub : analyseId introuvable en base, paiement reçu sans destinataire', analyseId)
+          await resend.emails.send({
+            from: 'Closia <noreply@closia.net>',
+            to: 'contact@closia.net',
+            subject: `🚨 Paiement CUb reçu mais demande introuvable en base — analyseId ${analyseId}`,
+            html: `
+              <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:32px;background:#0b1220;color:#fff;border-radius:12px;">
+                <h2 style="color:#ef4444;">🚨 Paiement CUb reçu (${montantCub}€) mais impossible de retrouver la demande</h2>
+                <p style="color:#d1d5db;">analyseId : ${analyseId}</p>
+                <p style="color:#9ca3af;font-size:12px;">session id : ${session.id}</p>
+              </div>
+            `,
+          }).catch(console.warn)
+        }
+      } catch (cubError: any) {
+        console.error('Webhook cub : exception non gérée', cubError)
+        await resend.emails.send({
+          from: 'Closia <noreply@closia.net>',
+          to: 'contact@closia.net',
+          subject: `🚨 Erreur inattendue lors du traitement du paiement CUb — ${analyseId}`,
+          html: `
+            <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:32px;background:#0b1220;color:#fff;border-radius:12px;">
+              <h2 style="color:#ef4444;">🚨 Erreur inattendue dans le webhook CUb (analyseId ${analyseId})</h2>
+              <p style="color:#d1d5db;">Vérifiez la session Stripe ${session.id} et retrouvez le client pour traiter manuellement.</p>
+              <p style="color:#9ca3af;font-size:12px;"><strong>Erreur :</strong> ${cubError?.message || String(cubError)}</p>
+            </div>
+          `,
+        }).catch(console.warn)
+      }
+
+      return NextResponse.json({ received: true })
+    }
+
     // ── Paiement lead ──
     if (achatId) {
       await supabase.from('achats').update({ statut: 'confirme' }).eq('id', achatId)
