@@ -59,6 +59,7 @@ export default function DashboardAdmin() {
   const [authChecked, setAuthChecked] = useState(false)
   const [loading, setLoading] = useState(true)
   const [loadingLive, setLoadingLive] = useState(false)
+  const [cloturingId, setCloturingId] = useState<string | null>(null)
   const [selected, setSelected] = useState<any | null>(null)
   const [apporteur, setApporteur] = useState<any | null>(null)
   const [decision, setDecision] = useState<'validate' | 'reject' | null>(null)
@@ -881,6 +882,28 @@ ${selectedAnalyse.description ? `
     setLoadingLive(false)
   }
 
+  // Clôture manuelle immédiate d'un lead expiré — le cron quotidien peut mettre jusqu'à
+  // ~24h à traiter un bien dont la diffusion vient de se terminer (voir /api/leads/cloturer,
+  // qui tournait même sans jamais s'exécuter avant ce correctif car Vercel Cron appelle en
+  // GET et la route n'exposait qu'un handler POST). Ce bouton permet de ne pas attendre.
+  async function cloturerMaintenant(bienId: string) {
+    setCloturingId(bienId)
+    try {
+      const res = await fetch('/api/leads/cloturer-maintenant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bienId }),
+      })
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      await loadLeadsLive()
+    } catch (err: any) {
+      alert('Erreur lors de la clôture : ' + err.message)
+    } finally {
+      setCloturingId(null)
+    }
+  }
+
   const filtered = tab === 'tous' ? biens : biens.filter(b =>
     tab === 'pending' ? b.statut === 'pending' :
     tab === 'diffuse' ? b.statut === 'diffuse' :
@@ -1514,6 +1537,18 @@ ${selectedAnalyse.description ? `
                                 style={{ width: `${((dureeTotale - h) / dureeTotale) * 100}%` }} />
                             </div>
                           </div>
+
+                          {h <= 0 && (
+                            <div className="mt-3 bg-red-500/10 border border-red-500/25 rounded-lg p-3 flex items-center justify-between gap-3">
+                              <p className="text-xs text-red-300">Diffusion terminée — en attente du cron de clôture.</p>
+                              <button
+                                onClick={() => cloturerMaintenant(lead.id)}
+                                disabled={cloturingId === lead.id}
+                                className="text-xs px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 font-medium transition-colors disabled:opacity-50 whitespace-nowrap">
+                                {cloturingId === lead.id ? 'Clôture…' : 'Clôturer maintenant'}
+                              </button>
+                            </div>
+                          )}
                         </div>
 
                         {/* Panel acheteurs + grille */}
