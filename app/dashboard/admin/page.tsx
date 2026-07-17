@@ -74,6 +74,7 @@ export default function DashboardAdmin() {
   const [savingRapport, setSavingRapport] = useState(false)
   const [sendingRapport, setSendingRapport] = useState(false)
   const [rapportEnvoye, setRapportEnvoye] = useState(false)
+  const [demandingPaiement, setDemandingPaiement] = useState(false)
   const [generatingRapport, setGeneratingRapport] = useState(false)
   const [corrections, setCorrections] = useState('')
   const [correctingRapport, setCorrectingRapport] = useState(false)
@@ -319,6 +320,32 @@ export default function DashboardAdmin() {
       alert('Erreur envoi CUb : ' + err.message)
     } finally {
       setSendingCub(false)
+    }
+  }
+
+  // Demande de paiement différée : envoyée une fois le rapport rédigé (pas à la
+  // soumission) — le client règle pour recevoir le rapport complet, livré
+  // automatiquement par le webhook Stripe une fois le paiement confirmé.
+  async function demanderPaiementAnalyse() {
+    if (!selectedAnalyse || !rapport.trim()) return
+    // Le rapport doit être enregistré en base avant l'envoi de la demande de
+    // paiement (la route le relit depuis la base, pas depuis le state local).
+    await sauvegarderRapport()
+    setDemandingPaiement(true)
+    try {
+      const res = await fetch('/api/analyses/demander-paiement', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ analyseId: selectedAnalyse.id }),
+      })
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      setSelectedAnalyse((prev: any) => prev ? { ...prev, statut: 'paiement_demande' } : prev)
+      setAnalyses((prev: any[]) => prev.map(a => a.id === selectedAnalyse.id ? { ...a, statut: 'paiement_demande', rapport } : a))
+    } catch (err: any) {
+      alert('Erreur lors de la demande de paiement : ' + err.message)
+    } finally {
+      setDemandingPaiement(false)
     }
   }
 
@@ -1357,9 +1384,10 @@ ${selectedAnalyse.description ? `
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        {a.statut === 'payee' && <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-[#c29a6b]/15 text-[#c29a6b] border border-[#c29a6b]/20">✦ Payée — À traiter</span>}
-                        {a.statut === 'livree' && <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-green-500/15 text-green-400 border border-green-500/20"><CheckCircle className="w-3 h-3" /> Livrée</span>}
-                        {a.statut === 'pending' && <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-gray-500/15 text-gray-400 border border-gray-500/20">En attente paiement</span>}
+                        {a.statut === 'paiement_demande' && <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-[#c29a6b]/15 text-[#c29a6b] border border-[#c29a6b]/20"><Clock className="w-3 h-3" /> Prête — paiement demandé</span>}
+                        {a.statut === 'livree' && <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-green-500/15 text-green-400 border border-green-500/20"><CheckCircle className="w-3 h-3" /> Payée et livrée</span>}
+                        {a.statut === 'payee' && <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-red-500/15 text-red-400 border border-red-500/20"><AlertCircle className="w-3 h-3" /> Payée sans rapport — à traiter</span>}
+                        {(!a.statut || a.statut === 'pending') && <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-gray-500/15 text-gray-400 border border-gray-500/20"><AlertCircle className="w-3 h-3" /> À analyser</span>}
                         <span className="text-xs text-gray-500 flex items-center gap-1"><Clock className="w-3 h-3" />{formatDate(a.created_at)}</span>
                       </div>
                       <h3 className="font-semibold">{a.nom}</h3>
@@ -2257,11 +2285,30 @@ ${selectedAnalyse.description ? `
                 ) : selectedAnalyse.statut === 'livree' ? (
                   <div className="space-y-3">
                     <div className="flex items-center justify-center gap-2 text-sm text-green-400 py-2">
-                      <CheckCircle className="w-5 h-5" /> Analyse envoyée et archivée
+                      <CheckCircle className="w-5 h-5" /> Payée et rapport livré
                     </div>
                     <button onClick={imprimerRapport}
                       className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs tracking-widest uppercase py-3 rounded-xl transition-colors">
                       🖨️ Réimprimer le rapport
+                    </button>
+                  </div>
+                ) : selectedAnalyse.statut === 'paiement_demande' ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-center gap-2 text-sm text-[#c29a6b] py-2 text-center">
+                      <Clock className="w-5 h-5 flex-shrink-0" /> Rapport prêt — en attente du paiement du client
+                    </div>
+                    <p className="text-xs text-center text-gray-500">Le rapport complet sera envoyé automatiquement dès réception du paiement.</p>
+                    <button
+                      onClick={demanderPaiementAnalyse}
+                      disabled={demandingPaiement}
+                      className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 disabled:opacity-30 text-white font-semibold text-xs tracking-widest uppercase py-3 rounded-xl transition-colors">
+                      {demandingPaiement ? <Loader2 className="w-4 h-4 animate-spin" /> : null} Renvoyer l'email de paiement
+                    </button>
+                    <button
+                      onClick={envoyerRapport}
+                      disabled={!rapport.trim() || sendingRapport}
+                      className="w-full text-xs text-gray-500 hover:text-gray-300 underline underline-offset-2 py-1">
+                      {sendingRapport ? 'Envoi…' : 'Envoyer sans paiement (cas particulier)'}
                     </button>
                   </div>
                 ) : (
@@ -2276,11 +2323,17 @@ ${selectedAnalyse.description ? `
                       🖨️ Aperçu / Imprimer en PDF
                     </button>
                     <button
+                      onClick={demanderPaiementAnalyse}
+                      disabled={!rapport.trim() || demandingPaiement}
+                      className="w-full flex items-center justify-center gap-2 bg-[#c29a6b] hover:bg-[#b8895a] disabled:opacity-30 disabled:cursor-not-allowed text-black font-semibold text-xs tracking-widest uppercase py-3.5 rounded-xl transition-colors">
+                      {demandingPaiement ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                      {demandingPaiement ? 'Envoi en cours…' : `Analyse prête — demander le paiement (590 €)`}
+                    </button>
+                    <button
                       onClick={envoyerRapport}
                       disabled={!rapport.trim() || sendingRapport}
-                      className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 disabled:opacity-30 disabled:cursor-not-allowed text-white font-semibold text-xs tracking-widest uppercase py-3.5 rounded-xl transition-colors">
-                      {sendingRapport ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                      {sendingRapport ? 'Envoi en cours…' : `Envoyer à ${selectedAnalyse.email}`}
+                      className="w-full text-xs text-gray-500 hover:text-gray-300 underline underline-offset-2 py-1">
+                      {sendingRapport ? 'Envoi…' : 'Envoyer sans paiement (cas particulier)'}
                     </button>
                   </div>
                 )}

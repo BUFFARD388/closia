@@ -956,7 +956,7 @@ export default function LandingPage() {
                   <h3 className="text-lg font-bold mb-2">{analyseType === 'simple' ? 'Demande envoyée !' : 'Devis demandé !'}</h3>
                   <p className="text-sm text-gray-400 mb-6">
                     {analyseType === 'simple'
-                      ? 'Nous vous contacterons sous 24h pour finaliser le paiement et démarrer l\'analyse.'
+                      ? 'Notre expert démarre l\'analyse de votre bien. Vous recevrez un email dès que le rapport sera prêt, avec un lien pour le régler et le recevoir.'
                       : 'Nous vous enverrons un devis personnalisé sous 24h à l\'adresse indiquée.'}
                   </p>
                   <button onClick={() => { setAnalyseModal(false); setAnalyseSent(false); setAnalyseType(null) }}
@@ -979,11 +979,13 @@ export default function LandingPage() {
                   analyseFiles.forEach(f => fd.append('files', f))
 
                   if (analyseType === 'simple') {
-                    // Redirection vers Stripe Checkout
+                    // Dépôt gratuit, sans paiement : le lien de paiement n'est envoyé
+                    // qu'une fois le rapport rédigé (voir dashboard admin).
                     const res = await fetch('/api/stripe/analyse-checkout', { method: 'POST', body: fd })
                     const data = await res.json()
-                    if (data.url) {
-                      window.location.href = data.url
+                    if (data.success) {
+                      setAnalyseSending(false)
+                      setAnalyseSent(true)
                     } else {
                       setAnalyseSending(false)
                       alert('Une erreur est survenue. Veuillez réessayer.')

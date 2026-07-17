@@ -30,6 +30,9 @@ export async function POST(req: NextRequest) {
     const { type, achatId, bienId, mode, analyseId } = session.metadata!
 
     // ── Paiement analyse préalable ──
+    // Le rapport est désormais rédigé AVANT le paiement (demande envoyée depuis l'admin
+    // une fois prêt, voir /api/analyses/demander-paiement) : le paiement déclenche donc
+    // directement la livraison du rapport complet, plutôt qu'un accusé "rapport sous 72h".
     if (type === 'analyse' && analyseId) {
       // Montant réellement facturé, lu directement sur la session Stripe plutôt que codé
       // en dur — évite un nouveau décalage si le prix de l'analyse change un jour.
@@ -43,70 +46,56 @@ export async function POST(req: NextRequest) {
         .eq('id', analyseId)
         .single()
 
-      if (analyse) {
-        // Marquer comme payée
-        await supabase
-          .from('analyses')
-          .update({ statut: 'payee' })
-          .eq('id', analyseId)
+      if (analyse && analyse.rapport && analyse.rapport.trim()) {
+        // Rapport déjà rédigé : on le livre immédiatement au client (réutilise le même
+        // email riche que l'envoi manuel depuis l'admin, et marque statut = 'livree').
+        await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/emails/envoyer-rapport`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            analyseId: analyse.id,
+            nom: analyse.nom,
+            email: analyse.email,
+            adresse: analyse.adresse,
+            description: analyse.description,
+            rapport: analyse.rapport,
+            fichiers: analyse.fichiers || [],
+          }),
+        }).catch(err => console.error('Erreur livraison rapport post-paiement:', err))
 
-        const fichiers = (analyse.fichiers as { name: string; url: string }[]) || []
-        const filesHtml = fichiers.length > 0
-          ? `<div style="background:#111720;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:16px;margin-bottom:24px;">
-              <p style="color:#9ca3af;font-size:12px;margin:0 0 12px;text-transform:uppercase;letter-spacing:1px;">Documents joints (${fichiers.length})</p>
-              ${fichiers.map(f => `<p style="margin:4px 0;"><a href="${f.url}" style="color:#c29a6b;">${f.name}</a></p>`).join('')}
-            </div>`
-          : ''
-
-        // Email à l'admin
+        // Notifier l'admin que le paiement est arrivé et le rapport livré automatiquement.
         await resend.emails.send({
           from: 'Closia <noreply@closia.net>',
           to: 'contact@closia.net',
-          subject: `✅ Analyse simple payée — ${analyse.nom}`,
+          subject: `✅ Analyse payée et livrée automatiquement — ${analyse.nom}`,
           html: `
             <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:32px;background:#0b1220;color:#fff;border-radius:12px;">
-              <h2 style="color:#c29a6b;">✅ Paiement reçu — Analyse simple (${montantAnalyse}€)</h2>
+              <h2 style="color:#c29a6b;">✅ Paiement reçu (${montantAnalyse}€) — rapport livré automatiquement</h2>
               <div style="background:#111720;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:16px;margin:24px 0;">
                 <p style="color:#fff;margin:0 0 4px;"><strong>Nom :</strong> ${analyse.nom}</p>
                 <p style="color:#fff;margin:0 0 4px;"><strong>Email :</strong> ${analyse.email}</p>
-                <p style="color:#fff;margin:0;"><strong>Tél :</strong> ${analyse.tel}</p>
+                <p style="color:#fff;margin:0;"><strong>Adresse :</strong> ${analyse.adresse}</p>
               </div>
-              <div style="background:#111720;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:16px;margin-bottom:24px;">
-                <p style="color:#fff;margin:0 0 8px;"><strong>Adresse :</strong> ${analyse.adresse}</p>
-                <p style="color:#d1d5db;margin:0;line-height:1.6;">${analyse.description}</p>
-              </div>
-              ${analyse.message ? `<div style="background:#111720;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:16px;margin-bottom:24px;"><p style="color:#d1d5db;margin:0;">${analyse.message}</p></div>` : ''}
-              ${filesHtml}
-              <p style="color:#6b7280;font-size:12px;">Répondre à : ${analyse.email}</p>
+              <p style="color:#6b7280;font-size:12px;">Le rapport a été envoyé automatiquement à ${analyse.email}. Aucune action requise.</p>
             </div>
           `,
-        })
-
-        // Email de confirmation au client
+        }).catch(console.warn)
+      } else if (analyse) {
+        // Filet de sécurité : paiement reçu mais rapport introuvable/vide (ne devrait pas
+        // arriver dans le nouveau flux). On marque payée et on alerte l'admin pour suivi manuel.
+        await supabase.from('analyses').update({ statut: 'payee' }).eq('id', analyseId)
         await resend.emails.send({
           from: 'Closia <noreply@closia.net>',
-          to: analyse.email,
-          subject: '✅ Paiement reçu — Votre analyse démarre — Closia',
+          to: 'contact@closia.net',
+          subject: `⚠️ Paiement reçu SANS rapport rédigé — ${analyse.nom}`,
           html: `
-            <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#0b1220;color:#fff;padding:40px;border-radius:12px;">
-              <img src="https://closia.net/logo.png" alt="Closia" style="height:48px;margin-bottom:32px;" />
-              <h2 style="color:#c29a6b;">Paiement reçu — Votre analyse est lancée</h2>
-              <p style="color:#9ca3af;">Bonjour ${analyse.nom},</p>
-              <p style="color:#d1d5db;">Votre paiement de <strong>${montantAnalyse}€</strong> a bien été reçu. Votre rapport d'analyse expert vous sera remis <strong>sous 72h</strong> à cette adresse email.</p>
-              <div style="background:#111720;border:1px solid rgba(194,154,107,0.3);border-radius:8px;padding:16px;margin:24px 0;">
-                <p style="color:#c29a6b;font-size:12px;margin:0 0 4px;text-transform:uppercase;">Bien concerné</p>
-                <p style="color:#fff;margin:0;">${analyse.adresse}</p>
-              </div>
-              <div style="background:rgba(194,154,107,0.05);border:1px solid rgba(194,154,107,0.2);border-radius:8px;padding:16px;margin-bottom:24px;">
-                <p style="color:#c29a6b;margin:0;">🔒 Tous les éléments transmis sont strictement confidentiels et ne seront jamais communiqués à un tiers.</p>
-              </div>
-              <p style="color:#6b7280;font-size:12px;margin-top:40px;border-top:1px solid rgba(255,255,255,0.1);padding-top:16px;">
-                Closia · contact@closia.net · 06 87 76 33 40<br/>
-                <a href="https://closia.net" style="color:#c29a6b;">closia.net</a>
-              </p>
+            <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:32px;background:#0b1220;color:#fff;border-radius:12px;">
+              <h2 style="color:#ef4444;">⚠️ Paiement reçu (${montantAnalyse}€) mais aucun rapport enregistré</h2>
+              <p style="color:#d1d5db;">Rédigez et envoyez le rapport manuellement à ${analyse.email} au plus vite.</p>
+              <p style="color:#fff;margin:0;"><strong>Adresse :</strong> ${analyse.adresse}</p>
             </div>
           `,
-        })
+        }).catch(console.warn)
       }
 
       return NextResponse.json({ received: true })

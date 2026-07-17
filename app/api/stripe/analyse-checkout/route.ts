@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-05-27.dahlia',
-})
+// Plus de paiement à la soumission : le client ne règle qu'une fois l'analyse
+// rédigée et prête (voir /api/analyses/demander-paiement, déclenché depuis l'admin).
+// Objectif : zéro friction au dépôt de la demande.
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -105,7 +104,7 @@ export async function POST(req: NextRequest) {
             <p style="color:#9ca3af;font-size:12px;margin:0 0 8px;">Documents</p>
             ${filesHtml}
           </div>
-          <p style="margin-top:24px;color:#6b7280;font-size:12px;">Le paiement est en cours — consultez le dashboard admin pour suivre le statut.</p>
+          <p style="margin-top:24px;color:#6b7280;font-size:12px;">Aucun paiement à ce stade — à traiter dans le dashboard admin. Le lien de paiement sera envoyé au client une fois le rapport rédigé.</p>
         </div>
       `,
     }).catch(console.warn)
@@ -125,9 +124,10 @@ export async function POST(req: NextRequest) {
           <div style="padding:36px 48px;">
             <p style="color:#9ca3af;margin:0 0 16px;">Bonjour ${nom},</p>
             <p style="color:#d1d5db;line-height:1.75;margin:0 0 28px;">
-              Votre demande d'analyse a bien été enregistrée. Dès réception de votre paiement,
-              nous lançons l'analyse et vous recevrez votre rapport expert
-              <strong style="color:#fff;">sous 72h</strong> à cette adresse email.
+              Votre demande d'analyse a bien été enregistrée, sans engagement de votre part.
+              Notre expert commence dès maintenant l'analyse de votre bien. Une fois le rapport
+              rédigé — <strong style="color:#fff;">sous 72h</strong> — vous recevrez un email avec
+              un aperçu et un lien pour régler et recevoir le rapport complet.
             </p>
             <div style="background:#111720;border:1px solid rgba(194,154,107,0.25);border-radius:10px;padding:18px 20px;margin-bottom:28px;">
               <p style="color:#c29a6b;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 10px;font-weight:700;">Récapitulatif de votre demande</p>
@@ -149,40 +149,7 @@ export async function POST(req: NextRequest) {
       `,
     }).catch(console.warn) // non bloquant
 
-    // Créer la session Stripe Checkout
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      mode: 'payment',
-      line_items: [
-        {
-          price_data: {
-            currency: 'eur',
-            product_data: {
-              name: 'Analyse simple — Avis expert standard',
-              description: 'Analyse du potentiel de valorisation, lecture PLU, identification des risques, axes de création de valeur — rapport écrit sous 48h.',
-            },
-            unit_amount: 59000, // 590 € en centimes
-          },
-          quantity: 1,
-        },
-      ],
-      metadata: {
-        analyseId: analyse.id,
-        type: 'analyse',
-      },
-      allow_promotion_codes: true,
-      customer_email: email,
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/?analyse=success`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/?analyse=cancel`,
-    })
-
-    // Sauvegarder l'ID session Stripe
-    await supabase
-      .from('analyses')
-      .update({ stripe_session: session.id })
-      .eq('id', analyse.id)
-
-    return NextResponse.json({ url: session.url })
+    return NextResponse.json({ success: true })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
