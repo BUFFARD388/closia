@@ -443,6 +443,15 @@ export default function DashboardAdmin() {
     const logoUrl = window.location.origin + '/logo.png'
     const rapportTexte = rapport || selectedAnalyse.rapport || ''
 
+    // Photo de couverture : priorité à photo_principale_url (sélection manuelle admin),
+    // sinon 1ère image parmi les fichiers transmis par le client — même logique que
+    // app/rapport/[id]/RapportView.tsx (page publique post-paiement).
+    const analyseFichiers: { name: string; url: string }[] = selectedAnalyse.fichiers || []
+    const coverPhotoUrl: string | null =
+      selectedAnalyse.photo_principale_url ||
+      analyseFichiers.find(f => /\.(jpe?g|png|webp|gif|heic|avif)$/i.test(f.name))?.url ||
+      null
+
     // --- Parseur markdown simplifié ---
     function renderInline(text: string): string {
       return text
@@ -602,6 +611,7 @@ export default function DashboardAdmin() {
     .conclusion-rec-text strong{color:#fff}
     .conclusion-quote{border-left:3px solid #c29a6b;padding:10px 16px;margin-top:16px;background:rgba(255,255,255,.04);border-radius:0 6px 6px 0;font-style:italic;font-size:12.5px;color:#cbd5e1;line-height:1.7}
     .disclaimer{margin-top:20px;padding:12px 16px;background:#f7f5f0;border-radius:6px;font-size:11px;color:#6b7280;line-height:1.6;border:1px solid #e8e2d5;font-style:italic}
+    .cover-photo{width:100%;max-height:320px;object-fit:cover;display:block}
     .box,.estimation-grid,.conclusion-block{page-break-inside:avoid}
     /* FOOTER */
     .footer{padding:16px 56px;background:#f7f5f0;border-top:1px solid #e8e2d5;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#9ca3af}
@@ -636,6 +646,8 @@ export default function DashboardAdmin() {
     <div class="info-item wide"><div class="info-label">Bien analysé</div><div class="info-value">${selectedAnalyse.adresse}</div></div>
   </div>
 </div>
+
+${coverPhotoUrl ? `<img src="${coverPhotoUrl}" alt="Photo du bien" class="cover-photo"/>` : ''}
 
 ${selectedAnalyse.description ? `
 <div class="desc-strip">

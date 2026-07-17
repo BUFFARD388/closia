@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
+import { sendRapportEmail } from '@/lib/sendRapportEmail'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2026-05-27.dahlia',
@@ -47,12 +48,12 @@ export async function POST(req: NextRequest) {
         .single()
 
       if (analyse && analyse.rapport && analyse.rapport.trim()) {
-        // Rapport déjà rédigé : on le livre immédiatement au client (réutilise le même
-        // email riche que l'envoi manuel depuis l'admin, et marque statut = 'livree').
-        await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/emails/envoyer-rapport`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+        // Rapport déjà rédigé : on le livre immédiatement au client. Appel direct en process
+        // (plus de fetch HTTP interne vers NEXT_PUBLIC_APP_URL, fragile en environnement
+        // serverless et source d'échecs silencieux) — voir lib/sendRapportEmail.ts, qui
+        // marque aussi statut = 'livree'.
+        try {
+          await sendRapportEmail({
             analyseId: analyse.id,
             nom: analyse.nom,
             email: analyse.email,
@@ -60,26 +61,44 @@ export async function POST(req: NextRequest) {
             description: analyse.description,
             rapport: analyse.rapport,
             fichiers: analyse.fichiers || [],
-          }),
-        }).catch(err => console.error('Erreur livraison rapport post-paiement:', err))
+          })
 
-        // Notifier l'admin que le paiement est arrivé et le rapport livré automatiquement.
-        await resend.emails.send({
-          from: 'Closia <noreply@closia.net>',
-          to: 'contact@closia.net',
-          subject: `✅ Analyse payée et livrée automatiquement — ${analyse.nom}`,
-          html: `
-            <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:32px;background:#0b1220;color:#fff;border-radius:12px;">
-              <h2 style="color:#c29a6b;">✅ Paiement reçu (${montantAnalyse}€) — rapport livré automatiquement</h2>
-              <div style="background:#111720;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:16px;margin:24px 0;">
-                <p style="color:#fff;margin:0 0 4px;"><strong>Nom :</strong> ${analyse.nom}</p>
-                <p style="color:#fff;margin:0 0 4px;"><strong>Email :</strong> ${analyse.email}</p>
-                <p style="color:#fff;margin:0;"><strong>Adresse :</strong> ${analyse.adresse}</p>
+          // Notifier l'admin que le paiement est arrivé et le rapport livré automatiquement.
+          await resend.emails.send({
+            from: 'Closia <noreply@closia.net>',
+            to: 'contact@closia.net',
+            subject: `✅ Analyse payée et livrée automatiquement — ${analyse.nom}`,
+            html: `
+              <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:32px;background:#0b1220;color:#fff;border-radius:12px;">
+                <h2 style="color:#c29a6b;">✅ Paiement reçu (${montantAnalyse}€) — rapport livré automatiquement</h2>
+                <div style="background:#111720;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:16px;margin:24px 0;">
+                  <p style="color:#fff;margin:0 0 4px;"><strong>Nom :</strong> ${analyse.nom}</p>
+                  <p style="color:#fff;margin:0 0 4px;"><strong>Email :</strong> ${analyse.email}</p>
+                  <p style="color:#fff;margin:0;"><strong>Adresse :</strong> ${analyse.adresse}</p>
+                </div>
+                <p style="color:#6b7280;font-size:12px;">Le rapport a été envoyé automatiquement à ${analyse.email}. Aucune action requise.</p>
               </div>
-              <p style="color:#6b7280;font-size:12px;">Le rapport a été envoyé automatiquement à ${analyse.email}. Aucune action requise.</p>
-            </div>
-          `,
-        }).catch(console.warn)
+            `,
+          }).catch(console.warn)
+        } catch (sendError: any) {
+          // La livraison automatique a échoué (Resend/Supabase en erreur) : on marque payée
+          // et on alerte l'admin avec le détail de l'erreur pour un envoi manuel immédiat.
+          console.error('Erreur livraison rapport post-paiement:', sendError)
+          await supabase.from('analyses').update({ statut: 'payee' }).eq('id', analyseId)
+          await resend.emails.send({
+            from: 'Closia <noreply@closia.net>',
+            to: 'contact@closia.net',
+            subject: `⚠️ Paiement reçu mais ÉCHEC d'envoi automatique du rapport — ${analyse.nom}`,
+            html: `
+              <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:32px;background:#0b1220;color:#fff;border-radius:12px;">
+                <h2 style="color:#ef4444;">⚠️ Paiement reçu (${montantAnalyse}€) mais l'envoi automatique du rapport a échoué</h2>
+                <p style="color:#d1d5db;">Envoyez le rapport manuellement à ${analyse.email} au plus vite (bouton "Envoyer sans paiement" dans l'admin).</p>
+                <p style="color:#fff;margin:0 0 8px;"><strong>Adresse :</strong> ${analyse.adresse}</p>
+                <p style="color:#9ca3af;font-size:12px;margin:0;"><strong>Erreur :</strong> ${sendError?.message || String(sendError)}</p>
+              </div>
+            `,
+          }).catch(console.warn)
+        }
       } else if (analyse) {
         // Filet de sécurité : paiement reçu mais rapport introuvable/vide (ne devrait pas
         // arriver dans le nouveau flux). On marque payée et on alerte l'admin pour suivi manuel.
