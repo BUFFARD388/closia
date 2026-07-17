@@ -35,17 +35,22 @@ export async function POST(req: NextRequest) {
     // une fois prêt, voir /api/analyses/demander-paiement) : le paiement déclenche donc
     // directement la livraison du rapport complet, plutôt qu'un accusé "rapport sous 72h".
     if (type === 'analyse' && analyseId) {
+     try {
       // Montant réellement facturé, lu directement sur la session Stripe plutôt que codé
       // en dur — évite un nouveau décalage si le prix de l'analyse change un jour.
       const montantAnalyse = typeof session.amount_total === 'number'
         ? (session.amount_total / 100).toLocaleString('fr-FR')
         : '590'
       // Récupérer les données de la demande
-      const { data: analyse } = await supabase
+      const { data: analyse, error: analyseFetchError } = await supabase
         .from('analyses')
         .select('*')
         .eq('id', analyseId)
         .single()
+
+      if (analyseFetchError) {
+        console.error('Webhook analyse : échec de récupération de la demande', analyseId, analyseFetchError)
+      }
 
       if (analyse && analyse.rapport && analyse.rapport.trim()) {
         // Rapport déjà rédigé : on le livre immédiatement au client. Appel direct en process
@@ -115,7 +120,42 @@ export async function POST(req: NextRequest) {
             </div>
           `,
         }).catch(console.warn)
+      } else {
+        // Dernier filet : la demande elle-même est introuvable en base (mauvais analyseId,
+        // erreur de lecture Supabase...) — sans ce bloc, aucun email n'est jamais envoyé, ni
+        // au client ni à l'admin, et le paiement disparaît silencieusement. On alerte toujours.
+        console.error('Webhook analyse : analyseId introuvable en base, paiement reçu sans destinataire', analyseId)
+        await resend.emails.send({
+          from: 'Closia <noreply@closia.net>',
+          to: 'contact@closia.net',
+          subject: `🚨 Paiement analyse reçu mais demande introuvable en base — analyseId ${analyseId}`,
+          html: `
+            <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:32px;background:#0b1220;color:#fff;border-radius:12px;">
+              <h2 style="color:#ef4444;">🚨 Paiement reçu (${montantAnalyse}€) mais impossible de retrouver la demande</h2>
+              <p style="color:#d1d5db;">analyseId : ${analyseId}</p>
+              <p style="color:#d1d5db;">Vérifiez la session Stripe et retrouvez le client pour lui envoyer le rapport manuellement.</p>
+              <p style="color:#9ca3af;font-size:12px;">session id : ${session.id}</p>
+            </div>
+          `,
+        }).catch(console.warn)
       }
+     } catch (outerError: any) {
+      // Filet ultime : toute exception non prévue dans ce bloc (ex. échec réseau Supabase/Stripe)
+      // ne doit jamais aboutir à un silence total. On log et on alerte systématiquement l'admin.
+      console.error('Webhook analyse : exception non gérée', outerError)
+      await resend.emails.send({
+        from: 'Closia <noreply@closia.net>',
+        to: 'contact@closia.net',
+        subject: `🚨 Erreur inattendue lors du traitement du paiement analyse — ${analyseId}`,
+        html: `
+          <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:32px;background:#0b1220;color:#fff;border-radius:12px;">
+            <h2 style="color:#ef4444;">🚨 Erreur inattendue dans le webhook (analyseId ${analyseId})</h2>
+            <p style="color:#d1d5db;">Vérifiez la session Stripe ${session.id} et retrouvez le client pour lui envoyer le rapport manuellement.</p>
+            <p style="color:#9ca3af;font-size:12px;"><strong>Erreur :</strong> ${outerError?.message || String(outerError)}</p>
+          </div>
+        `,
+      }).catch(console.warn)
+     }
 
       return NextResponse.json({ received: true })
     }
